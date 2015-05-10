@@ -36,7 +36,8 @@
 #define MULI_NUMERIC_TRAITS_HXX
 
 #include <type_traits>
-#include <cmath>
+#include <cmath>    // abs(double)
+#include <cstdlib>  // abs(int)
 #include <complex>
 #include "config.hxx"
 
@@ -279,6 +280,118 @@ struct NumericTraits<std::complex<T> >
     static type fromPromote(promote_type const & v) { return v; }
     static type fromRealPromote(real_promote_type v) { return type(v); }
 };
+
+namespace numeric_traits_detail {
+
+// both f1 and f2 are unsigned here
+template<class FPT>
+inline
+FPT safeFloatDivision( FPT f1, FPT f2 )
+{
+    return  f2 < NumericTraits<FPT>::one() && f1 > f2 * NumericTraits<FPT>::max()
+                ? NumericTraits<FPT>::max() 
+                : (f2 > NumericTraits<FPT>::one() && f1 < f2 * NumericTraits<FPT>::smallestPositive()) || 
+                   f1 == NumericTraits<FPT>::zero()
+                     ? NumericTraits<FPT>::zero() 
+                     : f1/f2;
+}
+
+} // namespace numeric_traits_detail
+    
+    /** \brief Tolerance based floating-point equality.
+
+        Check whether two floating point numbers are equal within the given tolerance.
+        This is useful because floating point numbers that should be equal in theory are
+        rarely exactly equal in practice. If the tolerance \a epsilon is not given,
+        twice the machine epsilon is used.
+
+        <b>\#include</b> \<vigra/mathutil.hxx\><br>
+        Namespace: vigra
+    */
+template <class T1, class T2>
+typename std::enable_if<std::is_floating_point<Promote<T1, T2> >::value,
+                        bool>::type
+closeAtTolerance(T1 l, T2 r, Promote<T1, T2> epsilon)
+{
+    using std::abs;
+    typedef Promote<T1, T2> T;
+    if(l == 0.0)
+        return abs(r) <= epsilon;
+    if(r == 0.0)
+        return abs(l) <= epsilon;
+    T diff = abs( l - r );
+    T d1   = numeric_traits_detail::safeFloatDivision<T>( diff, abs( r ) );
+    T d2   = numeric_traits_detail::safeFloatDivision<T>( diff, abs( l ) );
+
+    return (d1 <= epsilon && d2 <= epsilon);
+}
+
+template <class T1, class T2>
+inline
+typename std::enable_if<std::is_floating_point<Promote<T1, T2> >::value,
+                        bool>::type 
+closeAtTolerance(T1 l, T2 r)
+{
+    typedef Promote<T1, T2> T;
+    return closeAtTolerance(l, r, T(2.0) * NumericTraits<T>::epsilon());
+}
+    
+    /** \brief Tolerance based floating-point less-or-equal.
+
+        Check whether two floating point numbers are less or equal within the given tolerance.
+        That is, \a l can actually be greater than \a r within the given \a epsilon.
+        This is useful because floating point numbers that should be equal in theory are
+        rarely exactly equal in practice. If the tolerance \a epsilon is not given,
+        twice the machine epsilon is used.
+
+        <b>\#include</b> \<vigra/mathutil.hxx\><br>
+        Namespace: vigra
+    */
+template <class T1, class T2>
+inline
+typename std::enable_if<std::is_floating_point<Promote<T1, T2> >::value,
+                        bool>::type 
+lessEqualAtTolerance(T1 l, T2 r, Promote<T1, T2> epsilon)
+{
+    return l < r || closeAtTolerance(l, r, epsilon);
+}
+
+template <class T1, class T2>
+inline
+typename std::enable_if<std::is_floating_point<Promote<T1, T2> >::value,
+                        bool>::type 
+lessEqualAtTolerance(T1 l, T2 r)
+{
+    typedef Promote<T1, T2> T;
+    return lessEqualAtTolerance(l, r, T(2.0) * NumericTraits<T>::epsilon());
+}
+    
+    /** \brief Tolerance based floating-point greater-or-equal.
+
+        Check whether two floating point numbers are greater or equal within the given tolerance.
+        That is, \a l can actually be less than \a r within the given \a epsilon.
+        This is useful because floating point numbers that should be equal in theory are
+        rarely exactly equal in practice. If the tolerance \a epsilon is not given,
+        twice the machine epsilon is used.
+
+        <b>\#include</b> \<vigra/mathutil.hxx\><br>
+        Namespace: vigra
+    */
+template <class T1, class T2>
+inline
+typename std::enable_if<std::is_floating_point<Promote<T1, T2> >::value,
+                        bool>::type 
+greaterEqualAtTolerance(T1 l, T2 r, Promote<T1, T2> epsilon)
+{
+    return r < l || closeAtTolerance(l, r, epsilon);
+}
+
+template <class T1, class T2>
+inline bool greaterEqualAtTolerance(T1 l, T2 r)
+{
+    typedef Promote<T1, T2> T;
+    return greaterEqualAtTolerance(l, r, T(2.0) * NumericTraits<T>::epsilon());
+}
 
 } // namespace muli
 

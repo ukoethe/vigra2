@@ -122,6 +122,27 @@ struct NumericTraitsTest
             shouldEqual(T::fromRealPromote(1.25), 1.25f);
         }
     }
+    
+    void testCloseAtTolerance()
+    {
+        typedef NumericTraits<float> T;
+        
+        should(closeAtTolerance(T::zero(), T::epsilon()));
+        should(!closeAtTolerance(T::zero(), T::one()));
+        should(closeAtTolerance(T::zero(), T::one(), 2.0f));
+        
+        should(lessEqualAtTolerance(T::zero(), T::epsilon()));
+        should(lessEqualAtTolerance(T::epsilon(), T::zero()));
+        should(lessEqualAtTolerance(T::zero(), T::one()));
+        should(!lessEqualAtTolerance(T::one(), T::zero()));
+        should(lessEqualAtTolerance(T::one(), T::zero(), 2.0f));
+        
+        should(greaterEqualAtTolerance(T::zero(), T::epsilon()));
+        should(greaterEqualAtTolerance(T::epsilon(), T::zero()));
+        should(!greaterEqualAtTolerance(T::zero(), T::one()));
+        should(greaterEqualAtTolerance(T::zero(), T::one(), 2.0f));
+        should(greaterEqualAtTolerance(T::one(), T::zero()));
+    }
 };
 
 struct NumericTraitsTestSuite
@@ -132,6 +153,7 @@ struct NumericTraitsTestSuite
     {
         add( testCase(&NumericTraitsTest::testPromote));
         add( testCase(&NumericTraitsTest::testNumericTraits));
+        add( testCase(&NumericTraitsTest::testCloseAtTolerance));
     }
 };
 
