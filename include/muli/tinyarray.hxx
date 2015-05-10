@@ -33,7 +33,6 @@
 /*                                                                      */
 /************************************************************************/
 
-
 #ifndef MULI_TINYARRAY_HXX
 #define MULI_TINYARRAY_HXX
 
@@ -48,16 +47,15 @@ struct Invalid;
 #include <iosfwd>   // ostream
 #include <algorithm>
 #include <iterator>
-#include <array>
 #include "config.hxx"
-#include "promote.hxx"
+#include "numeric_traits.hxx"
 // #include "error.hxx"
 // #include "mathutil.hxx"
 
 #ifdef MULI_CHECK_BOUNDS
 #define MULI_ASSERT_INSIDE(diff) \
   muli_precondition(diff >= 0, "Index out of bounds");\
-  muli_precondition(diff < SIZE, "Index out of bounds");
+  muli_precondition(diff < TinySize<N...>::value, "Index out of bounds");
 #else
 #define MULI_ASSERT_INSIDE(diff)
 #endif
@@ -70,14 +68,12 @@ namespace muli {
 #pragma warning( disable : 4503 )
 #endif
 
-using std::abs;
-using std::ceil;
-using std::floor;
 using std::sqrt;
 
 using ArrayIndex = std::ptrdiff_t;
 
 enum SkipInitialization { DontInit };
+enum ReverseCopyTag { ReverseCopy };
 
 template <ArrayIndex LEVEL, ArrayIndex ... N>
 struct TinyShapeImpl;
@@ -121,12 +117,34 @@ struct TinyShapeImpl<LEVEL, N>
     }
 };
 
+template <ArrayIndex ... N>
+struct TinySize
+{
+    static const ArrayIndex value = TinyShapeImpl<0, N...>::total_size;
+    static const ArrayIndex ndim  = sizeof...(N);
+};
+
 template <class VALUETYPE, ArrayIndex ... N>
 class TinyArray;
 
 template <class VALUETYPE, ArrayIndex ... N>
 class TinyArrayView;
 
+/********************************************************/
+/*                                                      */
+/*                    TinyArrayBase                     */
+/*                                                      */
+/********************************************************/
+
+/** \brief Base class for fixed size vectors and matrices.
+
+    This class contains functionality shared by
+    \ref TinyArray and \ref TinyArrayView, and enables these classes
+    to be freely mixed within expressions. It is typically not used directly.
+
+    <b>\#include</b> \<muli/tinyarray.hxx\><br>
+    Namespace: muli
+**/
 template <class VALUETYPE, class DERIVED, ArrayIndex ... N>
 class TinyArrayBase
 {
@@ -138,8 +156,24 @@ class TinyArrayBase
                                                 VALUETYPE *, 
                                                 VALUETYPE[ShapeHelper::total_size]>::type;
     
+    template <int LEVEL, class V1, class ... V2>
+    void initImpl(V1 v1, V2... v2)
+    {
+        data_[LEVEL] = v1;
+        initImpl<LEVEL+1>(v2...);
+    }
+    
+    template <int LEVEL, class V1>
+    void initImpl(V1 v1)
+    {
+        data_[LEVEL] = v1;
+    }
+    
   public:
   
+    template <class NEW_VALUETYPE>
+    using AsType = TinyArray<NEW_VALUETYPE, N...>;
+    
     using value_type             = VALUETYPE;
     using reference              = value_type &;
     using const_reference        = value_type const &;
@@ -161,26 +195,12 @@ class TinyArrayBase
         
     constexpr TinyArrayBase(TinyArrayBase const &) = default;
     
+  protected:
+  
     TinyArrayBase(SkipInitialization)
     {}
     
-    TinyArrayBase(value_type v = value_type())
-    {
-        for(ArrayIndex i=0; i<static_size; ++i)
-            data_[i] = v;
-    }
-    
-    constexpr TinyArrayBase(value_type const (&v)[static_ndim])
-    : data_{v}
-    {}
-    
-    // template <class ... V>
-    // constexpr TinyArrayBase(V... v)
-    // : data_{v...}
-    // {
-        // static_assert(sizeof...(V) == static_size, 
-                      // "TinyArrayBase(): wrong number of arguments.");
-    // }
+    // constructores to be used by TinyArray
     
     template <class OTHER, class OTHER_DERIVED>
     TinyArrayBase(TinyArrayBase<OTHER, OTHER_DERIVED, N...> const & other)
@@ -188,6 +208,43 @@ class TinyArrayBase
         for(ArrayIndex i=0; i<static_size; ++i)
             data_[i] = other[i];
     }
+    
+    // constructor for zero or one argument
+    // activate 'constexpr' in C++ 14
+    /* constexpr */ TinyArrayBase(value_type v = value_type())
+    {
+        for(ArrayIndex i=0; i<static_size; ++i)
+            data_[i] = v;
+    }
+    
+    // constructor for two or arguments
+    template <class ... V>
+    constexpr TinyArrayBase(value_type v0, value_type v1, V ... v)
+    : data_{v0, v1, v...}
+    {
+        static_assert(sizeof...(V)+2 == static_size, 
+                      "TinyArrayBase(): wrong number of arguments.");
+    }
+    
+    constexpr TinyArrayBase(value_type const (&v)[static_ndim])
+    : data_{v}
+    {}
+    
+    template <class U>
+    explicit TinyArrayBase(U const * u)
+    {
+        for(ArrayIndex i=0; i<static_size; ++i)
+            data_[i] = u[i];
+    }
+    
+    template <class U>
+    explicit TinyArrayBase(U const * u, ReverseCopyTag)
+    {
+        for(ArrayIndex i=0; i<static_size; ++i)
+            data_[i] = u[static_size-1-i];
+    }
+
+  public:
     
     // assignment
     
@@ -213,6 +270,22 @@ class TinyArrayBase
         for(ArrayIndex i=0; i<static_size; ++i)
             data_[i] = other[i];
         return *this;
+    }
+    
+    DERIVED & init(value_type v = value_type())
+    {
+        for(ArrayIndex i=0; i<static_size; ++i)
+            data_[i] = v;
+        return static_cast<DERIVED &>(*this);
+    }
+    
+    template <class ... V>
+    DERIVED & init(value_type v0, value_type v1, V... v)
+    {
+        static_assert(sizeof...(V)+2 == static_size, 
+                      "TinyArrayBase::init(): wrong number of arguments.");
+        initImpl<0>(v0, v1, v...);
+        return static_cast<DERIVED &>(*this);
     }
     
     // arithmetic assignment
@@ -302,7 +375,7 @@ class TinyArrayBase
         return result;
     }
     
-    double norm() const
+    RealPromote<value_type> norm() const
     {
          return sqrt(this->squaredNorm());
     }
@@ -328,6 +401,16 @@ class TinyArrayBase
             if(data_[m] < data_[i])
                 m = i;
         return data_[m];
+    }
+    
+        /** Check that all elements of this vector are zero (or 'false' if T is bool).
+        */
+    bool allZero() const
+    {
+        for(ArrayIndex i=0; i<static_size; ++i)
+            if(data_[i] != value_type())
+                return false;
+        return true;
     }
     
         /** Check that all elements of this vector are non-zero (or 'true' if T is bool).
@@ -432,6 +515,32 @@ class TinyArrayBase
         return data_[ShapeHelper::offset(v...)];
     }
     
+        /** Get a view to the subarray with length <tt>(TO-FROM)</tt> starting at <tt>FROM</tt>.
+            The bounds must fullfill <tt>0 <= FROM < TO <= static_size</tt>.
+            Only available if <tt>static_ndim == 1</tt>.
+        */
+    template <ArrayIndex FROM, ArrayIndex TO>
+    typename std::enable_if<static_ndim == 1,
+                            TinyArrayView<value_type, TO-FROM> >::type
+    subarray() const
+    {
+        static_assert(FROM >= 0 && FROM < TO && TO <= static_size, 
+                      "TinyArrayBase::subarray(): range out of bounds.");
+        return TinyArrayView<value_type, TO-FROM>(data_+FROM);
+    }
+    
+    typename std::enable_if<sizeof...(N),
+                            TinyArray<value_type, static_size-1> >::type
+    dropIndex(ArrayIndex m) const
+    {
+        TinyArray<value_type, static_size-1> res(DontInit);
+        for(ArrayIndex k=0; k<m; ++k)
+            res[k] = data_[k];
+        for(ArrayIndex k=m; k<static_size-1; ++k)
+            res[k] = data_[k+1];
+        return res;
+    }
+
     // boiler plate
     
     iterator begin() { return data_; }
@@ -456,11 +565,22 @@ class TinyArrayBase
     constexpr const_reference front() const { return data_[0]; }
     constexpr const_reference back()  const { return data_[static_size-1]; }
     
-    constexpr index_type shape() const { return static_shape; }
+    constexpr bool       empty() const { return static_size == 0; }
     constexpr ArrayIndex size()  const { return static_size; }
     constexpr ArrayIndex max_size()  const { return static_size; }
+    constexpr index_type shape() const { return static_shape; }
     constexpr ArrayIndex ndim()  const { return static_ndim; }
-    constexpr bool empty() const { return static_size == 0; }
+    
+    template <class OTHER, class OTHER_DERIVED>
+    void swap(TinyArrayBase<OTHER, OTHER_DERIVED, N...> & other)
+    {
+        for(int k=0; k<static_size; ++k)
+        {
+            Promote<value_type, OTHER> t = data_[k];
+            data_[k] = static_cast<value_type>(other[k]);
+            other[k] = static_cast<OTHER>(t);
+        }
+    }
     
   protected:
     data_array_type data_;
@@ -474,82 +594,99 @@ TinyArrayBase<T, DERIVED, N...>::static_shape;
 template <class T, class DERIVED, ArrayIndex ... N>
 std::ostream & operator<<(std::ostream & o, TinyArrayBase<T, DERIVED, N...> const & v)
 {
+    o << "{";
     if(TinyArrayBase<T, DERIVED, N...>::static_size > 0)
         o << v[0];
     for(ArrayIndex i=1; i < TinyArrayBase<T, DERIVED, N...>::static_size; ++i)
-        o << " " << v[i];
+        o << ", " << v[i];
+    o << "}";
     return o;
 }
 
+/** \brief Class for fixed size arrays.
+    \ingroup RangesAndPoints
+
+    This class contains an array of the specified VALUETYPE with
+    (possibly multi-dimensional) shape given by the sequence <tt>ArrayIndex ... N</tt>.
+    The interface conforms to STL vector, except that there are no functions
+    that change the size of a TinyArray.
+
+    \ref TinyArrayOperators "Arithmetic operations"
+    on TinyArrays are defined as component-wise applications of these
+    operations.
+
+    See also:<br>
+    <UL style="list-style-image:url(documents/bullet.gif)">
+        <LI> \ref muli::TinyArrayBase
+        <LI> \ref muli::TinyArrayView
+        <LI> \ref TinyArrayOperators
+    </UL>
+
+    <b>\#include</b> \<vigra/TinyArray.hxx\><br>
+    Namespace: vigra
+**/
 template <class VALUETYPE, ArrayIndex ... N>
 class TinyArray
 : public TinyArrayBase<VALUETYPE, TinyArray<VALUETYPE, N...>, N...>
 {
     using BaseType = TinyArrayBase<VALUETYPE, TinyArray<VALUETYPE, N...>, N...>;
     
-    template <int LEVEL, class V1, class ... V2>
-    void initImpl(V1 v1, V2... v2)
-    {
-        BaseType::data_[LEVEL] =  v1;
-        initImpl<LEVEL+1>(v2...);
-    }
-    
-    template <int LEVEL, class V1>
-    void initImpl(V1 v1)
-    {
-        BaseType::data_[LEVEL] =  v1;
-    }
-    
   public:
   
-    template <class NEW_VALUETYPE>
-    using AsType = TinyArray<NEW_VALUETYPE, N...>;
-    
+    typedef typename BaseType::value_type value_type;
+    static const ArrayIndex static_ndim = BaseType::static_ndim;
+  
     constexpr TinyArray(TinyArray const &) = default;
-    
-    TinyArray(VALUETYPE v = VALUETYPE())
-    : BaseType(v)
-    {}
-    
-    constexpr TinyArray(VALUETYPE const (&v)[BaseType::static_ndim])
-    : BaseType(v)
-    {}
-    
-    template <class ... V>
-    // constexpr TinyArray(V... v)
-    TinyArray(V... v)
-    : BaseType(DontInit)
-    {
-        initImpl<0>(v...);
-    }
-    
-    template <class OTHER>
-    TinyArray(TinyArray<OTHER, N...> const & other)
-    : BaseType(static_cast<TinyArrayBase<OTHER, TinyArray<OTHER, N...>, N...> const &>(other))
-    {}
     
     template <class OTHER, class DERIVED>
     TinyArray(TinyArrayBase<OTHER, DERIVED, N...> const & other)
     : BaseType(other)
     {}
     
-    template <class ... V>
-    void init(V... v)
-    {
-        static_assert(sizeof...(V) == BaseType::static_size, 
-                      "TinyArray::init(): wrong number of arguments.");
-        initImpl<0>(v...);
-    }
+    TinyArray(SkipInitialization)
+    : BaseType(DontInit)
+    {}
     
+        /** Construction from lemon::Invalid.
+        
+            Initializes all vector elements with -1.
+        */
+    TinyArray(lemon::Invalid const &)
+    : BaseType(-1)
+    {}
+    
+    TinyArray(value_type v = value_type())
+    : BaseType(v)
+    {}
+    
+    template <class ... V>
+    constexpr TinyArray(value_type v0, value_type v1, V... v)
+    : BaseType(v0, v1, v...)
+    {}
+    
+    constexpr TinyArray(value_type const (&v)[static_ndim])
+    : BaseType(v)
+    {}
+    
+    template <class U>
+    explicit TinyArray(U const * u)
+    : BaseType(u)
+    {}
+    
+    template <class U>
+    explicit TinyArray(U const * u, ReverseCopyTag)
+    : BaseType(u, ReverseCopy)
+    {}
+
     TinyArray & operator=(TinyArray const &) = default;
 
-    TinyArray & operator=(VALUETYPE v)
+    TinyArray & operator=(value_type v)
     {
         BaseType::operator=(v);
         return *this;
     }
     
-    TinyArray & operator=(VALUETYPE const (&v)[BaseType::static_ndim])
+    TinyArray & operator=(value_type const (&v)[static_ndim])
     {
         BaseType::operator=(v);
         return *this;
@@ -563,8 +700,265 @@ class TinyArray
     }
 };
 
+    /// factory function for fixed-size unit matrix
+template <class VALUETYPE, ArrayIndex N>
+inline 
+TinyArray<VALUETYPE, N, N>
+tinyEye()
+{
+    TinyArray<VALUETYPE, N, N> res;
+    for(ArrayIndex k=0; k<N; ++k)
+        res(k,k) = 1;
+    return res;
+}
 
-    /// component-wise addition
+    /// factory function for the fixed-size k-th unit vector 
+template <class VALUETYPE, ArrayIndex N>
+inline 
+TinyArray<VALUETYPE, N>
+unitVector(ArrayIndex k)
+{
+    TinyArray<VALUETYPE, N> res;
+    res(k) = 1;
+    return res;
+}
+
+    /// factory function for fixed-size linear sequence starting at <tt>start</tt> with stepsize <tt>step</tt>
+template <class VALUETYPE, ArrayIndex ... N>
+inline 
+TinyArray<VALUETYPE, N...>
+linearSequence(VALUETYPE start = VALUETYPE(), VALUETYPE step = VALUETYPE(1))
+{
+    TinyArray<VALUETYPE, N...> res;
+    for(ArrayIndex k=0; k < TinySize<N...>::value; ++k)
+        res[k] = k;
+    return res;
+}
+
+/** \brief Wrapper for fixed size arrays.
+
+    This class wraps the mamory of an array of the specified VALUETYPE
+    with (possibly multi-dimensional) shape given by <tt>ArrayIndex....N</tt>.
+    Thus, the array can be accessed with an interface similar to
+    that of std::vector (except that there are no functions
+    that change the size of a TinyArrayView). The TinyArrayView
+    does <em>not</em> assume ownership of the given memory.
+
+    \ref TinyArrayOperators "Arithmetic operations"
+    on TinyArrayViews are defined as component-wise applications of these
+    operations. 
+
+    <b>See also:</b>
+    <ul>
+        <li> \ref muli::TinyArrayBase
+        <li> \ref muli::TinyArray
+        <li> \ref TinyArrayOperators
+    </ul>
+
+    <b>\#include</b> \<muli/tinyarray.hxx\><br>
+    Namespace: muli
+**/
+template <class VALUETYPE, ArrayIndex ... N>
+class TinyArrayView
+: public TinyArrayBase<VALUETYPE, TinyArrayView<VALUETYPE, N...>, N...>
+{
+    using BaseType = TinyArrayBase<VALUETYPE, TinyArrayView<VALUETYPE, N...>, N...>;
+    
+  public:
+  
+    typedef typename BaseType::value_type value_type;
+    typedef typename BaseType::pointer pointer;
+    typedef typename BaseType::const_pointer const_pointer;
+    static const ArrayIndex static_size = BaseType::static_size;
+    static const ArrayIndex static_ndim = BaseType::static_ndim;
+  
+    TinyArrayView()
+    : BaseType(DontInit)
+    {
+        BaseType::data_ = nullptr;
+    }
+
+        /** Construct view for given data array
+        */
+    TinyArrayView(const_pointer data)
+    : BaseType(DontInit)
+    {
+        BaseType::data_ = const_cast<pointer>(data);
+    }
+
+        /** Copy constructor (shallow copy).
+        */
+    TinyArrayView(TinyArrayView const & other)
+    : BaseType(DontInit)
+    {
+        BaseType::data_ = const_cast<pointer>(other.data());
+    }
+
+        /** Construct view from other TinyArray.
+        */
+    template <class OTHER_DERIVED>
+    TinyArrayView(TinyArrayBase<value_type, OTHER_DERIVED, N...> const & other)
+    : BaseType(DontInit)
+    {
+        BaseType::data_ = const_cast<pointer>(other.data());
+    }
+
+        /** Copy the data (not the pointer) of the rhs.
+        */
+    TinyArrayView & operator=(TinyArrayView const & r)
+    {
+        for(int k=0; k<static_size; ++k)
+            BaseType::data_[k] = r[k];
+        return *this;
+    }
+
+        /** Copy the data of the rhs with cast.
+        */
+    template <class U, class OTHER_DERIVED>
+    TinyArrayView & operator=(TinyArrayBase<U, OTHER_DERIVED, N...> const & r)
+    {
+        for(int k=0; k<static_size; ++k)
+            BaseType::data_[k] = static_cast<value_type>(r[k]);
+        return *this;
+    }
+};
+
+/********************************************************/
+/*                                                      */
+/*                TinyArray Comparison                  */
+/*                                                      */
+/********************************************************/
+
+/** \addtogroup TinyArrayOperators Functions for TinyArray
+
+    \brief Implement basic arithmetic and equality for TinyArray.
+
+    These functions fulinit the requirements of a Linear Space (vector space).
+    Return types are determined according to \ref TinyArrayTraits.
+
+    <b>\#include</b> \<muli/TinyArray.hxx\><br>
+    Namespace: muli
+*/
+//@{
+    /// element-wise equal
+template <class V1, class D1, class V2, class D2, ArrayIndex ... N>
+inline bool
+operator==(TinyArrayBase<V1, D1, N...> const & l,
+           TinyArrayBase<V2, D2, N...> const & r)
+{
+    for(ArrayIndex k=0; k < TinySize<N...>::value; ++k)
+        if(l[k] != r[k])
+            return false;
+    return true;
+}
+
+    /// element-wise not equal
+template <class V1, class D1, class V2, class D2, ArrayIndex ... N>
+inline bool
+operator!=(TinyArrayBase<V1, D1, N...> const & l,
+           TinyArrayBase<V2, D2, N...> const & r)
+{
+    for(ArrayIndex k=0; k < TinySize<N...>::value; ++k)
+        if(l[k] != r[k])
+            return true;
+    return false;
+}
+
+    /// lexicographical comparison
+template <class V1, class D1, class V2, class D2, ArrayIndex ... N>
+inline bool
+operator<(TinyArrayBase<V1, D1, N...> const & l,
+          TinyArrayBase<V2, D2, N...> const & r)
+{
+    for(ArrayIndex k=0; k < TinySize<N...>::value; ++k)
+    {
+        if(l[k] < r[k])
+            return true;
+        if(r[k] < l[k])
+            return false;
+    }
+    return false;
+}
+
+    /// check if all elements are zero
+template <class V, class D, ArrayIndex ... N>
+inline bool
+isZero(TinyArrayBase<V, D, N...> const & t)
+{
+    return t.allZero();
+}
+
+    /// pointwise less-than
+template <class V1, class D1, class V2, class D2, ArrayIndex ... N>
+inline bool
+allLess(TinyArrayBase<V1, D1, N...> const & l,
+        TinyArrayBase<V2, D2, N...> const & r)
+{
+    for(int k=0; k < TinySize<N...>::value; ++k)
+        if (l[k] >= r[k])
+            return false;
+    return true;
+}
+
+    /// pointwise greater-than
+template <class V1, class D1, class V2, class D2, ArrayIndex ... N>
+inline bool
+allGreater(TinyArrayBase<V1, D1, N...> const & l,
+           TinyArrayBase<V2, D2, N...> const & r)
+{
+    for(int k=0; k < TinySize<N...>::value; ++k)
+        if(l[k] <= r[k])
+            return false;
+    return true;
+}
+
+    /// pointwise less-equal
+template <class V1, class D1, class V2, class D2, ArrayIndex ... N>
+inline bool
+allLessEqual(TinyArrayBase<V1, D1, N...> const & l,
+             TinyArrayBase<V2, D2, N...> const & r)
+{
+    for(int k=0; k < TinySize<N...>::value; ++k)
+        if (l[k] > r[k])
+            return false;
+    return true;
+}
+
+    /// pointwise greater-equal
+template <class V1, class D1, class V2, class D2, ArrayIndex ... N>
+inline bool
+allGreaterEqual(TinyArrayBase<V1, D1, N...> const & l,
+                TinyArrayBase<V2, D2, N...> const & r)
+{
+    for(int k=0; k < TinySize<N...>::value; ++k)
+        if (l[k] < r[k])
+            return false;
+    return true;
+}
+
+template <class V1, class D1, class V2, class D2, ArrayIndex ... N>
+inline bool
+closeAtTolerance(TinyArrayBase<V1, D1, N...> const & l,
+                 TinyArrayBase<V2, D2, N...> const & r, 
+                 Promote<V1, V2> epsilon = 2.0*NumericTraits<Promote<V1, V2> >::epsilon())
+{
+    for(ArrayIndex k=0; k < TinySize<N...>::value; ++k)
+        if(!closeAtTolerance(l[k], r[k], epsilon))
+            return false;
+    return true;
+}
+
+/********************************************************/
+/*                                                      */
+/*                 TinyArray-Arithmetic                 */
+/*                                                      */
+/********************************************************/
+
+/** \addtogroup TinyArrayOperators
+ */
+//@{
+
+    /// element-wise addition
 template <class V1, class D1, class V2, class D2, ArrayIndex ... N>
 inline
 TinyArray<Promote<V1, V2>, N...>
@@ -574,1411 +968,252 @@ operator+(TinyArrayBase<V1, D1, N...> const & l,
     return TinyArray<Promote<V1, V2>, N...>(l) += r;
 }
 
-#if 0
-
-/********************************************************/
-/*                                                      */
-/*                    TinyArrayBase                    */
-/*                                                      */
-/********************************************************/
-
-/** \brief Base class for fixed size vectors.
-
-    This class contains functionality shared by
-    \ref TinyVector and \ref TinyVectorView, and enables these classes
-    to be freely mixed within expressions. It is typically not used directly.
-
-    <b>\#include</b> \<muli/tinyvector.hxx\><br>
-    Namespace: muli
-**/
-template <class VALUETYPE, int SIZE, class DATA, class DERIVED>
-class TinyArrayBase
-{
-    TinyArrayBase(TinyArrayBase const &); // do not use
-
-    TinyArrayBase & operator=(TinyArrayBase const & other); // do not use
-
-  protected:
-
-    typedef typename detail::LoopType<SIZE>::type Loop;
-
-    TinyArrayBase()
-    {}
-
-  public:
-        /** STL-compatible definition of valuetype
-        */
-    typedef VALUETYPE value_type;
-
-        /** reference (return of operator[]).
-        */
-    typedef VALUETYPE & reference;
-
-        /** const reference (return of operator[] const).
-        */
-    typedef VALUETYPE const & const_reference;
-
-        /** pointer (return of operator->).
-        */
-    typedef VALUETYPE * pointer;
-
-        /** const pointer (return of operator-> const).
-        */
-    typedef VALUETYPE const * const_pointer;
-
-        /** STL-compatible definition of iterator
-        */
-    typedef value_type * iterator;
-
-        /** STL-compatible definition of const iterator
-        */
-    typedef value_type const * const_iterator;
-
-        /** STL-compatible definition of size_type
-        */
-    typedef unsigned int size_type;
-
-        /** STL-compatible definition of difference_type
-        */
-    typedef std::ptrdiff_t difference_type;
-
-        /** the scalar type for the outer product
-        */
-    typedef double scalar_multiplier;
-
-        /** the vector's squared norm type
-        */
-    typedef typename NormTraits<VALUETYPE>::SquaredNormType SquaredNormType;
-
-        /** the vector's norm type
-        */
-    typedef typename SquareRootTraits<SquaredNormType>::SquareRootResult NormType;
-
-        /** the vector's size
-        */
-    enum { static_size = SIZE };
-
-        /** Initialize from another sequence (must have length SIZE!)
-        */
-    template <class Iterator>
-    void init(Iterator i, Iterator end)
-    {
-        muli_precondition(end-i == SIZE,
-            "TinyVector::init(): Sequence has wrong size.");
-        Loop::assignCast(data_, i);
-    }
-
-        /** Initialize with constant value
-        */
-    void init(value_type initial)
-    {
-        Loop::assignScalar(data_, initial);
-    }
-
-        /** Component-wise add-assignment
-        */
-    template <class T1, class D1, class D2>
-    DERIVED & operator+=(TinyArrayBase<T1, SIZE, D1, D2> const & r)
-    {
-        Loop::add(data_, r.begin());
-        return static_cast<DERIVED &>(*this);
-    }
-
-        /** Component-wise subtract-assignment
-        */
-    template <class T1, class D1, class D2>
-    DERIVED & operator-=(TinyArrayBase<T1, SIZE, D1, D2> const & r)
-    {
-        Loop::sub(data_, r.begin());
-        return static_cast<DERIVED &>(*this);
-    }
-
-        /** Component-wise multiply-assignment
-        */
-    template <class T1, class D1, class D2>
-    DERIVED & operator*=(TinyArrayBase<T1, SIZE, D1, D2> const & r)
-    {
-        Loop::mul(data_, r.begin());
-        return static_cast<DERIVED &>(*this);
-    }
-
-        /** Component-wise divide-assignment
-        */
-    template <class T1, class D1, class D2>
-    DERIVED & operator/=(TinyArrayBase<T1, SIZE, D1, D2> const & r)
-    {
-        Loop::div(data_, r.begin());
-        return static_cast<DERIVED &>(*this);
-    }
-
-        /** Component-wise modulo-assignment
-        */
-    template <class T1, class D1, class D2>
-    DERIVED & operator%=(TinyArrayBase<T1, SIZE, D1, D2> const & r)
-    {
-        Loop::mod(data_, r.begin());
-        return static_cast<DERIVED &>(*this);
-    }
-
-        /** Component-wise scalar multiply-assignment
-        */
-    DERIVED & operator+=(double r)
-    {
-        Loop::addScalar(data_, r);
-        return static_cast<DERIVED &>(*this);
-    }
-
-        /** Component-wise scalar divide-assignment
-        */
-    DERIVED & operator-=(double r)
-    {
-        Loop::subScalar(data_, r);
-        return static_cast<DERIVED &>(*this);
-    }
-
-        /** Component-wise scalar multiply-assignment
-        */
-    DERIVED & operator*=(double r)
-    {
-        Loop::mulScalar(data_, r);
-        return static_cast<DERIVED &>(*this);
-    }
-
-        /** Component-wise scalar divide-assignment
-        */
-    DERIVED & operator/=(double r)
-    {
-        Loop::divScalar(data_, r);
-        return static_cast<DERIVED &>(*this);
-    }
-
-        /** Calculate magnitude (i.e. 2-norm / Euclidean norm / length).
-         * \see squaredMagnitude()
-         */
-    NormType magnitude() const
-    {
-         return sqrt(static_cast<typename
-              SquareRootTraits<SquaredNormType>::SquareRootArgument>(squaredMagnitude()));
-    }
-
-        /** Calculate squared magnitude (i.e. sum of squared elements).
-        */
-    SquaredNormType squaredMagnitude() const
-    {
-        return Loop::squaredNorm(data_);
-    }
-
-        /** Return the minimal element.
-        */
-    VALUETYPE const & minimum() const
-    {
-        return Loop::minimum(data_);
-    }
-
-        /** Return the maximal element.
-        */
-    VALUETYPE const & maximum() const
-    {
-        return Loop::maximum(data_);
-    }
-    
-        /** Check that all elements of this vector are non-zero (or 'true' if T is bool).
-        */
-    bool all() const
-    {
-        return Loop::all(data_, VALUETYPE());
-    }
-    
-        /** Check that at least one element of this vector is non-zero (or 'true' if T is bool).
-        */
-    bool any() const
-    {
-        return Loop::any(data_, VALUETYPE());
-    }
-
-        /** Access component by index.
-        */
-    reference operator[](difference_type i)
-    {
-        MULI_ASSERT_INSIDE(i);
-        return data_[i];
-    }
-
-        /** Get component by index.
-        */
-    const_reference operator[](difference_type i) const
-    {
-        MULI_ASSERT_INSIDE(i);
-        return data_[i];
-    }
-
-        /** Get random access iterator to begin of vector.
-        */
-    iterator begin() { return data_; }
-        /** Get random access iterator past-the-end of vector.
-        */
-    iterator end() { return data_ + SIZE; }
-
-        /** Get const random access iterator to begin of vector.
-        */
-    const_iterator begin() const { return data_; }
-
-        /** Get const random access iterator past-the-end of vector.
-        */
-    const_iterator end() const { return data_ + SIZE; }
-
-        /** Get const random access iterator to begin of vector.
-        */
-    const_iterator cbegin() const { return data_; }
-
-        /** Get const random access iterator past-the-end of vector.
-        */
-    const_iterator cend() const { return data_ + SIZE; }
-    
-        /** Get a view to the subarray with length <tt>(TO-FROM)</tt> starting at <tt>FROM</tt>.
-            The bounds must fullfill <tt>0 <= FROM < TO <= SIZE</tt>, but this is only
-            checked when <tt>MULI_CHECK_BOUNDS</tt> is \#define'd.
-        */
-    template <int FROM, int TO>
-    TinyVectorView<VALUETYPE, TO-FROM> subarray() const
-    {
-#ifdef MULI_CHECK_BOUNDS
-        muli_precondition(FROM >= 0, "Index out of bounds");
-        muli_precondition(FROM < TO, "Index out of bounds");
-        muli_precondition(TO <=SIZE, "Index out of bounds");
-#endif
-        return TinyVectorView<VALUETYPE, TO-FROM>(data_+FROM);
-    }
-    
-    TinyVector<VALUETYPE, SIZE-1>
-    dropIndex(int m) const
-    {
-#ifdef MULI_CHECK_BOUNDS
-        muli_precondition(0 <= m && m < SIZE, "Dimension out of bounds");
-#endif
-        TinyVector<VALUETYPE, SIZE-1> res(SkipInitialization);
-        for(int k=0; k<m; ++k)
-            res[k] = data_[k];
-        for(int k=m; k<SIZE-1; ++k)
-            res[k] = data_[k+1];
-        return res;
-    }
-
-        /** Size of TinyVector vector always equals the template parameter SIZE.
-        */
-    size_type size() const { return SIZE; }
-
-    pointer data() { return data_; }
-
-    const_pointer data() const { return data_; }
-    
-    reference front()
-    {
-        return data_[0];
-    }
-    
-    const_reference front() const
-    {
-        return data_[0];
-    }
-    
-    reference back()
-    {
-        return data_[SIZE-1];
-    }
-    
-    const_reference back() const
-    {
-        return data_[SIZE-1];
-    }
-    
-        /** \brief Factory function for a unit vector for dimension \a k.
-        */
-    static TinyVector<VALUETYPE, SIZE> unitVector(int k)
-    {
-        MULI_ASSERT_INSIDE(k);
-        TinyVector<VALUETYPE, SIZE> ret;
-        ret[k] = 1;
-        return ret;
-    }
-    
-        /** \brief Factory function for a linear sequence.
-        
-            The result will be initialized as <tt>res[k] = start + k*step</tt>.
-        */
-    static TinyVector<VALUETYPE, SIZE> linearSequence(VALUETYPE start=VALUETYPE(), VALUETYPE step=VALUETYPE(1))
-    {
-        TinyVector<VALUETYPE, SIZE> ret(SkipInitialization);
-        for(int k=0; k<SIZE; ++k, start+=step)
-            ret[k] = start;
-        return ret;
-    }
-
-  protected:
-  
-    DATA data_;
-};
-
-#ifndef DOXYGEN
-
-template <int SIZE, int DESIRED_SIZE>
-struct TinyVector_constructor_has_wrong_number_of_arguments
-: staticAssert::AssertBool<SIZE == DESIRED_SIZE>
-{};
-
-#endif /* DOXYGEN */
-
-/** \brief Class for fixed size vectors.
-    \ingroup RangesAndPoints
-
-    This class contains an array of size SIZE of the specified VALUETYPE.
-    The interface conforms to STL vector, except that there are no functions
-    that change the size of a TinyVector.
-
-    \ref TinyVectorOperators "Arithmetic operations"
-    on TinyVectors are defined as component-wise applications of these
-    operations. Addition and subtraction of two TinyVectors
-    (+=, -=, +, -, unary -), multiplication and division of an
-    TinyVector with a double, and NumericTraits/PromoteTraits are defined,
-    so that TinyVector fulfills the requirements of \ref LinearAlgebraConcept "Linear Algebra".
-
-    MULI algorithms typically use \ref muli::VectorAccessor to access
-    TinyVectors as a whole, or specific components of them.
-
-    See also:<br>
-    <UL style="list-style-image:url(documents/bullet.gif)">
-        <LI> \ref muli::TinyArrayBase
-        <LI> \ref muli::TinyVectorView
-        <LI> \ref TinyVectorTraits
-        <LI> \ref TinyVectorOperators
-    </UL>
-
-    <b>\#include</b> \<muli/tinyvector.hxx\><br>
-    Namespace: muli
-**/
-template <class T, int SIZE>
-class TinyVector
-: public TinyArrayBase<T, SIZE, T[SIZE], TinyVector<T, SIZE> >
-{
-    typedef TinyArrayBase<T, SIZE, T[SIZE], TinyVector<T, SIZE> > BaseType;
-    typedef typename BaseType::Loop Loop;
-
-  public:
-
-    typedef typename BaseType::value_type value_type;
-    typedef typename BaseType::reference reference;
-    typedef typename BaseType::const_reference const_reference;
-    typedef typename BaseType::pointer pointer;
-    typedef typename BaseType::const_pointer const_pointer;
-    typedef typename BaseType::iterator iterator;
-    typedef typename BaseType::const_iterator const_iterator;
-    typedef typename BaseType::size_type size_type;
-    typedef typename BaseType::difference_type difference_type;
-    typedef typename BaseType::scalar_multiplier scalar_multiplier;
-    typedef typename BaseType::SquaredNormType SquaredNormType;
-    typedef typename BaseType::NormType NormType;
-    
-    enum ReverseCopyTag { ReverseCopy };
-
-        /** Construction with constant value.
-        
-            Initializes all vector elements with the given value.
-        */
-    explicit TinyVector(value_type const & initial)
-    : BaseType()
-    {
-        Loop::assignScalar(BaseType::begin(), initial);
-    }
-
-        /** Construction from lemon::Invalid.
-        
-            Initializes all vector elements with -1.
-        */
-    TinyVector(lemon::Invalid const &)
-    : BaseType()
-    {
-        Loop::assignScalar(BaseType::begin(), -1);
-    }
-
-        /** Construction with Diff2D.
-        
-            Use only when <tt>SIZE == 2</tt>.
-        */
-    explicit TinyVector(Diff2D const & initial)
-    : BaseType()
-    {
-        BaseType::data_[0] = detail::RequiresExplicitCast<T>::cast(initial.x);
-        BaseType::data_[1] = detail::RequiresExplicitCast<T>::cast(initial.y);
-    }
-
-        /** Construction with explicit values.
-            Call only if SIZE == 2
-        */
-    TinyVector(value_type const & i1, value_type const & i2)
-    : BaseType()
-    {
-        MULI_STATIC_ASSERT((TinyVector_constructor_has_wrong_number_of_arguments<SIZE, 2>));
-        BaseType::data_[0] = i1;
-        BaseType::data_[1] = i2;
-    }
-
-        /** Construction with explicit values.
-            Call only if SIZE == 3
-        */
-    TinyVector(value_type const & i1, value_type const & i2, value_type const & i3)
-    : BaseType()
-    {
-        MULI_STATIC_ASSERT((TinyVector_constructor_has_wrong_number_of_arguments<SIZE, 3>));
-        BaseType::data_[0] = i1;
-        BaseType::data_[1] = i2;
-        BaseType::data_[2] = i3;
-    }
-
-        /** Construction with explicit values.
-            Call only if SIZE == 4
-        */
-    TinyVector(value_type const & i1, value_type const & i2,
-               value_type const & i3, value_type const & i4)
-    : BaseType()
-    {
-        MULI_STATIC_ASSERT((TinyVector_constructor_has_wrong_number_of_arguments<SIZE, 4>));
-        BaseType::data_[0] = i1;
-        BaseType::data_[1] = i2;
-        BaseType::data_[2] = i3;
-        BaseType::data_[3] = i4;
-    }
-
-        /** Construction with explicit values.
-            Call only if SIZE == 5
-        */
-    TinyVector(value_type const & i1, value_type const & i2,
-               value_type const & i3, value_type const & i4,
-               value_type const & i5)
-    : BaseType()
-    {
-        MULI_STATIC_ASSERT((TinyVector_constructor_has_wrong_number_of_arguments<SIZE, 5>));
-        BaseType::data_[0] = i1;
-        BaseType::data_[1] = i2;
-        BaseType::data_[2] = i3;
-        BaseType::data_[3] = i4;
-        BaseType::data_[4] = i5;
-    }
-    
-       /** Default constructor (initializes all elements with zero).
-        */
-    TinyVector()
-    : BaseType()
-    {
-        Loop::assignScalar(BaseType::data_, value_type());
-    }
-
-        /** Construct without initializing the vector elements.
-        */
-    explicit TinyVector(SkipInitializationTag)
-    : BaseType()
-    {}
-
-    explicit TinyVector(detail::DontInit)
-    : BaseType()
-    {}
-
-        /** Copy constructor.
-        */
-    TinyVector(TinyVector const & r)
-    : BaseType()
-    {
-        Loop::assign(BaseType::data_, r.data_);
-    }
-
-        /** Constructor from C array.
-        */
-    template <class U>
-    explicit TinyVector(U const * data)
-    : BaseType()
-    {
-        Loop::assign(BaseType::data_, data);
-    }
-
-        /** Constructor by reverse copy from C array.
-            
-            Usage:
-            \code
-            TinyVector<int, 3> v(1,2,3);
-            TinyVector<int, 3> reversed(v.begin(), TinyVector<int, 3>::ReverseCopy);
-            \endcode
-        */
-    explicit TinyVector(const_pointer data, ReverseCopyTag)
-    : BaseType()
-    {
-        Loop::reverseAssign(BaseType::data_, data+SIZE-1);
-    }
-
-        /** Copy with type conversion.
-        */
-    template <class U, class DATA, class DERIVED>
-    TinyVector(TinyArrayBase<U, SIZE, DATA, DERIVED> const & r)
-    : BaseType()
-    {
-        Loop::assignCast(BaseType::data_, r.begin());
-    }
-
-        /** Copy assignment.
-        */
-    TinyVector & operator=(TinyVector const & r)
-    {
-        Loop::assign(BaseType::data_, r.data_);
-        return *this;
-    }
-
-        /** Copy assignment with type conversion.
-        */
-    template <class U, class DATA, class DERIVED>
-    TinyVector & operator=(TinyArrayBase<U, SIZE, DATA, DERIVED> const & r)
-    {
-        Loop::assignCast(BaseType::data_, r.begin());
-        return *this;
-    }
-
-        /** Assignment from Diff2D.
-        
-            Use only when <tt>SIZE == 2</tt>.
-        */
-    TinyVector & operator=(Diff2D const & r)
-    {
-        BaseType::data_[0] = detail::RequiresExplicitCast<T>::cast(r.x);
-        BaseType::data_[1] = detail::RequiresExplicitCast<T>::cast(r.y);
-        return *this;
-    }
-
-        /** Assignment from scalar. Will set all entries to the given value.
-        */
-    TinyVector & operator=(value_type const & v)
-    {
-        Loop::assignScalar(BaseType::begin(), v);
-        return *this;
-    }
-
-        /** Copy from a TinyVector with a different number of elements.
-        
-            Only the first <tt>min(SIZE, USIZE)</tt> elements are copied.
-        */
-    template <class U, int USIZE, class DATA, class DERIVED>
-    TinyVector & copy(TinyArrayBase<U, USIZE, DATA, DERIVED> const & r)
-    {
-        static const int minSize = USIZE < SIZE
-                                        ? USIZE
-                                        : SIZE;
-        
-        typedef typename detail::LoopType<minSize>::type MinLoop;
-        MinLoop::assignCast(BaseType::data_, r.begin());
-        return *this;
-    }
-};
-
-/** \brief Wrapper for fixed size vectors.
-
-    This class wraps an array of size SIZE of the specified VALUETYPE.
-    Thus, the array can be accessed with an interface similar to
-    that of std::vector (except that there are no functions
-    that change the size of a TinyVectorView). The TinyVectorView
-    does <em>not</em> assume ownership of the given memory.
-
-    \ref TinyVectorOperators "Arithmetic operations"
-    on TinyVectorViews are defined as component-wise applications of these
-    operations. Addition and subtraction of two TinyVectorViews
-    (+=, -=, +, -, unary -), multiplication and division of an
-    TinyVectorViews with a double, and NumericTraits/PromoteTraits are defined,
-    so that TinyVectorView fulfills the requirements of \ref LinearAlgebraConcept "Linear Algebra".
-
-    MULI algorithms typically use \ref muli::VectorAccessor to access
-    TinyVectorViews as a whole, or specific components of them.
-
-    <b>See also:</b>
-    <ul>
-        <li> \ref muli::TinyArrayBase
-        <li> \ref muli::TinyVector
-        <li> \ref TinyVectorTraits
-        <li> \ref TinyVectorOperators
-    </ul>
-
-    <b>\#include</b> \<muli/tinyvector.hxx\><br>
-    Namespace: muli
-**/
-template <class T, int SIZE>
-class TinyVectorView
-: public TinyArrayBase<T, SIZE, T *, TinyVectorView<T, SIZE> >
-{
-    typedef TinyArrayBase<T, SIZE, T *, TinyVectorView<T, SIZE> > BaseType;
-    typedef typename BaseType::Loop Loop;
-
-  public:
-
-    typedef typename BaseType::value_type value_type;
-    typedef typename BaseType::reference reference;
-    typedef typename BaseType::const_reference const_reference;
-    typedef typename BaseType::pointer pointer;
-    typedef typename BaseType::const_pointer const_pointer;
-    typedef typename BaseType::iterator iterator;
-    typedef typename BaseType::const_iterator const_iterator;
-    typedef typename BaseType::size_type size_type;
-    typedef typename BaseType::difference_type difference_type;
-    typedef typename BaseType::scalar_multiplier scalar_multiplier;
-    typedef typename BaseType::SquaredNormType SquaredNormType;
-    typedef typename BaseType::NormType NormType;
-
-        /** Default constructor
-            (pointer to wrapped data is NULL).
-        */
-    TinyVectorView()
-    : BaseType()
-    {
-        BaseType::data_ = 0;
-    }
-
-        /** Construct view for given data array
-        */
-    TinyVectorView(const_pointer data)
-    : BaseType()
-    {
-        BaseType::data_ = const_cast<pointer>(data);
-    }
-
-        /** Copy constructor (shallow copy).
-        */
-    TinyVectorView(TinyVectorView const & other)
-    : BaseType()
-    {
-        BaseType::data_ = const_cast<pointer>(other.data_);
-    }
-
-        /** Construct view from other TinyVector.
-        */
-    template <class DATA, class DERIVED>
-    TinyVectorView(TinyArrayBase<T, SIZE, DATA, DERIVED> const & other)
-    : BaseType()
-    {
-        BaseType::data_ = const_cast<pointer>(other.data());
-    }
-
-        /** Copy the data (not the pointer) of the rhs.
-        */
-   TinyVectorView & operator=(TinyVectorView const & r)
-    {
-        Loop::assign(BaseType::data_, r.begin());
-        return *this;
-    }
-
-        /** Copy the data of the rhs with cast.
-        */
-    template <class U, class DATA, class DERIVED>
-    TinyVectorView & operator=(TinyArrayBase<U, SIZE, DATA, DERIVED> const & r)
-    {
-        Loop::assignCast(BaseType::data_, r.begin());
-        return *this;
-    }
-};
-
-/********************************************************/
-/*                                                      */
-/*                     TinyVector Comparison            */
-/*                                                      */
-/********************************************************/
-
-/** \addtogroup TinyVectorOperators Functions for TinyVector
-
-    \brief Implement basic arithmetic and equality for TinyVector.
-
-    These functions fulfill the requirements of a Linear Space (vector space).
-    Return types are determined according to \ref TinyVectorTraits.
-
-    <b>\#include</b> \<muli/tinyvector.hxx\><br>
-    Namespace: muli
-*/
-//@{
-    /// component-wise equal
-template <class V1, int SIZE, class D1, class D2, class V2, class D3, class D4>
-inline bool
-operator==(TinyArrayBase<V1, SIZE, D1, D2> const & l,
-           TinyArrayBase<V2, SIZE, D3, D4> const & r)
-{
-    return !(l != r);
-}
-
-    /// component-wise not equal
-template <class V1, int SIZE, class D1, class D2, class V2, class D3, class D4>
-inline bool
-operator!=(TinyArrayBase<V1, SIZE, D1, D2> const & l,
-           TinyArrayBase<V2, SIZE, D3, D4> const & r)
-{
-    typedef typename detail::LoopType<SIZE>::type ltype;
-    return ltype::notEqual(l.begin(), r.begin());
-}
-
-    /// lexicographical comparison
-template <class V1, int SIZE, class D1, class D2, class V2, class D3, class D4>
-inline bool
-operator<(TinyArrayBase<V1, SIZE, D1, D2> const & l,
-                      TinyArrayBase<V2, SIZE, D3, D4> const & r)
-{
-    typedef typename detail::LoopType<SIZE>::type ltype;
-    return ltype::lexicographicLessThan(l.begin(), r.begin());
-}
-
-
-    /// pointwise less-than
-template <class V1, int SIZE, class D1, class D2, class V2, class D3, class D4>
-inline bool
-allLess(TinyArrayBase<V1, SIZE, D1, D2> const & l,
-        TinyArrayBase<V2, SIZE, D3, D4> const & r)
-{
-    for(int k=0; k < SIZE; ++k)
-        if (l[k] >= r[k])
-            return false;
-    return true;
-}
-
-    /// pointwise greater-than
-template <class V1, int SIZE, class D1, class D2, class V2, class D3, class D4>
-inline bool
-allGreater(TinyArrayBase<V1, SIZE, D1, D2> const & l,
-           TinyArrayBase<V2, SIZE, D3, D4> const & r)
-{
-    for(int k=0; k < SIZE; ++k)
-        if(l[k] <= r[k])
-            return false;
-    return true;
-}
-
-    /// pointwise less-equal
-template <class V1, int SIZE, class D1, class D2, class V2, class D3, class D4>
-inline bool
-allLessEqual(TinyArrayBase<V1, SIZE, D1, D2> const & l,
-             TinyArrayBase<V2, SIZE, D3, D4> const & r)
-{
-    for(int k=0; k < SIZE; ++k)
-        if (l[k] > r[k])
-            return false;
-    return true;
-}
-
-    /// pointwise greater-equal
-template <class V1, int SIZE, class D1, class D2, class V2, class D3, class D4>
-inline bool
-allGreaterEqual(TinyArrayBase<V1, SIZE, D1, D2> const & l,
-                TinyArrayBase<V2, SIZE, D3, D4> const & r)
-{
-    for(int k=0; k < SIZE; ++k)
-        if (l[k] < r[k])
-            return false;
-    return true;
-}
-
-template <class V, int SIZE, class D1, class D2, class D3, class D4>
-bool 
-closeAtTolerance(TinyArrayBase<V, SIZE, D1, D2> const & l,
-                 TinyArrayBase<V, SIZE, D3, D4> const & r, 
-                 V epsilon = NumericTraits<V>::epsilon())
-{
-    typedef typename detail::LoopType<SIZE>::type ltype;
-    return ltype::closeAtTolerance(l.begin(), r.begin(), epsilon);
-}
-
-template <class V, int SIZE>
-bool 
-closeAtTolerance(TinyVector<V, SIZE> const & l,
-                 TinyVector<V, SIZE> const & r, 
-                 V epsilon = NumericTraits<V>::epsilon())
-{
-    typedef typename detail::LoopType<SIZE>::type ltype;
-    return ltype::closeAtTolerance(l.begin(), r.begin(), epsilon);
-}
-
-/********************************************************/
-/*                                                      */
-/*                     TinyVector Output                */
-/*                                                      */
-/********************************************************/
-
-    /// stream output
-template <class V1, int SIZE, class DATA, class DERIVED>
-std::ostream &
-operator<<(std::ostream & out, TinyArrayBase<V1, SIZE, DATA, DERIVED> const & l)
-{
-    out << "(";
-    int i;
-    for(i=0; i<SIZE-1; ++i)
-        out << l[i] << ", ";
-    out << l[i] << ")";
-    return out;
-}
-//@}
-
-/********************************************************/
-/*                                                      */
-/*                      TinyVector-Traits               */
-/*                                                      */
-/********************************************************/
-
-/** \page TinyVectorTraits Numeric and Promote Traits of TinyVector
-    The numeric and promote traits for TinyVectors follow
-    the general specifications for \ref NumericPromotionTraits.
-    They are implemented in terms of the traits of the basic types by
-    partial template specialization:
-
-    \code
-
-    template <class T, int SIZE>
-    struct NumericTraits<TinyVector<T, SIZE> >
-    {
-        typedef TinyVector<typename NumericTraits<T>::Promote, SIZE> Promote;
-        typedef TinyVector<typename NumericTraits<T>::RealPromote, SIZE> RealPromote;
-
-        typedef typename NumericTraits<T>::isIntegral isIntegral;
-        typedef VigraFalseType isScalar;
-        typedef typename NumericTraits<T>::isSigned isSigned;
-
-        // etc.
-    };
-
-    template <class T, int SIZE>
-    struct NormTraits<TinyVector<T, SIZE> >
-    {
-        typedef TinyVector<T, SIZE> Type;
-        typedef typename Type::SquaredNormType    SquaredNormType;
-        typedef typename Type::NormType           NormType;
-    };
-
-    template <class T1, class T2, SIZE>
-    struct PromoteTraits<TinyVector<T1, SIZE>, TinyVector<T2, SIZE> >
-    {
-        typedef TinyVector<typename PromoteTraits<T1, T2>::Promote, SIZE> Promote;
-    };
-    \endcode
-
-    <b>\#include</b> \<muli/tinyvector.hxx\><br>
-    Namespace: muli
-
-    On compilers that don't support partial template specialization (e.g.
-    MS VisualC++), the traits classes are explicitly specialized for
-    <TT>TinyVector<VALUETYPE, SIZE></TT> with
-    <TT>VALUETYPE = unsigned char | int | float | double</TT> and <TT>SIZE = 2 | 3 | 4</TT>.
-
-*/
-
-#if !defined(NO_PARTIAL_TEMPLATE_SPECIALIZATION)
-
-template <class T, int SIZE>
-struct NumericTraits<TinyVector<T, SIZE> >
-{
-    typedef TinyVector<T, SIZE> Type;
-    typedef TinyVector<typename NumericTraits<T>::Promote, SIZE> Promote;
-    typedef TinyVector<typename NumericTraits<T>::RealPromote, SIZE> RealPromote;
-    typedef TinyVector<typename NumericTraits<T>::ComplexPromote, SIZE> ComplexPromote;
-    typedef T ValueType;
-
-    typedef typename NumericTraits<T>::isIntegral isIntegral;
-    typedef VigraFalseType isScalar;
-    typedef typename NumericTraits<T>::isSigned isSigned;
-    typedef VigraTrueType isOrdered;
-    typedef VigraFalseType isComplex;
-
-    static TinyVector<T, SIZE> zero()
-    {
-        return TinyVector<T, SIZE>(NumericTraits<T>::zero());
-    }
-    static TinyVector<T, SIZE> one()
-    {
-        return TinyVector<T, SIZE>(NumericTraits<T>::one());
-    }
-    static TinyVector<T, SIZE> nonZero()
-    {
-        return TinyVector<T, SIZE>(NumericTraits<T>::nonZero());
-    }
-
-    static TinyVector<T, SIZE> min()
-    {
-        return TinyVector<T, SIZE>(NumericTraits<T>::min());
-    }
-    static TinyVector<T, SIZE> max()
-    {
-        return TinyVector<T, SIZE>(NumericTraits<T>::max());
-    }
-
-    template <class D1, class D2>
-    static Promote toPromote(TinyArrayBase<T, SIZE, D1, D2> const & v)
-    {
-        return Promote(v);
-    }
-
-    template <class D1, class D2>
-    static RealPromote toRealPromote(TinyArrayBase<T, SIZE, D1, D2> const & v)
-    {
-        return RealPromote(v);
-    }
-
-    template <class D1, class D2>
-    static TinyVector<T, SIZE>
-    fromPromote(TinyArrayBase<typename NumericTraits<T>::Promote, SIZE, D1, D2> const & v)
-    {
-        TinyVector<T, SIZE> res(detail::dontInit());
-        typedef typename detail::LoopType<SIZE>::type ltype;
-        ltype::fromPromote(res.begin(), v.begin());
-        return res;
-    }
-
-    template <class D1, class D2>
-    static TinyVector<T, SIZE>
-    fromRealPromote(TinyArrayBase<typename NumericTraits<T>::RealPromote, SIZE, D1, D2> const & v)
-    {
-        TinyVector<T, SIZE> res(detail::dontInit());
-        typedef typename detail::LoopType<SIZE>::type ltype;
-        ltype::fromRealPromote(res.begin(), v.begin());
-        return res;
-    }
-};
-
-template <class T, int SIZE>
-struct NumericTraits<TinyVectorView<T, SIZE> >
-: public NumericTraits<TinyVector<T, SIZE> >
-{
-    typedef TinyVector<T, SIZE> Type;
-    typedef TinyVector<typename NumericTraits<T>::Promote, SIZE> Promote;
-    typedef TinyVector<typename NumericTraits<T>::RealPromote, SIZE> RealPromote;
-    typedef TinyVector<typename NumericTraits<T>::ComplexPromote, SIZE> ComplexPromote;
-    typedef T ValueType;
-
-    typedef typename NumericTraits<T>::isIntegral isIntegral;
-    typedef VigraFalseType isScalar;
-    typedef typename NumericTraits<T>::isSigned isSigned;
-    typedef VigraFalseType isOrdered;
-    typedef VigraFalseType isComplex;
-};
-
-template <class T, int SIZE>
-struct NormTraits<TinyVector<T, SIZE> >
-{
-    typedef TinyVector<T, SIZE> Type;
-    typedef typename Type::SquaredNormType    SquaredNormType;
-    typedef typename Type::NormType           NormType;
-};
-
-template <class T, int SIZE>
-struct NormTraits<TinyVectorView<T, SIZE> >
-{
-    typedef TinyVector<T, SIZE> Type;
-    typedef typename Type::SquaredNormType    SquaredNormType;
-    typedef typename Type::NormType           NormType;
-};
-
-template <class T1, class T2, int SIZE>
-struct PromoteTraits<TinyVector<T1, SIZE>, TinyVector<T2, SIZE> >
-{
-    typedef TinyVector<typename PromoteTraits<T1, T2>::Promote, SIZE> Promote;
-};
-
-template <class T1, class T2, int SIZE>
-struct PromoteTraits<TinyVectorView<T1, SIZE>, TinyVectorView<T2, SIZE> >
-{
-    typedef TinyVector<typename PromoteTraits<T1, T2>::Promote, SIZE> Promote;
-};
-
-template <class T1, class T2, int SIZE>
-struct PromoteTraits<TinyVectorView<T1, SIZE>, TinyVector<T2, SIZE> >
-{
-    typedef TinyVector<typename PromoteTraits<T1, T2>::Promote, SIZE> Promote;
-};
-
-template <class T1, class T2, int SIZE>
-struct PromoteTraits<TinyVector<T1, SIZE>, TinyVectorView<T2, SIZE> >
-{
-    typedef TinyVector<typename PromoteTraits<T1, T2>::Promote, SIZE> Promote;
-};
-
-template <class T, int SIZE>
-struct PromoteTraits<TinyVector<T, SIZE>, double >
-{
-    typedef TinyVector<typename NumericTraits<T>::RealPromote, SIZE> Promote;
-};
-
-template <class T, int SIZE>
-struct PromoteTraits<double, TinyVector<T, SIZE> >
-{
-    typedef TinyVector<typename NumericTraits<T>::RealPromote, SIZE> Promote;
-};
-
-template <class T, int SIZE>
-struct PromoteTraits<TinyVectorView<T, SIZE>, double >
-{
-    typedef TinyVector<typename NumericTraits<T>::RealPromote, SIZE> Promote;
-};
-
-template <class T, int SIZE>
-struct PromoteTraits<double, TinyVectorView<T, SIZE> >
-{
-    typedef TinyVector<typename NumericTraits<T>::RealPromote, SIZE> Promote;
-};
-
-template<class T, int SIZE>
-struct CanSkipInitialization<TinyVectorView<T, SIZE> >
-{
-    typedef typename CanSkipInitialization<T>::type type;
-    static const bool value = type::asBool;
-};
-
-template<class T, int SIZE>
-struct CanSkipInitialization<TinyVector<T, SIZE> >
-{
-    typedef typename CanSkipInitialization<T>::type type;
-    static const bool value = type::asBool;
-};
-
-
-
-#else // NO_PARTIAL_TEMPLATE_SPECIALIZATION
-
-
-#define TINYVECTOR_NUMTRAITS(T, SIZE) \
-template<>\
-struct NumericTraits<TinyVector<T, SIZE> >\
-{\
-    typedef TinyVector<T, SIZE> Type;\
-    typedef TinyVector<NumericTraits<T>::Promote, SIZE> Promote;\
-    typedef TinyVector<NumericTraits<T>::RealPromote, SIZE> RealPromote;\
-    typedef TinyVector<NumericTraits<T>::ComplexPromote, SIZE> ComplexPromote;\
-    typedef T ValueType; \
-    typedef NumericTraits<T>::isIntegral isIntegral;\
-    typedef VigraFalseType isScalar;\
-    typedef NumericTraits<T>::isSigned isSigned; \
-    typedef VigraFalseType isOrdered;\
-    typedef VigraFalseType isComplex;\
-    \
-    static TinyVector<T, SIZE> zero() { \
-        return TinyVector<T, SIZE>(NumericTraits<T>::zero()); \
-    }\
-    static TinyVector<T, SIZE> one() { \
-        return TinyVector<T, SIZE>(NumericTraits<T>::one()); \
-    }\
-    static TinyVector<T, SIZE> nonZero() { \
-        return TinyVector<T, SIZE>(NumericTraits<T>::nonZero()); \
-    }\
-    \
-    static Promote toPromote(TinyVector<T, SIZE> const & v) { \
-        return Promote(v); \
-    }\
-    static RealPromote toRealPromote(TinyVector<T, SIZE> const & v) { \
-        return RealPromote(v); \
-    }\
-    static TinyVector<T, SIZE> fromPromote(Promote const & v) { \
-        TinyVector<T, SIZE> res;\
-        TinyVector<T, SIZE>::iterator d = res.begin(), dend = res.end();\
-        Promote::const_iterator s = v.begin();\
-        for(; d != dend; ++d, ++s)\
-            *d = NumericTraits<T>::fromPromote(*s);\
-        return res;\
-    }\
-    static TinyVector<T, SIZE> fromRealPromote(RealPromote const & v) {\
-        TinyVector<T, SIZE> res;\
-        TinyVector<T, SIZE>::iterator d = res.begin(), dend = res.end();\
-        RealPromote::const_iterator s = v.begin();\
-        for(; d != dend; ++d, ++s)\
-            *d = NumericTraits<T>::fromRealPromote(*s);\
-        return res;\
-    }\
-}; \
-template<>\
-struct NormTraits<TinyVector<T, SIZE> >\
-{\
-    typedef TinyVector<T, SIZE> Type;\
-    typedef Type::SquaredNormType           SquaredNormType; \
-    typedef Type::NormType NormType; \
-};
-
-#define TINYVECTOR_PROMTRAITS1(type1, SIZE) \
-template<> \
-struct PromoteTraits<TinyVector<type1, SIZE>, TinyVector<type1, SIZE> > \
-{ \
-    typedef TinyVector<PromoteTraits<type1, type1>::Promote, SIZE> Promote; \
-    static Promote toPromote(TinyVector<type1, SIZE> const & v) { \
-        return static_cast<Promote>(v); } \
-};
-
-#define TINYVECTOR_PROMTRAITS2(type1, type2, SIZE) \
-template<> \
-struct PromoteTraits<TinyVector<type1, SIZE>, TinyVector<type2, SIZE> > \
-{ \
-    typedef TinyVector<PromoteTraits<type1, type2>::Promote, SIZE> Promote; \
-    static Promote toPromote(TinyVector<type1, SIZE> const & v) { \
-        return static_cast<Promote>(v); } \
-    static Promote toPromote(TinyVector<type2, SIZE> const & v) { \
-       return static_cast<Promote>(v); } \
-};
-
-#define TINYVECTOR_TRAITS(SIZE) \
-TINYVECTOR_NUMTRAITS(unsigned char, SIZE)\
-TINYVECTOR_NUMTRAITS(int, SIZE)\
-TINYVECTOR_NUMTRAITS(float, SIZE)\
-TINYVECTOR_NUMTRAITS(double, SIZE)\
-TINYVECTOR_PROMTRAITS1(unsigned char, SIZE)\
-TINYVECTOR_PROMTRAITS1(int, SIZE)\
-TINYVECTOR_PROMTRAITS1(float, SIZE)\
-TINYVECTOR_PROMTRAITS1(double, SIZE)\
-TINYVECTOR_PROMTRAITS2(float, unsigned char, SIZE)\
-TINYVECTOR_PROMTRAITS2(unsigned char, float, SIZE)\
-TINYVECTOR_PROMTRAITS2(int, unsigned char, SIZE)\
-TINYVECTOR_PROMTRAITS2(unsigned char, int, SIZE)\
-TINYVECTOR_PROMTRAITS2(int, float, SIZE)\
-TINYVECTOR_PROMTRAITS2(float, int, SIZE)\
-TINYVECTOR_PROMTRAITS2(double, unsigned char, SIZE)\
-TINYVECTOR_PROMTRAITS2(unsigned char, double, SIZE)\
-TINYVECTOR_PROMTRAITS2(int, double, SIZE)\
-TINYVECTOR_PROMTRAITS2(double, int, SIZE)\
-TINYVECTOR_PROMTRAITS2(double, float, SIZE)\
-TINYVECTOR_PROMTRAITS2(float, double, SIZE)
-
-TINYVECTOR_TRAITS(2)
-TINYVECTOR_TRAITS(3)
-TINYVECTOR_TRAITS(4)
-
-#undef TINYVECTOR_NUMTRAITS
-#undef TINYVECTOR_PROMTRAITS1
-#undef TINYVECTOR_PROMTRAITS2
-#undef TINYVECTOR_TRAITS
-
-#endif // NO_PARTIAL_TEMPLATE_SPECIALIZATION
-
-
-/********************************************************/
-/*                                                      */
-/*                      TinyVector-Arithmetic           */
-/*                                                      */
-/********************************************************/
-
-/** \addtogroup TinyVectorOperators
- */
-//@{
-
-    /// component-wise addition
-template <class V1, int SIZE, class D1, class D2, class V2, class D3, class D4>
+    /// element-wise scalar addition
+template <class V1, class D1, class V2, ArrayIndex ... N>
 inline
-typename PromoteTraits<TinyVector<V1, SIZE>, TinyVector<V2, SIZE> >::Promote
-operator+(TinyArrayBase<V1, SIZE, D1, D2> const & l,
-          TinyArrayBase<V2, SIZE, D3, D4> const & r)
+TinyArray<PromoteIf<std::is_arithmetic<V2>::value, V1, V2>, N...>
+operator+(TinyArrayBase<V1, D1, N...> const & l,
+          V2 r)
 {
-    return typename PromoteTraits<TinyVector<V1, SIZE>, TinyVector<V2 , SIZE> >::Promote(l) += r;
+    return TinyArray<Promote<V1, V2>, N...>(l) += r;
 }
 
-    /// component-wise subtraction
-template <class V1, int SIZE, class D1, class D2, class V2, class D3, class D4>
+    /// element-wise left scalar addition
+template <class V1, class V2, class D2, ArrayIndex ... N>
 inline
-typename PromoteTraits<TinyVector<V1, SIZE>, TinyVector<V2, SIZE> >::Promote
-operator-(TinyArrayBase<V1, SIZE, D1, D2> const & l,
-          TinyArrayBase<V2, SIZE, D3, D4> const & r)
+TinyArray<PromoteIf<std::is_arithmetic<V1>::value, V1, V2>, N...>
+operator+(V1 l,
+          TinyArrayBase<V2, D2, N...> const & r)
 {
-    return typename PromoteTraits<TinyVector<V1, SIZE>, TinyVector<V2 , SIZE> >::Promote(l) -= r;
+    return TinyArray<Promote<V1, V2>, N...>(l) += r;
 }
 
-    /// component-wise multiplication
-template <class V1, int SIZE, class D1, class D2, class V2, class D3, class D4>
+    /// element-wise subtraction
+template <class V1, class D1, class V2, class D2, ArrayIndex ... N>
 inline
-typename PromoteTraits<TinyVector<V1, SIZE>, TinyVector<V2, SIZE> >::Promote
-operator*(TinyArrayBase<V1, SIZE, D1, D2> const & l,
-          TinyArrayBase<V2, SIZE, D3, D4> const & r)
+TinyArray<Promote<V1, V2>, N...>
+operator-(TinyArrayBase<V1, D1, N...> const & l,
+          TinyArrayBase<V2, D2, N...> const & r)
 {
-    return typename PromoteTraits<TinyVector<V1, SIZE>, TinyVector<V2 , SIZE> >::Promote(l) *= r;
+    return TinyArray<Promote<V1, V2>, N...>(l) -= r;
 }
 
-    /// component-wise division
-template <class V1, int SIZE, class D1, class D2, class V2, class D3, class D4>
+    /// element-wise scalar subtraction
+template <class V1, class D1, class V2, ArrayIndex ... N>
 inline
-typename PromoteTraits<TinyVector<V1, SIZE>, TinyVector<V2, SIZE> >::Promote
-operator/(TinyArrayBase<V1, SIZE, D1, D2> const & l,
-          TinyArrayBase<V2, SIZE, D3, D4> const & r)
+TinyArray<PromoteIf<std::is_arithmetic<V2>::value, V1, V2>, N...>
+operator-(TinyArrayBase<V1, D1, N...> const & l,
+          V2 r)
 {
-    return typename PromoteTraits<TinyVector<V1, SIZE>, TinyVector<V2 , SIZE> >::Promote(l) /= r;
+    return TinyArray<Promote<V1, V2>, N...>(l) -= r;
 }
 
-    /// component-wise modulo
-template <class V1, int SIZE, class D1, class D2, class V2, class D3, class D4>
+    /// element-wise left scalar subtraction
+template <class V1, class V2, class D2, ArrayIndex ... N>
 inline
-typename PromoteTraits<TinyVector<V1, SIZE>, TinyVector<V2, SIZE> >::Promote
-operator%(TinyArrayBase<V1, SIZE, D1, D2> const & l,
-          TinyArrayBase<V2, SIZE, D3, D4> const & r)
+TinyArray<PromoteIf<std::is_arithmetic<V1>::value, V1, V2>, N...>
+operator-(V1 l,
+          TinyArrayBase<V2, D2, N...> const & r)
 {
-    return typename PromoteTraits<TinyVector<V1, SIZE>, TinyVector<V2 , SIZE> >::Promote(l) %= r;
+    return TinyArray<Promote<V1, V2>, N...>(l) -= r;
 }
 
-    /// component-wise left scalar addition
-template <class V, int SIZE, class D1, class D2>
+    /// Unary negation
+template <class V, class D, ArrayIndex ... N>
 inline
-typename NumericTraits<TinyVector<V, SIZE> >::RealPromote
-operator+(double v, TinyArrayBase<V, SIZE, D1, D2> const & r)
+TinyArray<V, N...>
+operator-(TinyArrayBase<V, D, N...> const & v)
 {
-    return typename NumericTraits<TinyVector<V, SIZE> >::RealPromote(r) += v;
-}
-
-    /// component-wise right scalar addition
-template <class V, int SIZE, class D1, class D2>
-inline
-typename NumericTraits<TinyVector<V, SIZE> >::RealPromote
-operator+(TinyArrayBase<V, SIZE, D1, D2> const & l, double v)
-{
-    return typename NumericTraits<TinyVector<V, SIZE> >::RealPromote(l) += v;
-}
-
-    /// component-wise left scalar subtraction
-template <class V, int SIZE, class D1, class D2>
-inline
-typename NumericTraits<TinyVector<V, SIZE> >::RealPromote
-operator-(double v, TinyArrayBase<V, SIZE, D1, D2> const & r)
-{
-    return typename NumericTraits<TinyVector<V, SIZE> >::RealPromote(v) -= r;
-}
-
-    /// component-wise right scalar subtraction
-template <class V, int SIZE, class D1, class D2>
-inline
-typename NumericTraits<TinyVector<V, SIZE> >::RealPromote
-operator-(TinyArrayBase<V, SIZE, D1, D2> const & l, double v)
-{
-    return typename NumericTraits<TinyVector<V, SIZE> >::RealPromote(l) -= v;
-}
-
-    /// component-wise left scalar multiplication
-template <class V, int SIZE, class D1, class D2>
-inline
-typename NumericTraits<TinyVector<V, SIZE> >::RealPromote
-operator*(double v, TinyArrayBase<V, SIZE, D1, D2> const & r)
-{
-    return typename NumericTraits<TinyVector<V, SIZE> >::RealPromote(r) *= v;
-}
-
-    /// component-wise right scalar multiplication
-template <class V, int SIZE, class D1, class D2>
-inline
-typename NumericTraits<TinyVector<V, SIZE> >::RealPromote
-operator*(TinyArrayBase<V, SIZE, D1, D2> const & l, double v)
-{
-    return typename NumericTraits<TinyVector<V, SIZE> >::RealPromote(l) *= v;
-}
-
-    /// component-wise left scalar division
-template <class V, int SIZE, class D1, class D2>
-inline
-typename NumericTraits<TinyVector<V, SIZE> >::RealPromote
-operator/(double v, TinyArrayBase<V, SIZE, D1, D2> const & r)
-{
-    return typename NumericTraits<TinyVector<V, SIZE> >::RealPromote(v) /= r;
-}
-
-    /// component-wise right scalar division
-template <class V, int SIZE, class D1, class D2>
-inline
-typename NumericTraits<TinyVector<V, SIZE> >::RealPromote
-operator/(TinyArrayBase<V, SIZE, D1, D2> const & l, double v)
-{
-    return typename NumericTraits<TinyVector<V, SIZE> >::RealPromote(l) /= v;
-}
-
-    /// component-wise scalar division without type promotion
-template <class V, int SIZE, class D1, class D2>
-inline
-TinyVector<V, SIZE>
-div(TinyArrayBase<V, SIZE, D1, D2> const & l, V v)
-{
-    TinyVector<V, SIZE> result(l);
-    typedef typename detail::LoopType<SIZE>::type Loop;
-    Loop::divScalar(result.data(), v);
-    return result;
-}
-
-
-    /** Unary negation (construct TinyVector with negative values)
-    */
-template <class V, int SIZE, class D1, class D2>
-inline
-TinyVector<V, SIZE>
-operator-(TinyArrayBase<V, SIZE, D1, D2> const & v)
-{
-    TinyVector<V, SIZE> res(detail::dontInit());
-    typedef typename detail::LoopType<SIZE>::type ltype;
-    ltype::neg(res.begin(), v.begin());
+    TinyArray<V, N...> res(DontInit);
+    for(ArrayIndex k=0; k < TinySize<N...>::value; ++k)
+        res[k] = -v[k];
     return res;
 }
 
-    /// component-wise absolute value
-template <class V, int SIZE, class D1, class D2>
+    /// element-wise multiplication
+template <class V1, class D1, class V2, class D2, ArrayIndex ... N>
 inline
-TinyVector<V, SIZE>
-abs(TinyArrayBase<V, SIZE, D1, D2> const & v)
+TinyArray<Promote<V1, V2>, N...>
+operator*(TinyArrayBase<V1, D1, N...> const & l,
+          TinyArrayBase<V2, D2, N...> const & r)
 {
-    TinyVector<V, SIZE> res(detail::dontInit());
-    typedef typename detail::LoopType<SIZE>::type ltype;
-    ltype::abs(res.begin(), v.begin());
+    return TinyArray<Promote<V1, V2>, N...>(l) *= r;
+}
+
+    /// element-wise scalar multiplication
+template <class V1, class D1, class V2, ArrayIndex ... N>
+inline
+TinyArray<PromoteIf<std::is_arithmetic<V2>::value, V1, V2>, N...>
+operator*(TinyArrayBase<V1, D1, N...> const & l,
+          V2 r)
+{
+    return TinyArray<Promote<V1, V2>, N...>(l) *= r;
+}
+
+    /// element-wise left scalar multiplication
+template <class V1, class V2, class D2, ArrayIndex ... N>
+inline
+TinyArray<PromoteIf<std::is_arithmetic<V1>::value, V1, V2>, N...>
+operator*(V1 l,
+          TinyArrayBase<V2, D2, N...> const & r)
+{
+    return TinyArray<Promote<V1, V2>, N...>(l) *= r;
+}
+
+    /// element-wise division
+template <class V1, class D1, class V2, class D2, ArrayIndex ... N>
+inline
+TinyArray<Promote<V1, V2>, N...>
+operator/(TinyArrayBase<V1, D1, N...> const & l,
+          TinyArrayBase<V2, D2, N...> const & r)
+{
+    return TinyArray<Promote<V1, V2>, N...>(l) /= r;
+}
+
+    /// element-wise scalar division
+template <class V1, class D1, class V2, ArrayIndex ... N>
+inline
+TinyArray<PromoteIf<std::is_arithmetic<V2>::value, V1, V2>, N...>
+operator/(TinyArrayBase<V1, D1, N...> const & l,
+          V2 r)
+{
+    return TinyArray<Promote<V1, V2>, N...>(l) /= r;
+}
+
+    /// element-wise left scalar division
+template <class V1, class V2, class D2, ArrayIndex ... N>
+inline
+TinyArray<PromoteIf<std::is_arithmetic<V1>::value, V1, V2>, N...>
+operator/(V1 l,
+          TinyArrayBase<V2, D2, N...> const & r)
+{
+    return TinyArray<Promote<V1, V2>, N...>(l) /= r;
+}
+
+    /// element-wise scalar division without type promotion
+template <class V1, class D1, class V2, ArrayIndex ... N>
+inline
+typename std::enable_if<std::is_arithmetic<V2>::value,
+                        TinyArray<V1, N...> >::type
+div(TinyArrayBase<V1, D1, N...> const & l, V2 r)
+{
+    return TinyArray<V1, N...>(l) /= r;
+}
+
+    /// element-wise modulo
+template <class V1, class D1, class V2, class D2, ArrayIndex ... N>
+inline
+TinyArray<Promote<V1, V2>, N...>
+operator%(TinyArrayBase<V1, D1, N...> const & l,
+          TinyArrayBase<V2, D2, N...> const & r)
+{
+    return TinyArray<Promote<V1, V2>, N...>(l) %= r;
+}
+
+    /// element-wise scalar modulo
+template <class V1, class D1, class V2, ArrayIndex ... N>
+inline
+TinyArray<PromoteIf<std::is_arithmetic<V2>::value, V1, V2>, N...>
+operator%(TinyArrayBase<V1, D1, N...> const & l,
+          V2 r)
+{
+    return TinyArray<Promote<V1, V2>, N...>(l) %= r;
+}
+
+    /// element-wise left scalar modulo
+template <class V1, class V2, class D2, ArrayIndex ... N>
+inline
+TinyArray<PromoteIf<std::is_arithmetic<V1>::value, V1, V2>, N...>
+operator%(V1 l,
+          TinyArrayBase<V2, D2, N...> const & r)
+{
+    return TinyArray<Promote<V1, V2>, N...>(l) %= r;
+}
+
+using std::abs;
+
+    /// element-wise absolute value
+template <class V, class D, ArrayIndex ... N>
+inline
+TinyArray<V, N...>
+abs(TinyArrayBase<V, D, N...> const & v)
+{
+    TinyArray<V, N...> res(DontInit);
+    for(ArrayIndex k=0; k < TinySize<N...>::value; ++k)
+        res[k] = abs(v[k]);
     return res;
 }
+
+using std::ceil;
 
     /** Apply ceil() function to each vector component.
     */
-template <class V, int SIZE, class D1, class D2>
+template <class V, class D, ArrayIndex ... N>
 inline
-TinyVector<V, SIZE>
-ceil(TinyArrayBase<V, SIZE, D1, D2> const & v)
+TinyArray<V, N...>
+ceil(TinyArrayBase<V, D, N...> const & v)
 {
-    TinyVector<V, SIZE> res(detail::dontInit());
-    typedef typename detail::LoopType<SIZE>::type ltype;
-    ltype::ceil(res.begin(), v.begin());
+    TinyArray<V, N...> res(DontInit);
+    for(ArrayIndex k=0; k < TinySize<N...>::value; ++k)
+        res[k] = ceil(v[k]);
     return res;
 }
+
+using std::floor;
 
     /** Apply floor() function to each vector component.
     */
-template <class V, int SIZE, class D1, class D2>
+template <class V, class D, ArrayIndex ... N>
 inline
-TinyVector<V, SIZE>
-floor(TinyArrayBase<V, SIZE, D1, D2> const & v)
+TinyArray<V, N...>
+floor(TinyArrayBase<V, D, N...> const & v)
 {
-    TinyVector<V, SIZE> res(detail::dontInit());
-    typedef typename detail::LoopType<SIZE>::type ltype;
-    ltype::floor(res.begin(), v.begin());
+    TinyArray<V, N...> res(DontInit);
+    for(ArrayIndex k=0; k < TinySize<N...>::value; ++k)
+        res[k] = floor(v[k]);
     return res;
 }
+
+using std::round;
 
     /** Apply round() function to each vector component.
     */
-template <class V, int SIZE, class D1, class D2>
+template <class V, class D, ArrayIndex ... N>
 inline
-TinyVector<V, SIZE>
-round(TinyArrayBase<V, SIZE, D1, D2> const & v)
+TinyArray<V, N...>
+round(TinyArrayBase<V, D, N...> const & v)
 {
-    TinyVector<V, SIZE> res(detail::dontInit());
-    typedef typename detail::LoopType<SIZE>::type ltype;
-    ltype::round(res.begin(), v.begin());
+    TinyArray<V, N...> res(DontInit);
+    for(ArrayIndex k=0; k < TinySize<N...>::value; ++k)
+        res[k] = round(v[k]);
     return res;
 }
 
-    /** Apply roundi() function to each vector component, i.e. return an integer vector.
-    */
-template <class V, int SIZE, class D1, class D2>
-inline
-TinyVector<std::ptrdiff_t, SIZE>
-roundi(TinyArrayBase<V, SIZE, D1, D2> const & v)
-{
-    TinyVector<V, SIZE> res(detail::dontInit());
-    for(int k=0; k<SIZE; ++k)
-        res[k] = roundi(v[k]);
-    return res;
-}
+    // /** Apply roundi() function to each vector component, i.e. return an integer vector.
+    // */
+// template <class V, class D, ArrayIndex ... N>
+// inline
+// TinyArray<ArrayIndex, SIZE>
+// roundi(TinyArrayBase<V, D, N...> const & v)
+// {
+    // TinyArray<V, N...> res(DontInit);
+    // for(ArrayIndex k=0; k < TinySize<N...>::value; ++k)
+        // res[k] = roundi(v[k]);
+    // return res;
+// }
+
+using std::sqrt;
 
     /** Apply sqrt() function to each vector component.
     */
-template <class V, int SIZE, class D1, class D2>
+template <class V, class D, ArrayIndex ... N>
 inline
-TinyVector<V, SIZE>
-sqrt(TinyArrayBase<V, SIZE, D1, D2> const & v)
+TinyArray<RealPromote<V>, N...>
+sqrt(TinyArrayBase<V, D, N...> const & v)
 {
-    TinyVector<V, SIZE> res(detail::dontInit());
-    typedef typename detail::LoopType<SIZE>::type ltype;
-    ltype::sqrt(res.begin(), v.begin());
+    TinyArray<RealPromote<V>, N...> res(DontInit);
+    for(ArrayIndex k=0; k < TinySize<N...>::value; ++k)
+        res[k] = sqrt(v[k]);
     return res;
 }
 
@@ -1986,86 +1221,96 @@ using std::pow;
 
     /** Apply pow() function to each vector component.
     */
-template <class V, int SIZE, class D1, class D2, class E>
+template <class V, class D, class E, ArrayIndex ... N>
 inline
-TinyVector<V, SIZE>
-pow(TinyArrayBase<V, SIZE, D1, D2> const & v, E exponent)
+TinyArray<Promote<V, E>, N...>
+pow(TinyArrayBase<V, D, N...> const & v, E exponent)
 {
-    TinyVector<V, SIZE> res(v);
-    typedef typename detail::LoopType<SIZE>::type ltype;
-    ltype::power(res.begin(), exponent);
+    TinyArray<Promote<V, E>, N...> res(DontInit);
+    for(ArrayIndex k=0; k < TinySize<N...>::value; ++k)
+        res[k] = pow(v[k], exponent);
     return res;
 }
 
     /// cross product
-template <class V1, class D1, class D2, class V2, class D3, class D4>
+template <class V1, class D1, class V2, class D2>
 inline
-TinyVector<typename PromoteTraits<V1, V2>::Promote, 3>
-cross(TinyArrayBase<V1, 3, D1, D2> const & r1,
-      TinyArrayBase<V2, 3, D3, D4> const & r2)
+TinyArray<Promote<V1, V2>, 3>
+cross(TinyArrayBase<V1, D1, 3> const & r1,
+      TinyArrayBase<V2, D2, 3> const & r2)
 {
-    typedef TinyVector<typename PromoteTraits<V1, V2>::Promote, 3>
-            Res;
+    typedef TinyArray<Promote<V1, V2>, 3> Res;
     return  Res(r1[1]*r2[2] - r1[2]*r2[1],
                 r1[2]*r2[0] - r1[0]*r2[2],
                 r1[0]*r2[1] - r1[1]*r2[0]);
 }
 
     /// dot product
-template <class V1, int SIZE, class D1, class D2, class V2, class D3, class D4>
+template <class V1, class D1, class V2, class D2, ArrayIndex ... N>
 inline
-typename PromoteTraits<V1, V2>::Promote
-dot(TinyArrayBase<V1, SIZE, D1, D2> const & l,
-    TinyArrayBase<V2, SIZE, D3, D4> const & r)
+Promote<V1, V2>
+dot(TinyArrayBase<V1, D1, N...> const & l,
+    TinyArrayBase<V2, D2, N...> const & r)
 {
-    typedef typename detail::LoopType<SIZE>::type ltype;
-    return ltype::dot(l.begin(), r.begin());
+    Promote<V1, V2> res = l[0] * r[0];
+    for(ArrayIndex k=1; k < TinySize<N...>::value; ++k)
+        res += l[k] * r[k];
+    return res;
 }
 
     /// sum of the vector's elements
-template <class V, int SIZE, class D1, class D2>
+template <class V, class D, ArrayIndex ... N>
 inline
-typename NumericTraits<V>::Promote
-sum(TinyArrayBase<V, SIZE, D1, D2> const & l)
+Promote<V>
+sum(TinyArrayBase<V, D, N...> const & l)
 {
-    typename NumericTraits<V>::Promote res = l[0];
-    for(int k=1; k<SIZE; ++k)
+    Promote<V> res = l[0];
+    for(int k=1; k < TinySize<N...>::value; ++k)
         res += l[k];
     return res;
 }
 
-    /// cumulative sum of the vector's elements
-template <class V, int SIZE, class D1, class D2>
-inline
-TinyVector<typename NumericTraits<V>::Promote, SIZE>
-cumsum(TinyArrayBase<V, SIZE, D1, D2> const & l)
+    /// mean of the vector's elements
+template <class V, class D, ArrayIndex ... N>
+inline RealPromote<V>
+mean(TinyArrayBase<V, D, N...> const & t)
 {
-    TinyVector<typename NumericTraits<V>::Promote, SIZE> res(l);
-    for(int k=1; k<SIZE; ++k)
+    const V sumVal = sum(t);
+    return static_cast<RealPromote<V> >(sumVal) / TinySize<N...>::value;
+}
+
+    /// cumulative sum of the vector's elements
+template <class V, class D, ArrayIndex ... N>
+inline
+TinyArray<Promote<V>, N...>
+cumsum(TinyArrayBase<V, D, N...> const & l)
+{
+    TinyArray<Promote<V>, N...> res(l);
+    for(int k=1; k < TinySize<N...>::value; ++k)
         res[k] += res[k-1];
     return res;
 }
 
     /// product of the vector's elements
-template <class V, int SIZE, class D1, class D2>
+template <class V, class D, ArrayIndex ... N>
 inline
-typename NumericTraits<V>::Promote
-prod(TinyArrayBase<V, SIZE, D1, D2> const & l)
+Promote<V>
+prod(TinyArrayBase<V, D, N...> const & l)
 {
-    typename NumericTraits<V>::Promote res = l[0];
-    for(int k=1; k<SIZE; ++k)
+    Promote<V> res = l[0];
+    for(int k=1; k < TinySize<N...>::value; ++k)
         res *= l[k];
     return res;
 }
 
     /// cumulative product of the vector's elements
-template <class V, int SIZE, class D1, class D2>
+template <class V, class D, ArrayIndex ... N>
 inline
-TinyVector<typename NumericTraits<V>::Promote, SIZE>
-cumprod(TinyArrayBase<V, SIZE, D1, D2> const & l)
+TinyArray<Promote<V>, N...>
+cumprod(TinyArrayBase<V, D, N...> const & l)
 {
-    TinyVector<typename NumericTraits<V>::Promote, SIZE> res(l);
-    for(int k=1; k<SIZE; ++k)
+    TinyArray<Promote<V>, N...> res(l);
+    for(int k=1; k < TinySize<N...>::value; ++k)
         res[k] *= res[k-1];
     return res;
 }
@@ -2073,48 +1318,36 @@ cumprod(TinyArrayBase<V, SIZE, D1, D2> const & l)
 using std::min;
 
     /// element-wise minimum
-template <class V1, int SIZE, class D1, class D2, class V2, class D3, class D4>
+template <class V1, class D1, class V2, class D2, ArrayIndex ... N>
 inline
-TinyVector<typename PromoteTraits<V1, V2>::Promote, SIZE>
-min(TinyArrayBase<V1, SIZE, D1, D2> const & l,
-    TinyArrayBase<V2, SIZE, D3, D4> const & r)
+TinyArray<Promote<V1, V2>, N...>
+min(TinyArrayBase<V1, D1, N...> const & l,
+    TinyArrayBase<V2, D2, N...> const & r)
 {
-    typedef typename detail::LoopType<SIZE>::type ltype;
-    TinyVector<typename PromoteTraits<V1, V2>::Promote, SIZE> res(l);
-    ltype::min(res.begin(), r.begin());
+    TinyArray<Promote<V1, V2>, N...> res(DontInit);
+    for(int k=0; k < TinySize<N...>::value; ++k)
+        res[k] = min<Promote<V1, V2> >(l[k], r[k]);
     return res;
 }
 
 // we also have to overload min for like-typed argument to prevent match of std::min()
-template <class V1, int SIZE, class D1, class D2>
+template <class V, class D, ArrayIndex ...N>
 inline
-TinyVector<V1, SIZE>
-min(TinyArrayBase<V1, SIZE, D1, D2> const & l,
-    TinyArrayBase<V1, SIZE, D1, D2> const & r)
+TinyArray<V, N...>
+min(TinyArrayBase<V, D, N...> const & l,
+    TinyArrayBase<V, D, N...> const & r)
 {
-    typedef typename detail::LoopType<SIZE>::type ltype;
-    TinyVector<V1, SIZE> res(l);
-    ltype::min(res.begin(), r.begin());
-    return res;
-}
-
-template <class V1, int SIZE>
-inline
-TinyVector<V1, SIZE>
-min(TinyVector<V1, SIZE> const & l,
-    TinyVector<V1, SIZE> const & r)
-{
-    typedef typename detail::LoopType<SIZE>::type ltype;
-    TinyVector<V1, SIZE> res(l);
-    ltype::min(res.begin(), r.begin());
+    TinyArray<V, N...> res(DontInit);
+    for(int k=0; k < TinySize<N...>::value; ++k)
+        res[k] = min(l[k], r[k]);
     return res;
 }
 
     /// minimum element
-template <class V, int SIZE, class D1, class D2>
+template <class V, class D, ArrayIndex ... N>
 inline
 V const &
-min(TinyArrayBase<V, SIZE, D1, D2> const & l)
+min(TinyArrayBase<V, D, N...> const & l)
 {
     return l.minimum();
 }
@@ -2122,95 +1355,90 @@ min(TinyArrayBase<V, SIZE, D1, D2> const & l)
 using std::max;
 
     /// element-wise maximum
-template <class V1, int SIZE, class D1, class D2, class V2, class D3, class D4>
+template <class V1, class D1, class V2, class D2, ArrayIndex ... N>
 inline
-TinyVector<typename PromoteTraits<V1, V2>::Promote, SIZE>
-max(TinyArrayBase<V1, SIZE, D1, D2> const & l,
-    TinyArrayBase<V2, SIZE, D3, D4> const & r)
+TinyArray<Promote<V1, V2>, N...>
+max(TinyArrayBase<V1, D1, N...> const & l,
+    TinyArrayBase<V2, D2, N...> const & r)
 {
-    typedef typename detail::LoopType<SIZE>::type ltype;
-    TinyVector<typename PromoteTraits<V1, V2>::Promote, SIZE> res(l);
-    ltype::max(res.begin(), r.begin());
+    TinyArray<Promote<V1, V2>, N...> res(DontInit);
+    for(int k=0; k < TinySize<N...>::value; ++k)
+        res[k] = max<Promote<V1, V2> >(l[k], r[k]);
     return res;
 }
 
 // we also have to overload max for like-typed argument to prevent match of std::max()
-template <class V1, int SIZE, class D1, class D2>
+template <class V, class D, ArrayIndex ...N>
 inline
-TinyVector<V1, SIZE>
-max(TinyArrayBase<V1, SIZE, D1, D2> const & l,
-    TinyArrayBase<V1, SIZE, D1, D2> const & r)
+TinyArray<V, N...>
+max(TinyArrayBase<V, D, N...> const & l,
+    TinyArrayBase<V, D, N...> const & r)
 {
-    typedef typename detail::LoopType<SIZE>::type ltype;
-    TinyVector<V1, SIZE> res(l);
-    ltype::max(res.begin(), r.begin());
+    TinyArray<V, N...> res(DontInit);
+    for(int k=0; k < TinySize<N...>::value; ++k)
+        res[k] = max(l[k], r[k]);
     return res;
 }
 
-template <class V1, int SIZE>
-inline
-TinyVector<V1, SIZE>
-max(TinyVector<V1, SIZE> const & l,
-    TinyVector<V1, SIZE> const & r)
-{
-    typedef typename detail::LoopType<SIZE>::type ltype;
-    TinyVector<V1, SIZE> res(l);
-    ltype::max(res.begin(), r.begin());
-    return res;
-}
 
     /// maximum element
-template <class V, int SIZE, class D1, class D2>
+template <class V, class D, ArrayIndex ... N>
 inline
 V const &
-max(TinyArrayBase<V, SIZE, D1, D2> const & l)
+max(TinyArrayBase<V, D, N...> const & l)
 {
     return l.maximum();
 }
 
     /// squared norm
-template <class V1, int SIZE, class D1, class D2>
+template <class V, class D, ArrayIndex ... N>
 inline
-typename TinyArrayBase<V1, SIZE, D1, D2>::SquaredNormType
-squaredNorm(TinyArrayBase<V1, SIZE, D1, D2> const & t)
+Promote<V>
+squaredNorm(TinyArrayBase<V, D, N...> const & t)
 {
-    return t.squaredMagnitude();
+    return t.squaredNorm();
 }
 
-    /// squared norm
-template <class V, int SIZE>
-inline
-typename TinyVector<V, SIZE>::SquaredNormType
-squaredNorm(TinyVector<V, SIZE> const & t)
+template <class V, class D, ArrayIndex ... N>
+inline RealPromote<V>
+sizeDividedSquaredNorm(TinyArrayBase<V, D, N...> const & t)
 {
-    return t.squaredMagnitude();
+    return static_cast<RealPromote<V> >(t.squaredNorm()) / TinySize<N...>::value;
+}
+
+template <class V, class D, ArrayIndex ... N>
+inline RealPromote<V>
+sizeDividedNorm(TinyArrayBase<V, D, N...> const & t)
+{
+    return static_cast<RealPromote<V> >(t.norm()) / TinySize<N...>::value;
 }
 
 using std::reverse;
 
     /// reversed copy
-template <class V, int SIZE>
+template <class V, class D, ArrayIndex ... N>
 inline
-TinyVector<V, SIZE>
-reverse(TinyVector<V, SIZE> const & t)
+TinyArray<V, N...>
+reverse(TinyArrayBase<V, D, N...> const & t)
 {
-    return TinyVector<V, SIZE>(t.begin(), TinyVector<V, SIZE>::ReverseCopy);
+    return TinyArray<V, N...>(t.begin(), ReverseCopy);
 }
 
     /** \brief transposed copy
     
         Elements are arranged such that <tt>res[k] = t[permutation[k]]</tt>.
     */
-template <class V, int SIZE, class T>
+template <class V1, class D1, class V2, class D2, ArrayIndex ...N>
 inline
-TinyVector<V, SIZE>
-transpose(TinyVector<V, SIZE> const & t, TinyVector<T, SIZE> const & permutation)
+TinyArray<V1, N...>
+transpose(TinyArrayBase<V1, D1, N...> const & v, 
+          TinyArrayBase<V2, D2, N...> const & permutation)
 {
-    TinyVector<V, SIZE> res(SkipInitialization);
-    for(int k=0; k<SIZE; ++k)
+    TinyArray<V1, N...> res(DontInit);
+    for(int k=0; k < TinySize<N...>::value; ++k)
     {
         MULI_ASSERT_INSIDE(permutation[k]);
-        res[k] = t[permutation[k]];
+        res[k] = v[permutation[k]];
     }
     return res;
 }
@@ -2219,22 +1447,27 @@ transpose(TinyVector<V, SIZE> const & t, TinyVector<T, SIZE> const & permutation
     
         All elements smaller than 0 are set to zero.
     */
-template<class V,int SIZE>
+template <class V, class D, ArrayIndex ... N>
 inline
-TinyVector<V, SIZE> clipLower(TinyVector<V, SIZE> const & t){
-    return clipLower(t, V(0));
+TinyArray<V, N...> 
+clipLower(TinyArrayBase<V, D, N...> const & t)
+{
+    return clipLower(t, V());
 }
 
     /** \brief Clip values below a threshold.
     
         All elements smaller than \a val are set to \a val.
     */
-template<class V,int SIZE>
+template <class V, class D, ArrayIndex ... N>
 inline
-TinyVector<V, SIZE> clipLower(TinyVector<V, SIZE> const & t,const V val){
-    TinyVector<V, SIZE> res(SkipInitialization);
-    for(int k=0; k<SIZE; ++k){
-        res[k]=t[k]< val ? val :  t[k];
+TinyArray<V, N...> 
+clipLower(TinyArrayBase<V, D, N...> const & t, const V val)
+{
+    TinyArray<V, N...> res(DontInit);
+    for(int k=0; k < TinySize<N...>::value; ++k)
+    {
+        res[k] = t[k] < val ? val :  t[k];
     }
     return res;
 }
@@ -2243,12 +1476,15 @@ TinyVector<V, SIZE> clipLower(TinyVector<V, SIZE> const & t,const V val){
     
         All elements bigger than \a val are set to \a val.
     */
-template<class V,int SIZE>
+template <class V, class D, ArrayIndex ... N>
 inline
-TinyVector<V, SIZE> clipUpper(TinyVector<V, SIZE> const & t,const V val){
-    TinyVector<V, SIZE> res(SkipInitialization);
-    for(int k=0; k<SIZE; ++k){
-        res[k]=t[k]> val ? val :  t[k];
+TinyArray<V, N...> 
+clipUpper(TinyArrayBase<V, D, N...> const & t, const V val)
+{
+    TinyArray<V, N...> res(DontInit);
+    for(int k=0; k < TinySize<N...>::value; ++k)
+    {
+        res[k] = t[k] > val ? val :  t[k];
     }
     return res;
 }
@@ -2258,11 +1494,15 @@ TinyVector<V, SIZE> clipUpper(TinyVector<V, SIZE> const & t,const V val){
         All elements less than \a valLower are set to \a valLower, all elements
         bigger than \a valUpper are set to \a valUpper.
     */
-template<class V,int SIZE>
+template <class V, class D, ArrayIndex ... N>
 inline
-TinyVector<V, SIZE> clip(TinyVector<V, SIZE> const & t,const V valLower, const V valUpper){
-    TinyVector<V, SIZE> res(SkipInitialization);
-    for(int k=0; k<SIZE; ++k){
+TinyArray<V, N...> 
+clip(TinyArrayBase<V, D, N...> const & t,
+     const V valLower, const V valUpper)
+{
+    TinyArray<V, N...> res(DontInit);
+    for(int k=0; k < TinySize<N...>::value; ++k)
+    {
         res[k] =  (t[k] < valLower)
                        ? valLower 
                        : (t[k] > valUpper)
@@ -2277,14 +1517,16 @@ TinyVector<V, SIZE> clip(TinyVector<V, SIZE> const & t,const V valLower, const V
         All elements less than \a valLower are set to \a valLower, all elements
         bigger than \a valUpper are set to \a valUpper.
     */
-template<class V,int SIZE>
+template <class V, class D1, class D2, class D3, ArrayIndex ... N>
 inline
-TinyVector<V, SIZE> clip(TinyVector<V, SIZE> const & t,
-                         TinyVector<V, SIZE> const & valLower, 
-                         TinyVector<V, SIZE> const & valUpper)
+TinyArray<V, N...> 
+clip(TinyArrayBase<V, D1, N...> const & t,
+     TinyArrayBase<V, D2, N...> const & valLower, 
+     TinyArrayBase<V, D3, N...> const & valUpper)
 {
-    TinyVector<V, SIZE> res(SkipInitialization);
-    for(int k=0; k<SIZE; ++k){
+    TinyArray<V, N...> res(DontInit);
+    for(int k=0; k < TinySize<N...>::value; ++k)
+    {
         res[k] =  (t[k] < valLower[k])
                        ? valLower[k] 
                        : (t[k] > valUpper[k])
@@ -2294,41 +1536,7 @@ TinyVector<V, SIZE> clip(TinyVector<V, SIZE> const & t,
     return res;
 }
 
-template<class V,int SIZE>
-inline
-bool isZero(TinyVector<V, SIZE> const & t){
-    for(int k=0; k<SIZE; ++k){
-        if(t[k]!=static_cast<V>(0))
-            return false;
-    }
-    return true;
-}
-
-template<class V,int SIZE>
-inline typename NumericTraits<V>::RealPromote
-mean(TinyVector<V, SIZE> const & t){
-    const V sumVal = sum(t);
-    return static_cast< typename NumericTraits<V>::RealPromote>(sumVal)/SIZE;
-}
-
-
-template<class V,int SIZE>
-inline typename NumericTraits<V>::RealPromote
-sizeDividedSquaredNorm(TinyVector<V, SIZE> const & t){
-    return squaredNorm(t)/SIZE;
-}
-
-template<class V,int SIZE>
-inline typename NumericTraits<V>::RealPromote
-sizeDividedNorm(TinyVector<V, SIZE> const & t){
-    return norm(t)/SIZE;
-}
-
-
-
 //@}
-
-#endif // #if 0
 
 // mask cl.exe shortcomings [end]
 #if defined(_MSC_VER)
@@ -2336,6 +1544,7 @@ sizeDividedNorm(TinyVector<V, SIZE> const & t){
 #endif
 
 } // namespace muli
+
 #undef MULI_ASSERT_INSIDE
 
 
