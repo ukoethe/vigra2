@@ -43,21 +43,35 @@
 
 namespace muli {
 
-namespace numeric_traits_detail {
-
-using std::sqrt;
-// using muli::sqrt;
-
-}
+template<class A>
+struct NumericTraits;
 
 template <class T1, class T2 = T1>
-using Promote = decltype(T1()+T2());
+using Promote = decltype(*(T1*)0 + *(T2*)0);
 
 template <bool Cond, class T1, class T2 = T1>
 using PromoteIf = typename std::enable_if<Cond, Promote<T1, T2> >::type;
 
+template <class T>
+struct RealPromoteImpl
+{
+    typedef decltype(sqrt(*(T*)0)) type;
+};
+
 template <class T1, class T2 = T1>
-using RealPromote = decltype(numeric_traits_detail::sqrt(Promote<T1, T2>()));
+using RealPromote = typename RealPromoteImpl<Promote<T1, T2> >::type;
+
+template <class T>
+struct SquaredNormTypeImpl
+{
+    typedef typename NumericTraits<T>::promote_type type;
+};
+
+template <class T>
+using SquaredNormType = typename SquaredNormTypeImpl<T>::type;
+
+template <class T>
+using NormType = RealPromote<SquaredNormType<T> >;
 
 struct Error_NumericTraits_not_specialized_for_this_case { };
 struct Error_NumericTraits_char_is_not_a_numeric_type__use_signed_char_or_unsigned_char { };
@@ -280,6 +294,126 @@ struct NumericTraits<std::complex<T> >
     static type fromPromote(promote_type const & v) { return v; }
     static type fromRealPromote(real_promote_type v) { return type(v); }
 };
+
+namespace detail {
+
+template <class T>
+struct RequiresExplicitCast {
+    template <class U>
+    static U const & cast(U const & v)
+        { return v; }
+};
+
+#if !defined(_MSC_VER) || _MSC_VER >= 1300
+#  define VIGRA_SPECIALIZED_CAST(type) \
+    template <> \
+    struct RequiresExplicitCast<type> { \
+        static type cast(float v) \
+            { return NumericTraits<type>::fromRealPromote(v); } \
+        static type cast(double v) \
+            { return NumericTraits<type>::fromRealPromote(v); } \
+        static type cast(type v) \
+            { return v; } \
+        template <class U> \
+        static type cast(U v) \
+            { return static_cast<type>(v); } \
+ \
+    };
+#else
+#  define VIGRA_SPECIALIZED_CAST(type) \
+    template <> \
+    struct RequiresExplicitCast<type> { \
+        static type cast(float v) \
+            { return NumericTraits<type>::fromRealPromote(v); } \
+        static type cast(double v) \
+            { return NumericTraits<type>::fromRealPromote(v); } \
+        static type cast(signed char v) \
+            { return v; } \
+        static type cast(unsigned char v) \
+            { return v; } \
+        static type cast(short v) \
+            { return v; } \
+        static type cast(unsigned short v) \
+            { return v; } \
+        static type cast(int v) \
+            { return v; } \
+        static type cast(unsigned int v) \
+            { return v; } \
+        static type cast(long v) \
+            { return v; } \
+        static type cast(unsigned long v) \
+            { return v; } \
+    };
+#endif
+
+
+VIGRA_SPECIALIZED_CAST(signed char)
+VIGRA_SPECIALIZED_CAST(unsigned char)
+VIGRA_SPECIALIZED_CAST(short)
+VIGRA_SPECIALIZED_CAST(unsigned short)
+VIGRA_SPECIALIZED_CAST(int)
+VIGRA_SPECIALIZED_CAST(unsigned int)
+VIGRA_SPECIALIZED_CAST(long)
+VIGRA_SPECIALIZED_CAST(unsigned long)
+
+template <>
+struct RequiresExplicitCast<bool> {
+    template <class U>
+    static bool cast(U v)
+    { return v == NumericTraits<U>::zero()
+                ? false
+                : true; }
+};
+
+template <>
+struct RequiresExplicitCast<float> {
+    static float cast(int v)
+        { return (float)v; }
+
+    static float cast(unsigned int v)
+        { return (float)v; }
+
+    static float cast(long v)
+        { return (float)v; }
+
+    static float cast(unsigned long v)
+        { return (float)v; }
+
+    static float cast(long long v)
+        { return (float)v; }
+
+    static float cast(unsigned long long v)
+        { return (float)v; }
+
+    static float cast(double v)
+        { return (float)v; }
+
+    static float cast(long double v)
+        { return (float)v; }
+
+    template <class U>
+    static U cast(U v)
+        { return v; }
+};
+
+template <>
+struct RequiresExplicitCast<double> {
+    static double cast(long long v)
+        { return (double)v; }
+
+    static double cast(unsigned long long v)
+        { return (double)v; }
+
+    template <class U>
+    static U cast(U v)
+        { return v; }
+};
+
+#undef VIGRA_SPECIALIZED_CAST
+
+} // namespace detail
+
+
 
 namespace numeric_traits_detail {
 
