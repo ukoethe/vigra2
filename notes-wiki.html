@@ -43,7 +43,7 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
 DAMAGE.
 " />
 <link id="faviconLink" rel="shortcut icon" href="favicon.ico">
-<title>Muli Notes — thoughts on MULI development</title>
+<title>Vigra2 Notes — thoughts on VIGRA2 development</title>
 <!--~~ This is a Tiddlywiki file. The points of interest in the file are marked with this pattern ~~--><!--~~ Raw markup ~~-->
 
 </head>
@@ -5654,29 +5654,29 @@ Error message and password prompt
 <div title="$:/isEncrypted">
 <pre>no</pre>
 </div>
-<div created="20150510123454189" modified="20150510123521152" title="$:/SiteSubtitle">
-<pre>thoughts on MULI development</pre>
+<div created="20150510123454189" creator="Ullrich Koethe" modified="20150510224326644" modifier="Ullrich Koethe" title="$:/SiteSubtitle">
+<pre>thoughts on VIGRA2 development</pre>
 </div>
-<div created="20150510123441246" modified="20150510123443532" title="$:/SiteTitle">
-<pre>Muli Notes</pre>
+<div created="20150510123441246" creator="Ullrich Koethe" modified="20150510224321936" modifier="Ullrich Koethe" title="$:/SiteTitle">
+<pre>Vigra2 Notes</pre>
 </div>
 <div modified="20150510140817323" modifier="Ullrich Koethe" title="$:/state/showeditpreview">
 <pre>yes</pre>
 </div>
-<div modified="20150510130150656" modifier="Ullrich Koethe" title="$:/state/sidebar">
-<pre>no</pre>
+<div modified="20150510224255025" modifier="Ullrich Koethe" title="$:/state/sidebar">
+<pre>yes</pre>
 </div>
 <div modified="20150510130139817" modifier="Ullrich Koethe" title="$:/state/tab--1963855381">
 <pre>$:/core/ui/ControlPanel/Palette</pre>
 </div>
-<div modified="20150510130002525" modifier="Ullrich Koethe" title="$:/state/tab--2112689675">
-<pre>$:/core/ui/ControlPanel/Advanced</pre>
+<div modified="20150510224312670" modifier="Ullrich Koethe" title="$:/state/tab--2112689675">
+<pre>$:/core/ui/ControlPanel/Basics</pre>
 </div>
-<div modified="20150510130046538" modifier="Ullrich Koethe" title="$:/state/tab-1749438307">
-<pre>$:/core/ui/ControlPanel/Appearance</pre>
+<div modified="20150510224307103" modifier="Ullrich Koethe" title="$:/state/tab-1749438307">
+<pre>$:/core/ui/ControlPanel/Info</pre>
 </div>
-<div modified="20150510130147104" modifier="Ullrich Koethe" title="$:/state/tab/sidebar--1835078512">
-<pre>$:/core/ui/SideBar/Open</pre>
+<div modified="20150510224300432" modifier="Ullrich Koethe" title="$:/state/tab/sidebar--1835078512">
+<pre>$:/core/ui/SideBar/Tools</pre>
 </div>
 <div modified="20150510130122484" modifier="Ullrich Koethe" title="$:/state/tabs/controlpanel/toolbars-1345989671">
 <pre>$:/core/ui/ControlPanel/Toolbars/PageControls</pre>
@@ -5801,19 +5801,28 @@ Error message and password prompt
     }
 }</pre>
 </div>
-<div created="20150510123957703" creator="Ullrich Koethe" modified="20150510193705354" modifier="Ullrich Koethe" title="FilesToBeConverted">
+<div created="20150510123957703" creator="Ullrich Koethe" modified="20150510212432476" modifier="Ullrich Koethe" title="FilesToBeConverted">
 <pre>!!include/vigra:
 # [no] accessor.hxx
+# [done] algorithm.hxx (except Marus' Nullmeier's 'inspectSequence()')
+# [done] autodiff.hxx
+# [done] bessel.hxx
+# [done] clebsch-gordan.hxx
 # [done] config_version.hxx
 # [done] error.hxx
+# [no] functorexpression.hxx
+# [done] gaussians.hxx
+# [done] mathutil.hxx
 # [done] numerictraits.hxx
-# [done] promote_traits.hxx
-# [done] promote_traits.hxx.py
+# [done] polynomial.hxx
+# [no] promote_traits.hxx (implemented in numeric_traits.hxx using decltype)
+# [no] promote_traits.hxx.py
+# [done] sized_int.hxx
+# [done] splines.hxx
 # [no] static_assert.hxx
 # [done] tinyvector.hxx
-# [wip] algorithm.hxx
 # [wip] config.hxx
-# [wip] mathutil.hxx
+# [wip] test_math.cxx
 # [wip] unittest.hxx
 # accumulator-grammar.hxx
 # accumulator.hxx
@@ -5822,12 +5831,10 @@ Error message and password prompt
 # affinegeometry.hxx
 # applywindowfunction.hxx
 # array_vector.hxx
-# autodiff.hxx
 # axistags.hxx
 # basicgeometry.hxx
 # basicimage.hxx
 # basicimageview.hxx
-# bessel.hxx
 # bit_array.hxx
 # blockify.hxx
 # blockwise_convolution.hxx
@@ -5839,7 +5846,6 @@ Error message and password prompt
 # bucket_queue.hxx
 # cellconfigurations.hxx
 # cellimage.hxx
-# clebsch-gordan.hxx
 # clustering_scores.hxx
 # codec.hxx
 # colorconversions.hxx
@@ -5862,10 +5868,8 @@ Error message and password prompt
 # fftw3.hxx
 # fixedpoint.hxx
 # flatmorphology.hxx
-# functorexpression.hxx
 # functortraits.hxx
 # gaborfilter.hxx
-# gaussians.hxx
 # gradient_energy_tensor.hxx
 # graph_algorithms.hxx
 # graph_algorithms_stefan.hxx
@@ -5944,7 +5948,6 @@ Error message and password prompt
 # overlapped_blocks.hxx
 # pixelneighborhood.hxx
 # polygon.hxx
-# polynomial.hxx
 # print_backtrace.hxx
 # priority_queue.hxx
 # project2ellipse.hxx
@@ -5974,13 +5977,11 @@ Error message and password prompt
 # shockfilter.hxx
 # sifImport.hxx
 # singular_value_decomposition.hxx
-# sized_int.hxx
 # skeleton.hxx
 # slanted_edge_mtf.hxx
 # slic.hxx
 # specklefilters.hxx
 # splineimageview.hxx
-# splines.hxx
 # stdconvolution.hxx
 # stdimage.hxx
 # stdimagefunctions.hxx
@@ -6044,8 +6045,8 @@ Error message and password prompt
 # void_vector.cxx
 # void_vector.hxx</pre>
 </div>
-<div created="20150510123649210" creator="Ullrich Koethe" modified="20150510140721606" modifier="Ullrich Koethe" title="MainPage">
-<pre>MULI is the working name for the C++ 11 version of VIGRA. MULI will put special emphasis on the lessons learned over the years and on parallelization. The main difference will be that MULI uses C-order because in VIGRA it was too difficult to maintain consistency with the C-order in numppy and HDF5.
+<div created="20150510123649210" creator="Ullrich Koethe" modified="20150510224358598" modifier="Ullrich Koethe" title="MainPage">
+<pre>VIGRA2 is the working name for the C++ 11 version of VIGRA. Itwill put special emphasis on the lessons learned over the years and on parallelization. The main difference will be that VIGRA2 uses C-order because in VIGRA it was too difficult to maintain consistency with the C-order in numppy and HDF5.
 
 * FilesToBeConverted
 * TestingPrinciples
