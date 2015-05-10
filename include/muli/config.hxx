@@ -270,6 +270,12 @@
 //                                                       //
 ///////////////////////////////////////////////////////////
 
+namespace muli {
+
+using ArrayIndex = std::ptrdiff_t;
+
+} // namespace muli
+
 #ifdef CMATH_NOT_IN_STD
     #define MULI_CSTD
 #else

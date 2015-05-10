@@ -38,13 +38,13 @@
 #include <muli/algorithm.hxx>
 #include <muli/bessel.hxx>
 #include <muli/clebsch-gordan.hxx>
-// #include <muli/polynomial.hxx>
+#include <muli/gaussians.hxx>
+#include <muli/polynomial.hxx>
+#include <muli/splines.hxx>
+#include <muli/autodiff.hxx>
 // #include <muli/array_vector.hxx>
-// #include <muli/splines.hxx>
-// #include <muli/gaussians.hxx>
 // #include <muli/rational.hxx>
 // #include <muli/fixedpoint.hxx>
-// #include <muli/autodiff.hxx>
 // #include <muli/linear_algebra.hxx>
 // #include <muli/singular_value_decomposition.hxx>
 // #include <muli/regression.hxx>
@@ -58,37 +58,37 @@ using namespace muli;
 #define MULI_TOLERANCE_MESSAGE "If this test fails, please adjust the tolerance threshold and report\n" \
                        "your findings (including compiler information etc.) to the MULI mailing list:"
 
-// static double coefficients[][12] =
-// {
-    // { 5.0, -416.0, 720.0, -464.0, 136.0, -18.0, 1.0 },
-    // { 8.0, 40320.0, -109584.0, 118124.0, -67284.0, 22449.0, -4536.0, 546.0, -36.0, 1.0},
-    // { 3.0, 1e10, -1e10, -1e-10, 1e-10},
-    // { 3.0, 1e-10, -1e-10, -1e10, 1e10},
-    // { 10.0, 2.88e-8, -1.848e-6, 0.00005204, -0.0008458, 0.008777,
-           // -0.06072, 0.2835, -0.882, 1.75, -2.0, 1.0},
-    // { 5.0, 0.3411268890719874, 0.48265610836623374, 0.29941395284477745,
-           // 0.13065520631476124, 0.68342489290545338, 0.0017437185812028133 },
-    // { 3.0, -1.0, 1000001000001.0 / 1e6, -1000001000001.0 / 1e6, 1.0},
-    // { 8.0, 36.0, 0.0, 85.0, 0.0, 63.0, 0.0, 15.0, 0.0, 1.0 }
-// };
+static double coefficients[][12] =
+{
+    { 5.0, -416.0, 720.0, -464.0, 136.0, -18.0, 1.0 },
+    { 8.0, 40320.0, -109584.0, 118124.0, -67284.0, 22449.0, -4536.0, 546.0, -36.0, 1.0},
+    { 3.0, 1e10, -1e10, -1e-10, 1e-10},
+    { 3.0, 1e-10, -1e-10, -1e10, 1e10},
+    { 10.0, 2.88e-8, -1.848e-6, 0.00005204, -0.0008458, 0.008777,
+           -0.06072, 0.2835, -0.882, 1.75, -2.0, 1.0},
+    { 5.0, 0.3411268890719874, 0.48265610836623374, 0.29941395284477745,
+           0.13065520631476124, 0.68342489290545338, 0.0017437185812028133 },
+    { 3.0, -1.0, 1000001000001.0 / 1e6, -1000001000001.0 / 1e6, 1.0},
+    { 8.0, 36.0, 0.0, 85.0, 0.0, 63.0, 0.0, 15.0, 0.0, 1.0 }
+};
 
-// typedef std::complex<double> C;
+typedef std::complex<double> C;
 
-// static C reference[][12] =
-// {
-    // { C(1e-12), C(2.0), C(2.0), C(2.0), C(6.0, -4.0), C(6.0, 4.0) },
-    // { C(1e-11), C(1.0), C(2.0), C(3.0), C(4.0), C(5.0), C(6.0), C(7.0), C(8.0) },
-    // { C(1e-12), C(-1e10), C(1.0), C(1e10) },
-    // { C(1e-12), C(-1e-10), C(1e-10), C(1.0) },
-    // { C(1e-5), C(0.1), C(0.1), C(0.1), C(0.1), C(0.2), C(0.2), C(0.2),
-               // C(0.3), C(0.3), C(0.4) },
-    // { C(1e-12), C(-391.74516023901123),
-                // C(-0.56839260551055271, -0.4046562986541693), C(-0.56839260551055271, 0.4046562986541693),
-                // C(0.47331479192572767, -0.89542786425410759), C(0.47331479192572767, 0.89542786425410759) },
-    // { C(1e-12), C(1e-6), C(1.0), C(1e6) },
-    // { C(1e-12), C(0.0, -3.0), C(0.0, -2.0), C(0.0, -1.0), C(0.0, -1.0),
-                // C(0.0, 1.0), C(0.0, 1.0), C(0.0, 2.0), C(0.0, 3.0) }
-// };
+static C reference[][12] =
+{
+    { C(1e-12), C(2.0), C(2.0), C(2.0), C(6.0, -4.0), C(6.0, 4.0) },
+    { C(1e-11), C(1.0), C(2.0), C(3.0), C(4.0), C(5.0), C(6.0), C(7.0), C(8.0) },
+    { C(1e-12), C(-1e10), C(1.0), C(1e10) },
+    { C(1e-12), C(-1e-10), C(1e-10), C(1.0) },
+    { C(1e-5), C(0.1), C(0.1), C(0.1), C(0.1), C(0.2), C(0.2), C(0.2),
+               C(0.3), C(0.3), C(0.4) },
+    { C(1e-12), C(-391.74516023901123),
+                C(-0.56839260551055271, -0.4046562986541693), C(-0.56839260551055271, 0.4046562986541693),
+                C(0.47331479192572767, -0.89542786425410759), C(0.47331479192572767, 0.89542786425410759) },
+    { C(1e-12), C(1e-6), C(1.0), C(1e6) },
+    { C(1e-12), C(0.0, -3.0), C(0.0, -2.0), C(0.0, -1.0), C(0.0, -1.0),
+                C(0.0, 1.0), C(0.0, 1.0), C(0.0, 2.0), C(0.0, 3.0) }
+};
 
 #if 0
 #undef should
@@ -101,25 +101,25 @@ using namespace muli;
 (std::cerr << #v1 << " == " << #v2 << ": " << (v1) << " " << (v2) << " " << (v1 - v2) << std::endl)
 #endif
 
-// template <unsigned int N, class POLYNOMIAL>
-// struct PolynomialTest
-// {
-    // void testPolynomial()
-    // {
-        // double epsilon = reference[N][0].real();
-        // unsigned int order = (unsigned int)(coefficients[N][0] + 0.5);
-        // POLYNOMIAL p(coefficients[N]+1, order);
+template <unsigned int N, class POLYNOMIAL>
+struct PolynomialTest
+{
+    void testPolynomial()
+    {
+        double epsilon = reference[N][0].real();
+        unsigned int order = (unsigned int)(coefficients[N][0] + 0.5);
+        POLYNOMIAL p(coefficients[N]+1, order);
 
-        // ArrayVector<std::complex<double> > roots;
+        std::vector<std::complex<double> > roots;
 
-        // should(polynomialRoots(p, roots));
-        // shouldEqual(roots.size(), order);
-        // for(unsigned int i = 0; i<roots.size(); ++i)
-        // {
-            // shouldEqualTolerance(roots[i].real(), reference[N][i+1].real(), epsilon);
-            // shouldEqualTolerance(roots[i].imag(), reference[N][i+1].imag(), epsilon);
-        // }
-    // }
+        should(polynomialRoots(p, roots));
+        shouldEqual(roots.size(), order);
+        for(unsigned int i = 0; i<roots.size(); ++i)
+        {
+            shouldEqualTolerance(roots[i].real(), reference[N][i+1].real(), epsilon);
+            shouldEqualTolerance(roots[i].imag(), reference[N][i+1].imag(), epsilon);
+        }
+    }
 
     // void testPolynomialEigenvalueMethod()
     // {
@@ -128,7 +128,7 @@ using namespace muli;
         // POLYNOMIAL p(coefficients[N]+1, order);
         // p.setEpsilon(epsilon);
 
-        // ArrayVector<std::complex<double> > roots;
+        // std::vector<std::complex<double> > roots;
 
         // should(polynomialRootsEigenvalueMethod(p, roots));
         // shouldEqual(roots.size(), order);
@@ -138,7 +138,7 @@ using namespace muli;
             // shouldEqualTolerance(roots[i].imag(), reference[N][i+1].imag(), epsilon);
         // }
     // }
-// };
+};
 
 // struct HighOrderPolynomialTest
 // {
@@ -146,12 +146,12 @@ using namespace muli;
     // {
         // unsigned int order = 80;
         // double epsilon = 1e-12;
-        // ArrayVector<double> coeffs(order+1, 0.0);
+        // std::vector<double> coeffs(order+1, 0.0);
         // coeffs[0] = -1.0;
         // coeffs[order] = 1.0;
         // Polynomial<double> p(coeffs.begin(), order);
 
-        // ArrayVector<std::complex<double> > roots;
+        // std::vector<std::complex<double> > roots;
 
         // should(polynomialRoots(p, roots));
         // shouldEqual(roots.size(), order);
@@ -162,7 +162,7 @@ using namespace muli;
             // shouldEqualTolerance(r.real(), 0.0, epsilon);
             // shouldEqualTolerance(r.imag(), 0.0, epsilon);
         // }
-        // ArrayVector<double> rroots;
+        // std::vector<double> rroots;
         // should(polynomialRealRoots(p, rroots));
         // shouldEqual(rroots.size(), 2u);
         // shouldEqualTolerance(rroots[0], -1.0, epsilon);
@@ -173,12 +173,12 @@ using namespace muli;
     // {
         // unsigned int order = 80;
         // double epsilon = 1e-12;
-        // ArrayVector<double> coeffs(order+1, 0.0);
+        // std::vector<double> coeffs(order+1, 0.0);
         // coeffs[0] = -1.0;
         // coeffs[order] = 1.0;
         // Polynomial<double> p(coeffs.begin(), order);
 
-        // ArrayVector<std::complex<double> > roots;
+        // std::vector<std::complex<double> > roots;
 
         // should(polynomialRootsEigenvalueMethod(p, roots));
         // shouldEqual(roots.size(), order);
@@ -189,7 +189,7 @@ using namespace muli;
             // shouldEqualTolerance(r.real(), 0.0, epsilon);
             // shouldEqualTolerance(r.imag(), 0.0, epsilon);
         // }
-        // ArrayVector<double> rroots;
+        // std::vector<double> rroots;
         // should(polynomialRealRootsEigenvalueMethod(p, rroots));
         // shouldEqual(rroots.size(), 2u);
         // shouldEqualTolerance(rroots[0], -1.0, epsilon);
@@ -197,25 +197,25 @@ using namespace muli;
     // }
 // };
 
-// template <int ORDER>
-// struct SplineTest
-// {
-    // typedef BSpline<ORDER, double> BS;
-    // typedef BSplineBase<ORDER, double> BSB;
-    // BS spline;
-    // BSB splineBase;
+template <int ORDER>
+struct SplineTest
+{
+    typedef BSpline<ORDER, double> BS;
+    typedef BSplineBase<ORDER, double> BSB;
+    BS spline;
+    BSB splineBase;
 
-    // void testValues()
-    // {
-        // double r = spline.radius();
-        // shouldEqual(r, splineBase.radius());
+    void testValues()
+    {
+        double r = spline.radius();
+        shouldEqual(r, splineBase.radius());
 
-        // for(int d = 0; d <= ORDER+1; ++d)
-        // {
-            // for(double x = -r-0.5; x <= r+0.5; x += 0.5)
-                // shouldEqualTolerance(spline(x, d), splineBase(x, d), 1e-15);
-        // }
-    // }
+        for(int d = 0; d <= ORDER+1; ++d)
+        {
+            for(double x = -r-0.5; x <= r+0.5; x += 0.5)
+                shouldEqualTolerance(spline(x, d), splineBase(x, d), 1e-15);
+        }
+    }
 
     // void testFixedPointValues()
     // {
@@ -232,95 +232,95 @@ using namespace muli;
         // }
     // }
 
-    // void testPrefilterCoefficients()
-    // {
-        // int n = ORDER / 2;
-        // ArrayVector<double> const & ps = spline.prefilterCoefficients();
-        // ArrayVector<double> const & psb = splineBase.prefilterCoefficients();
+    void testPrefilterCoefficients()
+    {
+        int n = ORDER / 2;
+        std::vector<double> const & ps = spline.prefilterCoefficients();
+        std::vector<double> const & psb = splineBase.prefilterCoefficients();
 
-        // if(n == 0)
-        // {
-            // shouldEqual(ps.size(), 0u);
-            // shouldEqual(psb.size(), 0u);
-        // }
-        // else
-        // {
-            // ArrayVector<double> & psb1 =
-                // const_cast<ArrayVector<double> &>(psb);
-            // std::sort(psb1.begin(), psb1.end());
+        if(n == 0)
+        {
+            shouldEqual(ps.size(), 0u);
+            shouldEqual(psb.size(), 0u);
+        }
+        else
+        {
+            std::vector<double> & psb1 =
+                const_cast<std::vector<double> &>(psb);
+            std::sort(psb1.begin(), psb1.end());
 
-            // for(int i = 0; i < n; ++i)
-                // shouldEqualTolerance(ps[i], psb[i], 1e-14);
-        // }
-    // }
+            for(int i = 0; i < n; ++i)
+                shouldEqualTolerance(ps[i], psb[i], 1e-14);
+        }
+    }
 
-    // void testWeightMatrix()
-    // {
-        // int n = ORDER + 1;
-        // typename BS::WeightMatrix const & ws = BS::weights();
-        // typename BSB::WeightMatrix const & wsb = BSB::weights();
+    void testWeightMatrix()
+    {
+        int n = ORDER + 1;
+        typename BS::WeightMatrix const & ws = BS::weights();
+        typename BSB::WeightMatrix const & wsb = BSB::weights();
 
-        // for(int d = 0; d < n; ++d)
-            // for(int i = 0; i < n; ++i)
-                // shouldEqualTolerance(ws[d][i], wsb[d][i], 1e-14);
-    // }
-// };
+        for(int d = 0; d < n; ++d)
+            for(int i = 0; i < n; ++i)
+                shouldEqualTolerance(ws[d][i], wsb[d][i], 1e-14);
+    }
+};
 
 struct FunctionsTest
 {
-    // void testGaussians()
-    // {
-        // Gaussian<double> g,
-                          // g1(2.0, 1),
-                          // g2(1.0, 2),
-                          // g3(2.0, 3),
-                          // g4(2.0, 4),
-                          // g5(2.0, 5);
+    void testGaussians()
+    {
+        Gaussian<double> g,
+                          g1(2.0, 1),
+                          g2(1.0, 2),
+                          g3(2.0, 3),
+                          g4(2.0, 4),
+                          g5(2.0, 5);
 
-        // double epsilon = 1e-15;
-        // shouldEqual(g.derivativeOrder(), 0u);
-        // shouldEqual(g.sigma(), 1.0);
-        // shouldEqualTolerance(g(0.0), 0.3989422804014327, epsilon);
-        // shouldEqualTolerance(g(0.5), 0.35206532676429952, epsilon);
-        // shouldEqualTolerance(g(1.0), 0.24197072451914337, epsilon);
-        // shouldEqualTolerance(g(-1.0), 0.24197072451914337, epsilon);
+        double epsilon = 1e-15;
+        shouldEqual(g.derivativeOrder(), 0u);
+        shouldEqual(g.sigma(), 1.0);
+        shouldEqualTolerance(g(0.0), 0.3989422804014327, epsilon);
+        shouldEqualTolerance(g(0.5), 0.35206532676429952, epsilon);
+        shouldEqualTolerance(g(1.0), 0.24197072451914337, epsilon);
+        shouldEqualTolerance(g(-1.0), 0.24197072451914337, epsilon);
 
-        // shouldEqual(g1.derivativeOrder(), 1u);
-        // shouldEqual(g1.sigma(), 2.0);
-        // shouldEqualTolerance(g1(0.0), 0, epsilon);
-        // shouldEqualTolerance(g1(0.5), -0.024166757300178077, epsilon);
-        // shouldEqualTolerance(g1(1.0), -0.044008165845537441, epsilon);
-        // shouldEqualTolerance(g1(-1.0), 0.044008165845537441, epsilon);
+        shouldEqual(g1.derivativeOrder(), 1u);
+        shouldEqual(g1.sigma(), 2.0);
+        shouldEqualTolerance(g1(0.0), 0, epsilon);
+        shouldEqualTolerance(g1(0.5), -0.024166757300178077, epsilon);
+        shouldEqualTolerance(g1(1.0), -0.044008165845537441, epsilon);
+        shouldEqualTolerance(g1(-1.0), 0.044008165845537441, epsilon);
 
-        // shouldEqual(g2.derivativeOrder(), 2u);
-        // shouldEqual(g2.sigma(), 1.0);
-        // shouldEqualTolerance(g2(0.0), -0.3989422804014327, epsilon);
-        // shouldEqualTolerance(g2(0.5), -0.26404899507322466, epsilon);
-        // shouldEqualTolerance(g2(1.0), 0, epsilon);
-        // shouldEqualTolerance(g2(-1.0), 0, epsilon);
-        // shouldEqualTolerance(g2(1.5), 0.16189699458236467, epsilon);
-        // shouldEqualTolerance(g2(-1.5), 0.16189699458236467, epsilon);
+        shouldEqual(g2.derivativeOrder(), 2u);
+        shouldEqual(g2.sigma(), 1.0);
+        shouldEqualTolerance(g2(0.0), -0.3989422804014327, epsilon);
+        shouldEqualTolerance(g2(0.5), -0.26404899507322466, epsilon);
+        shouldEqualTolerance(g2(1.0), 0, epsilon);
+        shouldEqualTolerance(g2(-1.0), 0, epsilon);
+        shouldEqualTolerance(g2(1.5), 0.16189699458236467, epsilon);
+        shouldEqualTolerance(g2(-1.5), 0.16189699458236467, epsilon);
 
-        // shouldEqual(g3.derivativeOrder(), 3u);
-        // shouldEqual(g3.sigma(), 2.0);
-        // shouldEqualTolerance(g3(0.0), 0, epsilon);
-        // shouldEqualTolerance(g3(0.5), 0.017747462392318277, epsilon);
-        // shouldEqualTolerance(g3(1.0), 0.030255614018806987, epsilon);
-        // shouldEqualTolerance(g3(-1.0), -0.030255614018806987, epsilon);
-        // shouldEqualTolerance(g3(2.0*MULI_CSTD::sqrt(3.0)), 0, epsilon);
-        // shouldEqualTolerance(g3(-2.0*MULI_CSTD::sqrt(3.0)), 0, epsilon);
+        shouldEqual(g3.derivativeOrder(), 3u);
+        shouldEqual(g3.sigma(), 2.0);
+        shouldEqualTolerance(g3(0.0), 0, epsilon);
+        shouldEqualTolerance(g3(0.5), 0.017747462392318277, epsilon);
+        shouldEqualTolerance(g3(1.0), 0.030255614018806987, epsilon);
+        shouldEqualTolerance(g3(-1.0), -0.030255614018806987, epsilon);
+        shouldEqualTolerance(g3(2.0*MULI_CSTD::sqrt(3.0)), 0, epsilon);
+        shouldEqualTolerance(g3(-2.0*MULI_CSTD::sqrt(3.0)), 0, epsilon);
 
-        // shouldEqualTolerance(g4(0.0), 0.037400838787634318, epsilon);
-        // shouldEqualTolerance(g4(1.0), 0.017190689783413062, epsilon);
-        // shouldEqualTolerance(g4(-1.0), 0.017190689783413062, epsilon);
-        // shouldEqualTolerance(g4(1.483927568605452), 0, epsilon);
-        // shouldEqualTolerance(g4(4.668828436677955), 0, epsilon);
-        // shouldEqualTolerance(g5(0.0), 0, epsilon);
-        // shouldEqualTolerance(g5(1.0), -0.034553286464660257, epsilon);
-        // shouldEqualTolerance(g5(-1.0), 0.034553286464660257, epsilon);
-        // shouldEqualTolerance(g5(2.711252359948531), 0, epsilon);
-        // shouldEqualTolerance(g5(5.713940027745611), 0, epsilon);
-    // }
+        shouldEqualTolerance(g4(0.0), 0.037400838787634318, epsilon);
+        shouldEqualTolerance(g4(1.0), 0.017190689783413062, epsilon);
+        shouldEqualTolerance(g4(-1.0), 0.017190689783413062, epsilon);
+        shouldEqualTolerance(g4(1.483927568605452), 0, epsilon);
+        shouldEqualTolerance(g4(4.668828436677955), 0, epsilon);
+        shouldEqualTolerance(g5(0.0), 0, epsilon);
+        shouldEqualTolerance(g5(1.0), -0.034553286464660257, epsilon);
+        shouldEqualTolerance(g5(-1.0), 0.034553286464660257, epsilon);
+        shouldEqualTolerance(g5(2.711252359948531), 0, epsilon);
+        shouldEqualTolerance(g5(5.713940027745611), 0, epsilon);
+    }
 
     void testSpecialIntegerFunctions()
     {
@@ -953,177 +953,177 @@ struct FunctionsTest
     // }
 // };
 
-// struct AutodiffTest
-// {
-    // typedef autodiff::DualVector<double, 1> N1;
-    // typedef autodiff::DualVector<double, 2> N2;
+struct AutodiffTest
+{
+    typedef autodiff::DualVector<double, 1> N1;
+    typedef autodiff::DualVector<double, 2> N2;
 
-    // void testOStreamShifting()
-    // {
-        // std::ostringstream out;
-        // out << N1(1.0,2.0);
-        // out << "Testing.." << N1(42.0,23.0) << 3.141592653589793238 << std::endl;
-    // }
+    void testOStreamShifting()
+    {
+        std::ostringstream out;
+        out << N1(1.0,2.0);
+        out << "Testing.." << N1(42.0,23.0) << 3.141592653589793238 << std::endl;
+    }
 
-    // void testOperators()
-    // {
-        // should(N2(3.0,4.0,5.0).value() == 3.0);
-        // should(N2(3.0,4.0,5.0).gradient() == N2::Gradient(4.0,5.0));
-        // should(N2(3.0,4.0,5.0) == N2(3.0, N2::Gradient(4.0,5.0)));
+    void testOperators()
+    {
+        should(N2(3.0,4.0,5.0).value() == 3.0);
+        should(N2(3.0,4.0,5.0).gradient() == N2::Gradient(4.0,5.0));
+        should(N2(3.0,4.0,5.0) == N2(3.0, N2::Gradient(4.0,5.0)));
 
-        // should(N1(3.0,4.0) == N1(3.0,4.0));
-        // should(!(N1(3.0,4.0) == N1(2.0,4.0)));
-        // should(!(N1(3.0,4.0) == N1(3.0,2.0)));
-        // should(!(N1(3.0,4.0) != N1(3.0,4.0)));
-        // should(N1(3.0,4.0) != N1(2.0,4.0));
-        // should(N1(3.0,4.0) != N1(3.0,2.0));
-        // should(closeAtTolerance(N1(3.0,4.0), N1(3.0,4.0)));
-        // should(!closeAtTolerance(N1(3.0,4.0), N1(2.0,4.0)));
-        // should(!closeAtTolerance(N1(3.0,4.0), N1(3.0,2.0)));
-        // should(closeAtTolerance(N1(3.0,4.0), N1(2.0,4.0), 1.0));
-        // should(closeAtTolerance(N1(3.0,4.0), N1(3.0,2.0), 1.0));
+        should(N1(3.0,4.0) == N1(3.0,4.0));
+        should(!(N1(3.0,4.0) == N1(2.0,4.0)));
+        should(!(N1(3.0,4.0) == N1(3.0,2.0)));
+        should(!(N1(3.0,4.0) != N1(3.0,4.0)));
+        should(N1(3.0,4.0) != N1(2.0,4.0));
+        should(N1(3.0,4.0) != N1(3.0,2.0));
+        should(closeAtTolerance(N1(3.0,4.0), N1(3.0,4.0)));
+        should(!closeAtTolerance(N1(3.0,4.0), N1(2.0,4.0)));
+        should(!closeAtTolerance(N1(3.0,4.0), N1(3.0,2.0)));
+        should(closeAtTolerance(N1(3.0,4.0), N1(2.0,4.0), 1.0));
+        should(closeAtTolerance(N1(3.0,4.0), N1(3.0,2.0), 1.0));
 
-        // shouldEqual(N1(3.0,4.0), N1(3.0,4.0));
-        // shouldEqual(-N1(3.0,4.0), N1(-3.0,-4.0));
+        shouldEqual(N1(3.0,4.0), N1(3.0,4.0));
+        shouldEqual(-N1(3.0,4.0), N1(-3.0,-4.0));
 
-        // TinyVector<N2, 2> v = autodiff::dualMatrix(TinyVector<double, 2>(2.0, 3.0));
-        // shouldEqual(v[0], N2(2.0, 1.0, 0.0));
-        // shouldEqual(v[1], N2(3.0, 0.0, 1.0));
+        TinyArray<N2, 2> v = autodiff::dualMatrix(TinyArray<double, 2>(2.0, 3.0));
+        shouldEqual(v[0], N2(2.0, 1.0, 0.0));
+        shouldEqual(v[1], N2(3.0, 0.0, 1.0));
 
-        // shouldEqual(N2(5.0,1.0,0.0) + N2(2.0,0.0,1.0), N2(7.0,1.0,1.0));
-        // shouldEqual(N2(5.0,1.0,0.0) - N2(2.0,0.0,1.0), N2(3.0,1.0,-1.0));
-        // shouldEqual(N2(5.0,1.0,0.0) * N2(2.0,0.0,1.0), N2(10.0,2.0,5.0));
-        // shouldEqual(N2(5.0,1.0,0.0) / N2(2.0,0.0,1.0), N2(2.5,0.5,-1.25));
+        shouldEqual(N2(5.0,1.0,0.0) + N2(2.0,0.0,1.0), N2(7.0,1.0,1.0));
+        shouldEqual(N2(5.0,1.0,0.0) - N2(2.0,0.0,1.0), N2(3.0,1.0,-1.0));
+        shouldEqual(N2(5.0,1.0,0.0) * N2(2.0,0.0,1.0), N2(10.0,2.0,5.0));
+        shouldEqual(N2(5.0,1.0,0.0) / N2(2.0,0.0,1.0), N2(2.5,0.5,-1.25));
 
-        // shouldEqual(5.0 + N2(2.0,0.0,1.0), N2(7.0,0.0,1.0));
-        // shouldEqual(5.0 - N2(2.0,0.0,1.0), N2(3.0,0.0,-1.0));
-        // shouldEqual(5.0 * N2(2.0,0.0,1.0), N2(10.0,0.0,5.0));
-        // shouldEqual(5.0 / N2(2.0,0.0,1.0), N2(2.5,0.0,-1.25));
+        shouldEqual(5.0 + N2(2.0,0.0,1.0), N2(7.0,0.0,1.0));
+        shouldEqual(5.0 - N2(2.0,0.0,1.0), N2(3.0,0.0,-1.0));
+        shouldEqual(5.0 * N2(2.0,0.0,1.0), N2(10.0,0.0,5.0));
+        shouldEqual(5.0 / N2(2.0,0.0,1.0), N2(2.5,0.0,-1.25));
 
-        // shouldEqual(N2(5.0,1.0,0.0) + 2.0, N2(7.0,1.0,0.0));
-        // shouldEqual(N2(5.0,1.0,0.0) - 2.0, N2(3.0,1.0,0.0));
-        // shouldEqual(N2(5.0,1.0,0.0) * 2.0, N2(10.0,2.0,0.0));
-        // shouldEqual(N2(5.0,1.0,0.0) / 2.0, N2(2.5,0.5,0.0));
+        shouldEqual(N2(5.0,1.0,0.0) + 2.0, N2(7.0,1.0,0.0));
+        shouldEqual(N2(5.0,1.0,0.0) - 2.0, N2(3.0,1.0,0.0));
+        shouldEqual(N2(5.0,1.0,0.0) * 2.0, N2(10.0,2.0,0.0));
+        shouldEqual(N2(5.0,1.0,0.0) / 2.0, N2(2.5,0.5,0.0));
 
-        // shouldEqual(abs(N1(3.0,4.0)), N1(3.0,4.0));
-        // shouldEqual(abs(N1(-3.0,4.0)), N1(3.0,-4.0));
-        // shouldEqual(abs(N1(-3.0,-4.0)), N1(3.0,4.0));
-        // shouldEqual(abs(N1(3.0,-4.0)), N1(3.0,-4.0));
+        shouldEqual(abs(N1(3.0,4.0)), N1(3.0,4.0));
+        shouldEqual(abs(N1(-3.0,4.0)), N1(3.0,-4.0));
+        shouldEqual(abs(N1(-3.0,-4.0)), N1(3.0,4.0));
+        shouldEqual(abs(N1(3.0,-4.0)), N1(3.0,-4.0));
 
-        // shouldEqual(max(N2(5.0,1.0,0.0), N2(2.0,0.0,1.0)), N2(5.0,1.0,0.0));
-        // shouldEqual(min(N2(5.0,1.0,0.0), N2(2.0,0.0,1.0)), N2(2.0,0.0,1.0));
-        // shouldEqual(max(5.0, N2(2.0,0.0,1.0)), N2(5.0,0.0,0.0));
-        // shouldEqual(min(5.0, N2(2.0,0.0,1.0)), N2(2.0,0.0,1.0));
-        // shouldEqual(max(N2(5.0,1.0,0.0), 2.0), N2(5.0,1.0,0.0));
-        // shouldEqual(min(N2(5.0,1.0,0.0), 2.0), N2(2.0,0.0,0.0));
+        shouldEqual(max(N2(5.0,1.0,0.0), N2(2.0,0.0,1.0)), N2(5.0,1.0,0.0));
+        shouldEqual(min(N2(5.0,1.0,0.0), N2(2.0,0.0,1.0)), N2(2.0,0.0,1.0));
+        shouldEqual(max(5.0, N2(2.0,0.0,1.0)), N2(5.0,0.0,0.0));
+        shouldEqual(min(5.0, N2(2.0,0.0,1.0)), N2(2.0,0.0,1.0));
+        shouldEqual(max(N2(5.0,1.0,0.0), 2.0), N2(5.0,1.0,0.0));
+        shouldEqual(min(N2(5.0,1.0,0.0), 2.0), N2(2.0,0.0,0.0));
 
-        // should(N2(1.0, 1.0, 0.0) < N2(2.0, 0.0, 1.0));
-        // should(!(N2(1.0, 1.0, 0.0) < N2(1.0, 0.0, 1.0)));
-        // should(N2(1.0, 1.0, 0.0) < 1.1);
-        // should(!(N2(1.0, 1.0, 0.0) < 1.0));
-        // should(0.8 < N2(2.0, 0.0, 1.0));
-        // should(!(2.0 < N2(2.0, 0.0, 1.0)));
+        should(N2(1.0, 1.0, 0.0) < N2(2.0, 0.0, 1.0));
+        should(!(N2(1.0, 1.0, 0.0) < N2(1.0, 0.0, 1.0)));
+        should(N2(1.0, 1.0, 0.0) < 1.1);
+        should(!(N2(1.0, 1.0, 0.0) < 1.0));
+        should(0.8 < N2(2.0, 0.0, 1.0));
+        should(!(2.0 < N2(2.0, 0.0, 1.0)));
 
-        // should(N2(1.0, 1.0, 0.0) <= N2(2.0, 0.0, 1.0));
-        // should(N2(1.0, 1.0, 0.0) <= N2(1.0, 0.0, 1.0));
-        // should(N2(1.0, 1.0, 0.0) <= 1.1);
-        // should(N2(1.0, 1.0, 0.0) <= 1.0);
-        // should(0.8 <= N2(2.0, 0.0, 1.0));
-        // should(2.0 <= N2(2.0, 0.0, 1.0));
+        should(N2(1.0, 1.0, 0.0) <= N2(2.0, 0.0, 1.0));
+        should(N2(1.0, 1.0, 0.0) <= N2(1.0, 0.0, 1.0));
+        should(N2(1.0, 1.0, 0.0) <= 1.1);
+        should(N2(1.0, 1.0, 0.0) <= 1.0);
+        should(0.8 <= N2(2.0, 0.0, 1.0));
+        should(2.0 <= N2(2.0, 0.0, 1.0));
 
-        // should(N2(2.0, 1.0, 0.0) > N2(1.0, 0.0, 1.0));
-        // should(!(N2(1.0, 1.0, 0.0) > N2(1.0, 0.0, 1.0)));
-        // should(N2(2.0, 1.0, 0.0) > 1.1);
-        // should(!(N2(1.0, 1.0, 0.0) > 1.0));
-        // should(2.8 > N2(2.0, 0.0, 1.0));
-        // should(!(2.0 > N2(2.0, 0.0, 1.0)));
+        should(N2(2.0, 1.0, 0.0) > N2(1.0, 0.0, 1.0));
+        should(!(N2(1.0, 1.0, 0.0) > N2(1.0, 0.0, 1.0)));
+        should(N2(2.0, 1.0, 0.0) > 1.1);
+        should(!(N2(1.0, 1.0, 0.0) > 1.0));
+        should(2.8 > N2(2.0, 0.0, 1.0));
+        should(!(2.0 > N2(2.0, 0.0, 1.0)));
 
-        // should(N2(2.0, 1.0, 0.0) >= N2(1.0, 0.0, 1.0));
-        // should(N2(1.0, 1.0, 0.0) >= N2(1.0, 0.0, 1.0));
-        // should(N2(2.0, 1.0, 0.0) >= 1.1);
-        // should(N2(1.0, 1.0, 0.0) >= 1.0);
-        // should(2.8 >= N2(2.0, 0.0, 1.0));
-        // should(2.0 >= N2(2.0, 0.0, 1.0));
-    // }
+        should(N2(2.0, 1.0, 0.0) >= N2(1.0, 0.0, 1.0));
+        should(N2(1.0, 1.0, 0.0) >= N2(1.0, 0.0, 1.0));
+        should(N2(2.0, 1.0, 0.0) >= 1.1);
+        should(N2(1.0, 1.0, 0.0) >= 1.0);
+        should(2.8 >= N2(2.0, 0.0, 1.0));
+        should(2.0 >= N2(2.0, 0.0, 1.0));
+    }
 
-    // void testFunctions()
-    // {
-        // // check numbers
-        // should(closeAtTolerance(log(N1(M_E, 1.0)), N1(1.0, 1.0 / M_E)));
-        // should(closeAtTolerance(exp(N1(0.0, 1.0)), N1(1.0, 1.0)));
-        // should(closeAtTolerance(sqrt(N1(4.0, 1.0)), N1(2.0, 0.25)));
-        // should(closeAtTolerance(sq(N1(3.0, 1.0)), N1(9.0, 6.0)));
-        // should(closeAtTolerance(sin(N1(M_PI_2, 1.0)), N1(1.0, 0.0)));
-        // should(closeAtTolerance(sin(N1(M_PI, 1.0)), N1(0.0, -1.0)));
-        // should(closeAtTolerance(sin_pi(N1(0.5, 1.0)), N1(1.0, 0.0)));
-        // should(closeAtTolerance(sin_pi(N1(1.0, 1.0)), N1(0.0, -M_PI)));
-        // should(closeAtTolerance(cos(N1(0.0, 1.0)), N1(1.0, 0.0)));
-        // should(closeAtTolerance(cos(N1(M_PI_2, 1.0)), N1(0.0, -1.0)));
-        // should(closeAtTolerance(cos_pi(N1(1.0, 1.0)), N1(-1.0, 0.0)));
-        // should(closeAtTolerance(cos_pi(N1(0.5, 1.0)), N1(0.0, -M_PI)));
-        // should(closeAtTolerance(asin(N1(0.5, 1.0)), N1(M_PI/6.0, 2.0/sqrt(3.0)), 1e-15));
-        // should(closeAtTolerance(acos(N1(0.5, 1.0)), N1(M_PI/3.0, -2.0/sqrt(3.0)), 1e-15));
-        // should(closeAtTolerance(tan(N1(M_PI/4.0, 1.0)), N1(1.0, 2.0)));
-        // should(closeAtTolerance(atan(N1(1.0, 1.0)), N1(0.25*M_PI, 0.5)));
-        // should(closeAtTolerance(sinh(N1(1.0, 1.0)), N1(sinh(1.0), cosh(1.0))));
-        // should(closeAtTolerance(cosh(N1(1.0, 1.0)), N1(cosh(1.0), sinh(1.0))));
-        // should(closeAtTolerance(tanh(N1(0.0, 1.0)), N1(0.0, 1.0)));
-        // should(closeAtTolerance(atan2(N2(-1.0, 1.0, 0.0), N2(-1.0, 0.0, 1.0)), N2(-0.75*M_PI, -0.5, 0.5)));
-        // should(closeAtTolerance(pow(N1(3.0, 1.0), 2.0), N1(9.0, 6.0)));
-        // should(closeAtTolerance(pow(3.0, N1(2.0, 1.0)), N1(9.0, 9.0*log(3.0))));
-        // should(closeAtTolerance(pow(N2(3.0, 1.0, 0.0), N2(2.0, 0.0, 1.0)), N2(9.0, 6.0, 9.0*log(3.0))));
+    void testFunctions()
+    {
+        // check numbers
+        should(closeAtTolerance(log(N1(M_E, 1.0)), N1(1.0, 1.0 / M_E)));
+        should(closeAtTolerance(exp(N1(0.0, 1.0)), N1(1.0, 1.0)));
+        should(closeAtTolerance(sqrt(N1(4.0, 1.0)), N1(2.0, 0.25)));
+        should(closeAtTolerance(sq(N1(3.0, 1.0)), N1(9.0, 6.0)));
+        should(closeAtTolerance(sin(N1(M_PI_2, 1.0)), N1(1.0, 0.0)));
+        should(closeAtTolerance(sin(N1(M_PI, 1.0)), N1(0.0, -1.0)));
+        should(closeAtTolerance(sin_pi(N1(0.5, 1.0)), N1(1.0, 0.0)));
+        should(closeAtTolerance(sin_pi(N1(1.0, 1.0)), N1(0.0, -M_PI)));
+        should(closeAtTolerance(cos(N1(0.0, 1.0)), N1(1.0, 0.0)));
+        should(closeAtTolerance(cos(N1(M_PI_2, 1.0)), N1(0.0, -1.0)));
+        should(closeAtTolerance(cos_pi(N1(1.0, 1.0)), N1(-1.0, 0.0)));
+        should(closeAtTolerance(cos_pi(N1(0.5, 1.0)), N1(0.0, -M_PI)));
+        should(closeAtTolerance(asin(N1(0.5, 1.0)), N1(M_PI/6.0, 2.0/sqrt(3.0)), 1e-15));
+        should(closeAtTolerance(acos(N1(0.5, 1.0)), N1(M_PI/3.0, -2.0/sqrt(3.0)), 1e-15));
+        should(closeAtTolerance(tan(N1(M_PI/4.0, 1.0)), N1(1.0, 2.0)));
+        should(closeAtTolerance(atan(N1(1.0, 1.0)), N1(0.25*M_PI, 0.5)));
+        should(closeAtTolerance(sinh(N1(1.0, 1.0)), N1(sinh(1.0), cosh(1.0))));
+        should(closeAtTolerance(cosh(N1(1.0, 1.0)), N1(cosh(1.0), sinh(1.0))));
+        should(closeAtTolerance(tanh(N1(0.0, 1.0)), N1(0.0, 1.0)));
+        should(closeAtTolerance(atan2(N2(-1.0, 1.0, 0.0), N2(-1.0, 0.0, 1.0)), N2(-0.75*M_PI, -0.5, 0.5)));
+        should(closeAtTolerance(pow(N1(3.0, 1.0), 2.0), N1(9.0, 6.0)));
+        should(closeAtTolerance(pow(3.0, N1(2.0, 1.0)), N1(9.0, 9.0*log(3.0))));
+        should(closeAtTolerance(pow(N2(3.0, 1.0, 0.0), N2(2.0, 0.0, 1.0)), N2(9.0, 6.0, 9.0*log(3.0))));
         
-        // // check constraints
-        // N1 x(2.3, 1.0);
-        // N2 a(1.2,2.3,3.4), b(4.5,5.6,6.7);
-        // should(closeAtTolerance(sq(sqrt(a)), a));
-        // should(closeAtTolerance(exp(log(a)), a));
-        // should(closeAtTolerance(sq(sin(x)) + sq(cos(x)), N1(1.0, 0.0), 1e-13));
-        // should(closeAtTolerance(sin(2.0*a), 2.0*cos(a)*sin(a), 1e-13));
-        // should(closeAtTolerance(cos(2.0*a), sq(cos(a)) - sq(sin(a)), 1e-13));
-        // should(closeAtTolerance(sin(a) / cos(a), tan(a), 1e-13));
-        // should(closeAtTolerance(tan(atan(a)), a, 1e-13));
-        // should(closeAtTolerance(sq(cosh(x)) - sq(sinh(x)), N1(1.0, 0.0), 1e-13));
-        // should(closeAtTolerance(tanh(a+b), (tanh(a) + tanh(b)) / (1.0 + tanh(a) * tanh(b)), 1e-12));
-        // should(closeAtTolerance(atan2(b*sin(a), b*cos(a)), a, 1e-13));
-        // should(closeAtTolerance(pow(a, 1.0), a));
-        // should(closeAtTolerance(pow(pow(a, b), 1.0 / b), a, 1e-13));
+        // check constraints
+        N1 x(2.3, 1.0);
+        N2 a(1.2,2.3,3.4), b(4.5,5.6,6.7);
+        should(closeAtTolerance(sq(sqrt(a)), a));
+        should(closeAtTolerance(exp(log(a)), a));
+        should(closeAtTolerance(sq(sin(x)) + sq(cos(x)), N1(1.0, 0.0), 1e-13));
+        should(closeAtTolerance(sin(2.0*a), 2.0*cos(a)*sin(a), 1e-13));
+        should(closeAtTolerance(cos(2.0*a), sq(cos(a)) - sq(sin(a)), 1e-13));
+        should(closeAtTolerance(sin(a) / cos(a), tan(a), 1e-13));
+        should(closeAtTolerance(tan(atan(a)), a, 1e-13));
+        should(closeAtTolerance(sq(cosh(x)) - sq(sinh(x)), N1(1.0, 0.0), 1e-13));
+        should(closeAtTolerance(tanh(a+b), (tanh(a) + tanh(b)) / (1.0 + tanh(a) * tanh(b)), 1e-12));
+        should(closeAtTolerance(atan2(b*sin(a), b*cos(a)), a, 1e-13));
+        should(closeAtTolerance(pow(a, 1.0), a));
+        should(closeAtTolerance(pow(pow(a, b), 1.0 / b), a, 1e-13));
 
-        // BSpline<0, double> s0;
-        // BSpline<1, double> s1;
-        // BSpline<2, double> s2;
-        // BSpline<3, double> s3;
-        // BSpline<4, double> s4;
-        // BSpline<5, double> s5;
+        BSpline<0, double> s0;
+        BSpline<1, double> s1;
+        BSpline<2, double> s2;
+        BSpline<3, double> s3;
+        BSpline<4, double> s4;
+        BSpline<5, double> s5;
 
-        // for(double x=-3.3; x < 3.5; x += 0.5)
-        // {
-            // N1 r = s0(N1(x, 0));
-            // should(closeAtTolerance(r.value(), s0(x), 1e-15));
-            // should(closeAtTolerance(r.gradient()[0], s0(x,1), 1e-13));
+        for(double x=-3.3; x < 3.5; x += 0.5)
+        {
+            N1 r = s0(N1(x, 0));
+            should(closeAtTolerance(r.value(), s0(x), 1e-15));
+            should(closeAtTolerance(r.gradient()[0], s0(x,1), 1e-13));
 
-            // r = s1(N1(x, 0));
-            // should(closeAtTolerance(r.value(), s1(x), 1e-15));
-            // should(closeAtTolerance(r.gradient()[0], s1(x,1), 1e-13));
+            r = s1(N1(x, 0));
+            should(closeAtTolerance(r.value(), s1(x), 1e-15));
+            should(closeAtTolerance(r.gradient()[0], s1(x,1), 1e-13));
 
-            // r = s2(N1(x, 0));
-            // should(closeAtTolerance(r.value(), s2(x), 1e-15));
-            // should(closeAtTolerance(r.gradient()[0], s2(x,1), 1e-13));
+            r = s2(N1(x, 0));
+            should(closeAtTolerance(r.value(), s2(x), 1e-15));
+            should(closeAtTolerance(r.gradient()[0], s2(x,1), 1e-13));
 
-            // r = s3(N1(x, 0));
-            // should(closeAtTolerance(r.value(), s3(x), 1e-15));
-            // should(closeAtTolerance(r.gradient()[0], s3(x,1), 1e-13));
+            r = s3(N1(x, 0));
+            should(closeAtTolerance(r.value(), s3(x), 1e-15));
+            should(closeAtTolerance(r.gradient()[0], s3(x,1), 1e-13));
 
-            // r = s4(N1(x, 0));
-            // should(closeAtTolerance(r.value(), s4(x), 1e-15));
-            // should(closeAtTolerance(r.gradient()[0], s4(x,1), 1e-13));
+            r = s4(N1(x, 0));
+            should(closeAtTolerance(r.value(), s4(x), 1e-15));
+            should(closeAtTolerance(r.gradient()[0], s4(x,1), 1e-13));
 
-            // r = s5(N1(x, 0));
-            // should(closeAtTolerance(r.value(), s5(x), 1e-15));
-            // should(closeAtTolerance(r.gradient()[0], s5(x,1), 1e-13));
-        // }
-    // }
-// };
+            r = s5(N1(x, 0));
+            should(closeAtTolerance(r.value(), s5(x), 1e-15));
+            should(closeAtTolerance(r.gradient()[0], s5(x,1), 1e-13));
+        }
+    }
+};
 
 // struct QuaternionTest
 // {
@@ -1975,7 +1975,7 @@ struct FunctionsTest
             // for(int j=0; j<g1.columnCount(); ++j)
                 // shouldEqual(g1(i,j), data[i]*data[j]);
 
-        // Matrix g2 = outer(TinyVector<double, 6>(data));
+        // Matrix g2 = outer(TinyArray<double, 6>(data));
         // shouldEqual(g2.rowCount(), 6);
         // shouldEqual(g2.columnCount(), 6);
         // for(int i=0; i<g2.rowCount(); ++i)
@@ -1993,7 +1993,7 @@ struct FunctionsTest
         // should(!isSymmetric(random_matrix(10, 10)));
 
         // Matrix tm(2, 2, tref2);
-        // TinyVector<double, 2> tv(1.0, 2.0), tvrref(7.0, 9.0), tvlref(11.0, 7.0);
+        // TinyArray<double, 2> tv(1.0, 2.0), tvrref(7.0, 9.0), tvlref(11.0, 7.0);
         // shouldEqual(tm * tv, tvrref);
         // shouldEqual(tv * tm, tvlref);
 
@@ -2331,7 +2331,7 @@ struct FunctionsTest
         // Matrix b = random_matrix (size, 1);
         // Matrix x(size, 1);
 
-        // TinyVector<double, 4> vb(b.data()), vx;
+        // TinyArray<double, 4> vb(b.data()), vx;
         // should(linearSolve (a, b, x));
         // should(linearSolve (a, vb, vx));
         // shouldEqualSequenceTolerance(x.data(), x.data()+size, vx.data(), epsilon);
@@ -2463,7 +2463,7 @@ struct FunctionsTest
 
             // {
                 // Matrix r(a), qtb(b), px(size,1), xx(size,1);
-                // ArrayVector<unsigned int> permutation(size);
+                // std::vector<unsigned int> permutation(size);
 
                 // for(int k=0; k<size; ++k)
                 // {
@@ -2489,7 +2489,7 @@ struct FunctionsTest
 
             // {
                 // Matrix r(a), qtb(b), px(size,1), xx(size,1);
-                // ArrayVector<unsigned int> permutation(size);
+                // std::vector<unsigned int> permutation(size);
 
                 // for(int k=0; k<size; ++k)
                 // {
@@ -2866,17 +2866,17 @@ struct MathTestSuite
     MathTestSuite()
     : test_suite("MathTest")
     {
-        // typedef Polynomial<double> P1;
-        // typedef StaticPolynomial<10, double> P2;
+        typedef Polynomial<double> P1;
+        typedef StaticPolynomial<10, double> P2;
 
-        // add( testCase((&PolynomialTest<0, P1>::testPolynomial)));
-        // add( testCase((&PolynomialTest<1, P1>::testPolynomial)));
-        // add( testCase((&PolynomialTest<2, P1>::testPolynomial)));
-        // add( testCase((&PolynomialTest<3, P1>::testPolynomial)));
-        // add( testCase((&PolynomialTest<4, P1>::testPolynomial)));
-        // add( testCase((&PolynomialTest<5, P1>::testPolynomial)));
-        // add( testCase((&PolynomialTest<6, P1>::testPolynomial)));
-        // add( testCase((&PolynomialTest<7, P1>::testPolynomial)));
+        add( testCase((&PolynomialTest<0, P1>::testPolynomial)));
+        add( testCase((&PolynomialTest<1, P1>::testPolynomial)));
+        add( testCase((&PolynomialTest<2, P1>::testPolynomial)));
+        add( testCase((&PolynomialTest<3, P1>::testPolynomial)));
+        add( testCase((&PolynomialTest<4, P1>::testPolynomial)));
+        add( testCase((&PolynomialTest<5, P1>::testPolynomial)));
+        add( testCase((&PolynomialTest<6, P1>::testPolynomial)));
+        add( testCase((&PolynomialTest<7, P1>::testPolynomial)));
 
         // // test only some polynomials, as the eigenvalue method is less robust
         // add( testCase((&PolynomialTest<1, P1>::testPolynomialEigenvalueMethod)));
@@ -2891,28 +2891,28 @@ struct MathTestSuite
         // add( testCase(&HighOrderPolynomialTest::testPolynomial));
         // add( testCase(&HighOrderPolynomialTest::testPolynomialEigenvalueMethod));
 
-        // add( testCase(&SplineTest<0>::testValues));
-        // add( testCase(&SplineTest<1>::testValues));
-        // add( testCase(&SplineTest<2>::testValues));
-        // add( testCase(&SplineTest<3>::testValues));
-        // add( testCase(&SplineTest<4>::testValues));
-        // add( testCase(&SplineTest<5>::testValues));
+        add( testCase(&SplineTest<0>::testValues));
+        add( testCase(&SplineTest<1>::testValues));
+        add( testCase(&SplineTest<2>::testValues));
+        add( testCase(&SplineTest<3>::testValues));
+        add( testCase(&SplineTest<4>::testValues));
+        add( testCase(&SplineTest<5>::testValues));
         // add( testCase(&SplineTest<0>::testFixedPointValues));
         // add( testCase(&SplineTest<1>::testFixedPointValues));
         // add( testCase(&SplineTest<2>::testFixedPointValues));
         // add( testCase(&SplineTest<3>::testFixedPointValues));
         // add( testCase(&SplineTest<0>::testPrefilterCoefficients));
-        // add( testCase(&SplineTest<1>::testPrefilterCoefficients));
-        // add( testCase(&SplineTest<2>::testPrefilterCoefficients));
-        // add( testCase(&SplineTest<3>::testPrefilterCoefficients));
-        // add( testCase(&SplineTest<4>::testPrefilterCoefficients));
-        // add( testCase(&SplineTest<5>::testPrefilterCoefficients));
-        // add( testCase(&SplineTest<0>::testWeightMatrix));
-        // add( testCase(&SplineTest<1>::testWeightMatrix));
-        // add( testCase(&SplineTest<2>::testWeightMatrix));
-        // add( testCase(&SplineTest<3>::testWeightMatrix));
-        // add( testCase(&SplineTest<4>::testWeightMatrix));
-        // add( testCase(&SplineTest<5>::testWeightMatrix));
+        add( testCase(&SplineTest<1>::testPrefilterCoefficients));
+        add( testCase(&SplineTest<2>::testPrefilterCoefficients));
+        add( testCase(&SplineTest<3>::testPrefilterCoefficients));
+        add( testCase(&SplineTest<4>::testPrefilterCoefficients));
+        add( testCase(&SplineTest<5>::testPrefilterCoefficients));
+        add( testCase(&SplineTest<0>::testWeightMatrix));
+        add( testCase(&SplineTest<1>::testWeightMatrix));
+        add( testCase(&SplineTest<2>::testWeightMatrix));
+        add( testCase(&SplineTest<3>::testWeightMatrix));
+        add( testCase(&SplineTest<4>::testWeightMatrix));
+        add( testCase(&SplineTest<5>::testWeightMatrix));
 
         add( testCase(&FunctionsTest::testSpecialIntegerFunctions));
         add( testCase(&FunctionsTest::testSpecialFunctions));
@@ -2922,7 +2922,7 @@ struct MathTestSuite
         add( testCase(&FunctionsTest::testChecksum));
         add( testCase(&FunctionsTest::testBessel));
         add( testCase(&FunctionsTest::testClebschGordan));
-        // add( testCase(&FunctionsTest::testGaussians));
+        add( testCase(&FunctionsTest::testGaussians));
 
         // add( testCase(&RationalTest::testGcdLcm));
         // add( testCase(&RationalTest::testOStreamShifting));
@@ -2931,9 +2931,9 @@ struct MathTestSuite
         // add( testCase(&RationalTest::testFunctions));
         // add( testCase(&RationalTest::testInf));
 
-        // add( testCase(&AutodiffTest::testOStreamShifting));
-        // add( testCase(&AutodiffTest::testOperators));
-        // add( testCase(&AutodiffTest::testFunctions));
+        add( testCase(&AutodiffTest::testOStreamShifting));
+        add( testCase(&AutodiffTest::testOperators));
+        add( testCase(&AutodiffTest::testFunctions));
 
         // add( testCase(&QuaternionTest::testContents));
         // add( testCase(&QuaternionTest::testStreamIO));

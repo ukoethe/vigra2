@@ -42,12 +42,12 @@ struct Invalid;
 
 } // namespace lemon
 
+#include "config.hxx"
 #include <cmath>    // abs(double)
 #include <cstdlib>  // abs(int)
 #include <iosfwd>   // ostream
 #include <algorithm>
 #include <iterator>
-#include "config.hxx"
 #include "numeric_traits.hxx"
 #include "error.hxx"
 #include "math.hxx"
@@ -69,8 +69,6 @@ namespace muli {
 #endif
 
 using std::sqrt;
-
-using ArrayIndex = std::ptrdiff_t;
 
 enum SkipInitialization { DontInit };
 enum ReverseCopyTag { ReverseCopy };
