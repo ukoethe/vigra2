@@ -45,7 +45,7 @@
 #include "config.hxx"
 #include "error.hxx"
 // #include "tuple.hxx"
-// #include "sized_int.hxx"
+#include "sized_int.hxx"
 #include "numeric_traits.hxx"
 // #include "algorithm.hxx"
 
@@ -333,8 +333,6 @@ inline int roundi(double t)
                 : int(t - 0.5);
 }
 
-#if 0
-
     /** \brief Round up to the nearest power of 2.
 
         Efficient algorithm for finding the smallest power of 2 which is not smaller than \a x
@@ -345,7 +343,7 @@ inline int roundi(double t)
         <b>\#include</b> \<muli/mathutil.hxx\><br>
         Namespace: muli
     */
-inline UInt32 ceilPower2(UInt32 x) 
+inline uint32_t ceilPower2(uint32_t x) 
 {
     if(x == 0) return 0;
     
@@ -367,7 +365,7 @@ inline UInt32 ceilPower2(UInt32 x)
         <b>\#include</b> \<muli/mathutil.hxx\><br>
         Namespace: muli
     */
-inline UInt32 floorPower2(UInt32 x) 
+inline uint32_t floorPower2(uint32_t x) 
 { 
     x = x | (x >> 1);
     x = x | (x >> 2);
@@ -382,11 +380,11 @@ namespace detail {
 template <class T>
 struct IntLog2
 {
-    static Int32 table[64];
+    static int32_t table[64];
 };
 
 template <class T>
-Int32 IntLog2<T>::table[64] = {
+int32_t IntLog2<T>::table[64] = {
          -1,  0,  -1,  15,  -1,  1,  28,  -1,  16,  -1,  -1,  -1,  2,  21,  
          29,  -1,  -1,  -1,  19,  17,  10,  -1,  12,  -1,  -1,  3,  -1,  6,  
          -1,  22,  30,  -1,  14,  -1,  27,  -1,  -1,  -1,  20,  -1,  18,  9,  
@@ -411,7 +409,7 @@ Int32 IntLog2<T>::table[64] = {
         <b>\#include</b> \<muli/mathutil.hxx\><br>
         Namespace: muli
     */
-inline Int32 log2i(UInt32 x) 
+inline int32_t log2i(uint32_t x) 
 { 
     // Propagate leftmost 1-bit to the right.
     x = x | (x >> 1);
@@ -420,7 +418,7 @@ inline Int32 log2i(UInt32 x)
     x = x | (x >> 8);
     x = x | (x >>16);
     x = x*0x06EB14F9; // Multiplier is 7*255**3. 
-    return detail::IntLog2<Int32>::table[x >> 26];
+    return detail::IntLog2<int32_t>::table[x >> 26];
 }
 
 namespace detail {
@@ -474,12 +472,12 @@ namespace detail {
 template <class T>
 struct IntSquareRoot
 {
-    static UInt32 sqq_table[];
-    static UInt32 exec(UInt32 v);
+    static uint32_t sqq_table[];
+    static uint32_t exec(uint32_t v);
 };
 
 template <class T>
-UInt32 IntSquareRoot<T>::sqq_table[] = {
+uint32_t IntSquareRoot<T>::sqq_table[] = {
            0,  16,  22,  27,  32,  35,  39,  42,  45,  48,  50,  53,  55,  57,
           59,  61,  64,  65,  67,  69,  71,  73,  75,  76,  78,  80,  81,  83,
           84,  86,  87,  89,  90,  91,  93,  94,  96,  97,  98,  99, 101, 102,
@@ -502,14 +500,14 @@ UInt32 IntSquareRoot<T>::sqq_table[] = {
 };
 
 template <class T>
-UInt32 IntSquareRoot<T>::exec(UInt32 x) 
+uint32_t IntSquareRoot<T>::exec(uint32_t x) 
 {
-    UInt32 xn;
+    uint32_t xn;
     if (x >= 0x10000)
         if (x >= 0x1000000)
             if (x >= 0x10000000)
                 if (x >= 0x40000000) {
-                    if (x >= (UInt32)65535*(UInt32)65535)
+                    if (x >= (uint32_t)65535*(uint32_t)65535)
                         return 65535;
                     xn = sqq_table[x>>24] << 8;
                 } else
@@ -565,7 +563,7 @@ UInt32 IntSquareRoot<T>::exec(UInt32 x)
 
 } // namespace detail
 
-using MULI_CSTD::sqrt;
+using std::sqrt;
 
     /** \brief Signed integer square root.
     
@@ -574,11 +572,11 @@ using MULI_CSTD::sqrt;
         <b>\#include</b> \<muli/mathutil.hxx\><br>
         Namespace: muli
     */
-inline Int32 sqrti(Int32 v)
+inline int32_t sqrti(int32_t v)
 {
     if(v < 0)
-        throw std::domain_error("sqrti(Int32): negative argument.");
-    return (Int32)detail::IntSquareRoot<UInt32>::exec((UInt32)v);
+        throw std::domain_error("sqrti(int32_t): negative argument.");
+    return (int32_t)detail::IntSquareRoot<uint32_t>::exec((uint32_t)v);
 }
 
     /** \brief Unsigned integer square root.
@@ -588,9 +586,9 @@ inline Int32 sqrti(Int32 v)
         <b>\#include</b> \<muli/mathutil.hxx\><br>
         Namespace: muli
     */
-inline UInt32 sqrti(UInt32 v)
+inline uint32_t sqrti(uint32_t v)
 {
-    return detail::IntSquareRoot<UInt32>::exec(v);
+    return detail::IntSquareRoot<uint32_t>::exec(v);
 }
 
 #ifdef MULI_NO_HYPOT
@@ -615,7 +613,7 @@ inline double hypot(double a, double b)
 
 #else
 
-using ::hypot;
+using std::hypot;
 
 #endif
 
@@ -907,7 +905,7 @@ inline double erf(double x)
 
 #else
 
-using ::erf;
+using std::erf;
 
 #endif
 
@@ -1586,11 +1584,10 @@ inline double loggamma(double x)
     return detail::GammaImpl<double>::loggamma(x);
 }
 
-#endif
 
 //@}
 
-#if 0
+#if 1
 
 #define MULI_MATH_FUNC_HELPER(TYPE) \
     inline TYPE clipLower(const TYPE t){ \
@@ -1617,7 +1614,7 @@ inline double loggamma(double x)
         return t; \
     }\
     inline TYPE isZero(const TYPE t){ \
-        return t==TYPE(); \
+        return t==static_cast<TYPE>(0.0); \
     } \
     inline RealPromote<TYPE> sizeDividedSquaredNorm(const TYPE t){ \
         return  squaredNorm(t); \

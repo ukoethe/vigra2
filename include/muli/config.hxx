@@ -1,13 +1,10 @@
 /************************************************************************/
 /*                                                                      */
-/*               Copyright 1998-2002 by Ullrich Koethe                  */
+/*               Copyright 2014-2015 by Ullrich Koethe                  */
 /*                                                                      */
-/*    This file is part of the MULI computer vision library.           */
-/*    The MULI Website is                                              */
-/*        http://hci.iwr.uni-heidelberg.de/muli/                       */
-/*    Please direct questions, bug reports, and contributions to        */
-/*        ullrich.koethe@iwr.uni-heidelberg.de    or                    */
-/*        muli@informatik.uni-hamburg.de                               */
+/*    This file is part of the MULI computer vision library.            */
+/*    The MULI Website is                                               */
+/*        http://ukoethe.github.io/muli                                 */
 /*                                                                      */
 /*    Permission is hereby granted, free of charge, to any person       */
 /*    obtaining a copy of this software and associated documentation    */
@@ -33,6 +30,7 @@
 /*                                                                      */
 /************************************************************************/
 
+#pragma once
 
 #ifndef MULI_CONFIG_HXX
 #define MULI_CONFIG_HXX
@@ -230,6 +228,8 @@
     #else
         #define MULI_EXPORT __declspec(dllimport)
     #endif
+    
+    #define MULI_NO_BESSEL
 #endif  // __MINGW32__
 
 ///////////////////////////////////////////////////////////

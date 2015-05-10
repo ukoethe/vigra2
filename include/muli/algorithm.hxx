@@ -35,7 +35,7 @@
 #ifndef MULI_ALGORITHM_HXX
 #define MULI_ALGORITHM_HXX
 
-// #include "sized_int.hxx"
+#include "sized_int.hxx"
 #include "numeric_traits.hxx"
 // #include "inspector_passes.hxx"
 #include <algorithm>
@@ -224,71 +224,69 @@ void linearSequence(Iterator first, Iterator last)
     linearSequence(first, last, NumericTraits<Value>::zero());
 }
 
-#if 0
+// /** \brief Call an analyzing functor at every element of a sequence.
 
-/** \brief Call an analyzing functor at every element of a sequence.
+    // This function can be used to collect statistics of the sequence
+    // <tt>[first, last)</tt> defined by these two input interators.
+    // The results must be stored in the functor, which serves as a return
+    // value.
 
-    This function can be used to collect statistics of the sequence
-    <tt>[first, last)</tt> defined by these two input interators.
-    The results must be stored in the functor, which serves as a return
-    value.
+    // <b> Declarations:</b>
 
-    <b> Declarations:</b>
+    // \code
+    // namespace muli {
+        // template <class InputIterator, class Functor>
+        // void
+        // inspectSequence(InputIterator first, InputIterator last, Functor & f);
+    // }
+    // \endcode
 
-    \code
-    namespace muli {
-        template <class InputIterator, class Functor>
-        void
-        inspectSequence(InputIterator first, InputIterator last, Functor & f);
-    }
-    \endcode
+    // <b> Usage:</b>
 
-    <b> Usage:</b>
+    // <b>\#include</b> \<muli/algorithm.hxx\><br>
+    // Namespace: muli
 
-    <b>\#include</b> \<muli/algorithm.hxx\><br>
-    Namespace: muli
+    // \code
+    // std::vector array(100);
 
-    \code
-    std::vector array(100);
+    // // init functor
+    // muli::FindMinMax<int> minmax;
 
-    // init functor
-    muli::FindMinMax<int> minmax;
+    // muli::inspectSequence(array.begin(), array.end(), minmax);
 
-    muli::inspectSequence(array.begin(), array.end(), minmax);
+    // cout << "Min: " << minmax.min << " Max: " << minmax.max;
 
-    cout << "Min: " << minmax.min << " Max: " << minmax.max;
+    // \endcode
 
-    \endcode
+// */
+// doxygen_overloaded_function(template <...> void inspectSequence)
 
-*/
-doxygen_overloaded_function(template <...> void inspectSequence)
+// namespace detail {
 
-namespace detail {
+// template <class InputIterator>
+// struct inspectSequence_binder
+// {
+    // InputIterator first;
+    // InputIterator last;
+    // inspectSequence_binder(InputIterator first_, InputIterator last_)
+        // : first(first_), last(last_) {}
+    // template <class Functor>
+    // void operator()(Functor & f)
+    // {
+        // for (InputIterator i = first; i != last; ++i)
+            // f(*i);
+    // }
+// };
 
-template <class InputIterator>
-struct inspectSequence_binder
-{
-    InputIterator first;
-    InputIterator last;
-    inspectSequence_binder(InputIterator first_, InputIterator last_)
-        : first(first_), last(last_) {}
-    template <class Functor>
-    void operator()(Functor & f)
-    {
-        for (InputIterator i = first; i != last; ++i)
-            f(*i);
-    }
-};
+// } // namespace detail
 
-} // namespace detail
-
-template <class InputIterator, class Functor>
-inline void
-inspectSequence(InputIterator first, InputIterator last, Functor & f)
-{
-    detail::inspectSequence_binder<InputIterator> g(first, last);
-    detail::extra_passes_select(g, f);
-}
+// template <class InputIterator, class Functor>
+// inline void
+// inspectSequence(InputIterator first, InputIterator last, Functor & f)
+// {
+    // detail::inspectSequence_binder<InputIterator> g(first, last);
+    // detail::extra_passes_select(g, f);
+// }
    
 namespace detail {
 
@@ -499,24 +497,24 @@ namespace detail {
 
 static bool isLittleEndian()
 {
-    static const UIntBiggest testint = 0x01;
-    return ((UInt8 *)&testint)[0] == 0x01;
+    static const uintmax_t testint = 0x01;
+    return ((uint8_t *)&testint)[0] == 0x01;
 }
 
 template <class INT>
 struct ChecksumImpl
 {
-    static UInt32 table0[256];
-    static UInt32 table1[256];
-    static UInt32 table2[256];
-    static UInt32 table3[256];
+    static uint32_t table0[256];
+    static uint32_t table1[256];
+    static uint32_t table2[256];
+    static uint32_t table3[256];
     
     template <class InIterator>
-    static UInt32 exec(InIterator i, unsigned int size, UInt32 crc = 0xFFFFFFFF);
+    static uint32_t exec(InIterator i, unsigned int size, uint32_t crc = 0xFFFFFFFF);
 };
 
 template <class INT>
-UInt32 ChecksumImpl<INT>::table0[256] = {
+uint32_t ChecksumImpl<INT>::table0[256] = {
     0x0U, 0x77073096U, 0xee0e612cU, 0x990951baU, 0x76dc419U, 0x706af48fU, 
     0xe963a535U, 0x9e6495a3U, 0xedb8832U, 0x79dcb8a4U, 0xe0d5e91eU, 0x97d2d988U, 
     0x9b64c2bU, 0x7eb17cbdU, 0xe7b82d07U, 0x90bf1d91U, 0x1db71064U, 0x6ab020f2U, 
@@ -562,7 +560,7 @@ UInt32 ChecksumImpl<INT>::table0[256] = {
     0xb40bbe37U, 0xc30c8ea1U, 0x5a05df1bU, 0x2d02ef8dU }; 
 
 template <class INT>
-UInt32 ChecksumImpl<INT>::table1[256] = {
+uint32_t ChecksumImpl<INT>::table1[256] = {
     0x00000000U, 0x191b3141U, 0x32366282U, 0x2b2d53c3U, 0x646cc504U,
     0x7d77f445U, 0x565aa786U, 0x4f4196c7U, 0xc8d98a08U, 0xd1c2bb49U,
     0xfaefe88aU, 0xe3f4d9cbU, 0xacb54f0cU, 0xb5ae7e4dU, 0x9e832d8eU,
@@ -617,7 +615,7 @@ UInt32 ChecksumImpl<INT>::table1[256] = {
     0x9324fd72U };
     
 template <class INT>
-UInt32 ChecksumImpl<INT>::table2[256] = {
+uint32_t ChecksumImpl<INT>::table2[256] = {
     0x00000000U, 0x01c26a37U, 0x0384d46eU, 0x0246be59U, 0x0709a8dcU,
     0x06cbc2ebU, 0x048d7cb2U, 0x054f1685U, 0x0e1351b8U, 0x0fd13b8fU,
     0x0d9785d6U, 0x0c55efe1U, 0x091af964U, 0x08d89353U, 0x0a9e2d0aU,
@@ -672,7 +670,7 @@ UInt32 ChecksumImpl<INT>::table2[256] = {
     0xbe9834edU };
     
 template <class INT>
-UInt32 ChecksumImpl<INT>::table3[256] = {
+uint32_t ChecksumImpl<INT>::table3[256] = {
     0x00000000U, 0xb8bc6765U, 0xaa09c88bU, 0x12b5afeeU, 0x8f629757U,
     0x37def032U, 0x256b5fdcU, 0x9dd738b9U, 0xc5b428efU, 0x7d084f8aU,
     0x6fbde064U, 0xd7018701U, 0x4ad6bfb8U, 0xf26ad8ddU, 0xe0df7733U,
@@ -729,7 +727,7 @@ UInt32 ChecksumImpl<INT>::table3[256] = {
 
 template <class INT>
 template <class InIterator>
-UInt32 ChecksumImpl<INT>::exec(InIterator i, unsigned int size, UInt32 crc)
+uint32_t ChecksumImpl<INT>::exec(InIterator i, unsigned int size, uint32_t crc)
 {
     InIterator end = i + size;
     
@@ -742,7 +740,7 @@ UInt32 ChecksumImpl<INT>::exec(InIterator i, unsigned int size, UInt32 crc)
         }
         for(; i < end-3; i+=4)
         {
-            crc ^= *((UInt32 *)i);
+            crc ^= *((uint32_t *)i);
             crc = table3[crc & 0xFF] ^
                   table2[(crc >> 8) & 0xFF] ^
                   table1[(crc >> 16) & 0xFF] ^
@@ -764,17 +762,17 @@ UInt32 ChecksumImpl<INT>::exec(InIterator i, unsigned int size, UInt32 crc)
         because the "4 bytes at a time" optimization is only implemented for 
         little-endian.
     */
-inline UInt32 checksum(const char * data, unsigned int size)
+inline uint32_t checksum(const char * data, unsigned int size)
 {
-    return detail::ChecksumImpl<UInt32>::exec(data, size);
+    return detail::ChecksumImpl<uint32_t>::exec(data, size);
 }
 
     /** Concatenate a byte array to an existing CRC-32 checksum.
     */
-inline UInt32 concatenateChecksum(UInt32 checksum, const char * data, unsigned int size)
+inline uint32_t concatenateChecksum(uint32_t checksum, const char * data, unsigned int size)
 {
     
-    return detail::ChecksumImpl<UInt32>::exec(data, size, ~checksum);
+    return detail::ChecksumImpl<uint32_t>::exec(data, size, ~checksum);
 }
 
 template <class T>
@@ -790,8 +788,6 @@ void updateMax(T & x, const T & y)
     using std::max;
     x = max(x, y);
 }
-
-#endif // #if 0
 
 //@}
 
