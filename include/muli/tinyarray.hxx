@@ -571,12 +571,12 @@ class TinyArrayBase
     const_iterator cbegin() const { return data_; }
     const_iterator cend()   const { return data_ + static_size; }
     
-    reverse_iterator rbegin() { return data_ + static_size; }
-    reverse_iterator rend()   { return data_; }
-    const_reverse_iterator rbegin() const { return data_ + static_size; }
-    const_reverse_iterator rend()   const { return data_; }
-    const_reverse_iterator crbegin() const { return data_ + static_size; }
-    const_reverse_iterator crend()   const { return data_; }
+    reverse_iterator rbegin() { return reverse_iterator(data_ + static_size); }
+    reverse_iterator rend()   { return reverse_iterator(data_); }
+    const_reverse_iterator rbegin() const { return const_reverse_iterator(data_ + static_size); }
+    const_reverse_iterator rend()   const { return const_reverse_iterator(data_); }
+    const_reverse_iterator crbegin() const { return const_reverse_iterator(data_ + static_size); }
+    const_reverse_iterator crend()   const { return const_reverse_iterator(data_); }
     
     pointer data() { return data_; }
     const_pointer data() const { return data_; }
@@ -607,7 +607,7 @@ class TinyArrayBase
     template <ArrayIndex SIZE>
     static inline 
     TinyArray<value_type, SIZE, SIZE>
-    tinyEye()
+    eye()
     {
         TinyArray<value_type, SIZE, SIZE> res;
         for(ArrayIndex k=0; k<SIZE; ++k)
@@ -1528,22 +1528,62 @@ dot(TinyArrayBase<V1, D1, N> const & l,
     TinyArrayBase<V2, D2, N> const & r)
 {
     Promote<V1, V2> res = l[0] * r[0];
-    for(ArrayIndex k=1; k < TinySize<N>::value; ++k)
+    for(ArrayIndex k=1; k < N; ++k)
         res += l[k] * r[k];
     return res;
 }
 
-// template <class V1, class D1, class V2, class D2, ArrayIndex ... N>
-// inline
-// Promote<V1, V2>
-// dot(TinyArrayBase<V1, D1, N...> const & l,
-    // TinyArrayBase<V2, D2, N...> const & r)
-// {
-    // Promote<V1, V2> res = l[0] * r[0];
-    // for(ArrayIndex k=1; k < TinySize<N...>::value; ++k)
-        // res += l[k] * r[k];
-    // return res;
-// }
+template <class V1, class D1, class V2, class D2, ArrayIndex N1, ArrayIndex N2>
+inline
+TinyArray<Promote<V1, V2>, N2>
+dot(TinyArrayBase<V1, D1, N1> const & l,
+    TinyArrayBase<V2, D2, N1, N2> const & r)
+{
+    TinyArray<Promote<V1, V2>, N2> res;
+    for(ArrayIndex j=0; j < N2; ++j)
+    {
+        res[j] = l[0] * r(0,j);
+        for(ArrayIndex i=1; i < N1; ++i)
+            res[j] += l[i] * r(i,j);
+    }
+    return res;
+}
+
+template <class V1, class D1, class V2, class D2, ArrayIndex N1, ArrayIndex N2>
+inline
+TinyArray<Promote<V1, V2>, N1>
+dot(TinyArrayBase<V1, D1, N1, N2> const & l,
+    TinyArrayBase<V2, D2, N2> const & r)
+{
+    TinyArray<Promote<V1, V2>, N1> res;
+    for(ArrayIndex i=0; i < N1; ++i)
+    {
+        res[i] = l(i,0) * r[0];
+        for(ArrayIndex j=1; j < N2; ++j)
+            res[i] += l(i,j) * r[j];
+    }
+    return res;
+}
+
+template <class V1, class D1, class V2, class D2, 
+          ArrayIndex N1, ArrayIndex N2, ArrayIndex N3>
+inline
+TinyArray<Promote<V1, V2>, N1, N3>
+dot(TinyArrayBase<V1, D1, N1, N2> const & l,
+    TinyArrayBase<V2, D2, N2, N3> const & r)
+{
+    TinyArray<Promote<V1, V2>, N1, N3> res;
+    for(ArrayIndex i=0; i < N1; ++i)
+    {
+        for(ArrayIndex j=0; j < N3; ++j)
+        {
+            res(i,j) = l(i,0) * r(0,j);
+            for(ArrayIndex k=1; k < N2; ++k)
+                res(i,j) += l(i,k) * r(k,j);
+        }
+    }
+    return res;
+}
 
     /// sum of the vector's elements
 template <class V, class D, ArrayIndex ... N>
@@ -1774,17 +1814,41 @@ reverse(TinyArrayBase<V, D, N...> const & t)
     
         Elements are arranged such that <tt>res[k] = t[permutation[k]]</tt>.
     */
-template <class V1, class D1, class V2, class D2, ArrayIndex ...N>
+template <class V1, class D1, class V2, class D2, ArrayIndex N>
 inline
-TinyArray<V1, N...>
-transpose(TinyArrayBase<V1, D1, N...> const & v, 
-          TinyArrayBase<V2, D2, N...> const & permutation)
+TinyArray<V1, N>
+transpose(TinyArrayBase<V1, D1, N> const & v, 
+          TinyArrayBase<V2, D2, N> const & permutation)
 {
-    TinyArray<V1, N...> res(DontInit);
-    for(int k=0; k < TinySize<N...>::value; ++k)
+    TinyArray<V1, N> res(DontInit);
+    for(int k=0; k < N; ++k)
     {
         MULI_ASSERT_INSIDE(permutation[k]);
         res[k] = v[permutation[k]];
+    }
+    return res;
+}
+
+template <class V1, class D1, ArrayIndex N>
+inline
+TinyArray<V1, N>
+transpose(TinyArrayBase<V1, D1, N> const & v)
+{
+    return reverse(v);
+}
+
+template <class V1, class D1, ArrayIndex N1, ArrayIndex N2>
+inline
+TinyArray<V1, N2, N1>
+transpose(TinyArrayBase<V1, D1, N1, N2> const & v)
+{
+    TinyArray<V1, N2, N1> res(DontInit);
+    for(int i=0; i < N1; ++i)
+    {
+        for(int j=0; j < N2; ++j)
+        {
+            res(j,i) = v(i,j);
+        }
     }
     return res;
 }

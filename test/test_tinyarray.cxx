@@ -274,6 +274,8 @@ struct TinyArrayTest
         should(equalIter(ivi3.begin(), ivi3.end(), ri));
         ivi3 = floor(fv3);
         should(equalIter(ivi3.begin(), ivi3.end(), fpi));
+        ivi3 = roundi(fv3);
+        should(equalIter(ivi3.begin(), ivi3.end(), ri));
         ivi3 = -ceil(fvm3);
         should(equalIter(ivi3.begin(), ivi3.end(), fpi));
         ivi3 = -round(fvm3);
@@ -302,14 +304,6 @@ struct TinyArrayTest
         shouldEqual(dot(bv3, bv3), squaredNorm(bv3));
         shouldEqual(dot(iv3, bv3), squaredNorm(iv3));
         shouldEqual(dot(fv3, fv3), squaredNorm(fv3));
-
-        // shouldEqual(squaredNorm(bv3), bv3.squaredNorm());
-        // shouldEqual(squaredNorm(iv3), iv3.squaredNorm());
-        // shouldEqual(squaredNorm(fv3), fv3.squaredNorm());
-
-        // shouldEqual(norm(bv3), bv3.norm());
-        // shouldEqual(norm(iv3), iv3.norm());
-        // shouldEqual(norm(fv3), fv3.norm());
 
         TinyArray<IV, 3> ivv(iv3, iv3, iv3);
         shouldEqual(squaredNorm(ivv), 3*squaredNorm(iv3));
@@ -390,10 +384,14 @@ struct TinyArrayTest
         int maxRef2[] = { 1, 3, 4, 5, 8, 10 };
         shouldEqualSequence(maxRef2, maxRef2+SIZE, max(iv3, ivmax).begin());
         
+        shouldEqual(sqrt(iv3 * iv3), iv3);
+        shouldEqual(sqrt(pow(iv3, 2)), iv3);
+        
         shouldEqual(sum(iv3), SIZE == 3 ? 7 : 30);
         shouldEqual(sum(fv3), SIZE == 3 ? 7.2f : 29.8f);
         shouldEqual(prod(iv3), SIZE == 3 ? 8 : 3200);
         shouldEqual(prod(fv3), SIZE == 3 ? 10.368f : 3910.15f);
+        shouldEqualTolerance(mean(iv3), SIZE == 3 ? 7.0/SIZE : 30.0/SIZE, 1e-15);
 
         float cumsumRef[] = {1.2f, 3.6f, 7.2f, 12.0f, 20.1f, 29.8f };
         shouldEqualSequenceTolerance(cumsumRef, cumsumRef+3, cumsum(fv3).begin(), 1e-6);
@@ -423,71 +421,93 @@ struct TinyArrayTest
         out << bv3 << std::endl;
     }
     
-    void test()
+    void test2D()
     {
-        using Array1 = TinyArray<int, 6> ;
-        using Array = TinyArray<int, 2, 3> ;
-        std::cerr << Array::static_ndim << " ndim\n";
-        std::cerr << Array::static_size << " size\n";
-        Array a = {4,5,6,7,8,9};
-        std::cerr << a[1] << " a[1]\n";
-        std::cerr << a[{0,1}] << " a[{0,1}]\n";
-        std::cerr << a[Array::index_type(0,1)] << " a[Array::index_type(0,1)]\n";
-        std::cerr << a(0,1) << " a(0,1)\n";
+        using Array = TinyArray<int, 2, 3>;
+        using Index = TinyArray<ArrayIndex, 2>;
         
-        std::cerr << TinySymmetricView<int, 3>(a.data()).shape() << " symshape\n";
-        std::cerr << TinySymmetricView<int, 3>(a.data()) << " symview\n";
+        shouldEqual(Array::static_ndim, 2);
+        shouldEqual(Array::static_size, 6);
+        should((std::is_same<Index, Array::index_type>::value));
+        shouldEqual(Array::static_shape, (Index{2,3}));
+        
+        int adata[] = {4,5,6,7,8,9};
+        Array a{adata};
+        shouldEqual(a.ndim(), 2);
+        shouldEqual(a.size(), 6);
+        shouldEqual(a.shape(), Index(2,3));
+        
+        int count = 0, i, j;
+        Index idx;
+        for(i=0, idx[0]=0; i<2; ++i, ++idx[0])
+        {
+            for(j=0, idx[1]=0; j<3; ++j, ++count, ++idx[1])
+            {
+                shouldEqual(a[count], adata[count]);
+                shouldEqual((a[{i,j}]), adata[count]);
+                shouldEqual(a[idx], adata[count]);
+                shouldEqual(a(i,j), adata[count]);
+            }
+        }
+        {
+            std::string s = "{4, 5, 6,\n 7, 8, 9}";
+            std::stringstream ss;
+            ss << a;
+            shouldEqual(s, ss.str());
+        }
+        
+        TinySymmetricView<int, 3> sym(a.data());
+        shouldEqual(sym.shape(), Index(3,3));
+        {
+            std::string s = "{4, 5, 6,\n 5, 7, 8,\n 6, 8, 9}";
+            std::stringstream ss;
+            ss << sym;
+            shouldEqual(s, ss.str());
+        }
         
         Array::AsType<float> b = a;
-        std::cerr << b << " b\n";
+        shouldEqual(a, b);
         
-        a = {0,2,3,4,5,6};
-        std::cerr << a << " a\n";
-        std::cerr << squaredNorm(a) << " squaredNorm(a)\n";
-        std::cerr << norm(a) << " norm(a)\n";
-        std::cerr << a.minimum() << " a.minimum()\n";
-        std::cerr << a.maximum() << " a.maximum()\n";
-        std::cerr << a.all() << " a.all()\n";
-        std::cerr << a.any() << " a.any()\n";
+        int adata2[] = {0,1,2,3,4,5};
+        a = {0,1,2,3,4,5};
+        shouldEqualSequence(a.begin(), a.end(), adata2);
+        Array c = reverse(a);
+        shouldEqualSequence(c.rbegin(), c.rend(), adata2);
         
-        std::cerr << (a+b) << " a+b\n";
-        std::cerr << (a+4) << " a+4\n";
-        std::cerr << (4+a) << " 4+a\n";
-        std::cerr << (-a) << " -a\n";
-        std::cerr << sqrt(a) << " sqrt(a)\n";
-        std::cerr << sum(a) << " sum(a)\n";
-        std::cerr << mean(a) << " mean(a)\n";
-        std::cerr << cumsum(a) << " cumsum(a)\n";
+        should(a==a);
+        should(a!=b);
+        should(a < b);
+        should(a.any());
+        should(!a.all());
+        should(b.any());
+        should(b.all());
+        should(!isZero(a));
+        should(allLess(a, b));
+        should(allLessEqual(a, b));
+        should(!allGreater(a, b));
+        should(!allGreaterEqual(a, b));
+        should(closeAtTolerance(a, b, 10.0f));
         
-        a.swap(b);
-        std::cerr << b << " b\n";
-        std::cerr << a << " a\n";
-        std::cerr << (a==a) << " a==a\n";
-        std::cerr << (a==b) << " a==b\n";
-        std::cerr << isZero(a) << " isZero(a)\n";
-        std::cerr << closeAtTolerance(b, b) << " closeAtTolerance(b, b)\n";
-        std::cerr << min(a,b) << " min(a,b)\n";
-        std::cerr << max(a,b) << " max(a,b)\n";
+        shouldEqual(squaredNorm(a), 55);
+        shouldEqualTolerance(norm(a), sqrt(55.0), 1e-15);
+        shouldEqual(min(a), 0);
+        shouldEqual(max(a), 5);
+        shouldEqual(max(a, b), b);
+       
+        c.swap(b);
+        shouldEqualSequence(c.cbegin(), c.cend(), adata);
+        shouldEqualSequence(b.crbegin(), b.crend(), adata2);
         
-        Array c(a.begin(), ReverseCopy);
-        std::cerr << c << " c\n";
-        std::cerr << reverse(c) << " reverse(c)\n";
+        TinyArray<int, 2, 2> dot2ref = { 5, 14, 14, 50 };
+        shouldEqual(dot2ref, dot(a, transpose(a)));
+        TinyArray<int, 3> f {4, 3, 2};
+        TinyArray<int, 2> dotref { 7, 34 };
+        shouldEqual(dotref, dot(a, f));
+        shouldEqual(dotref, dot(f, transpose(a)));
         
-        Array1 d = {1,2,3,4,5,6};
-        std::cerr << d << " d\n";
-        std::cerr << d.subarray<1,4>() << " d.subarray<1,4>()\n";
-        std::cerr << d.dropIndex(2) << " d.dropIndex(2)\n";
-        std::cerr << dot(d, d) << " dot(d, d)\n";
-        
-        std::cerr << Array::tinyEye<3>() << " tinyEye<3>()\n";
-        std::cerr << Array::unitVector<3>(1) << " Array::unitVector<3>(1)\n";
-        std::cerr << Array::linearSequence() << " Array::linearSequence()\n";
-        
-        TinyArray<int, 3> f = {1,2,3};
-        std::cerr << cross(f,f) << " cross(f,f)\n";
-        
-        TinyArray<float, 3> g = {1.f,2.f,3.f};
-        std::cerr << cross(g,g) << " cross(g,g)\n";
+        int eyedata[] = { 1, 0, 0, 0, 1, 0, 0, 0, 1};
+        auto eye = Array::eye<3>();
+        shouldEqualSequence(eye.begin(), eye.end(), eyedata);
     }
     
     void testException()
@@ -514,7 +534,7 @@ struct TinyArrayTestSuite
     TinyArrayTestSuite()
     : muli::test_suite("TinyArrayTest")
     {
-        add( testCase(&Tests::test));
+        add( testCase(&Tests::test2D));
         add( testCase(&Tests::testConstruction));
         add( testCase(&Tests::testComparison));
         add( testCase(&Tests::testArithmetic));
