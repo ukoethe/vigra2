@@ -127,11 +127,15 @@ Error message and password prompt
 
 <li>$:/SiteTitle</li>
 
+<li>$:/state/showeditpreview</li>
+
 <li>$:/state/tab/sidebar--1835078512</li>
 
 <li>$:/StoryList</li>
 
 <li>$:/temp/info-plugin</li>
+
+<li>$:/temp/search</li>
 
 <li>$:/themes/tiddlywiki/snowwhite</li>
 
@@ -140,6 +144,8 @@ Error message and password prompt
 <li>FilesToBeConverted</li>
 
 <li>MainPage</li>
+
+<li>TestingPrinciples</li>
 
 </ul>
 </p>
@@ -5640,10 +5646,13 @@ Error message and password prompt
 <div created="20150510123441246" modified="20150510123443532" title="$:/SiteTitle">
 <pre>Muli Notes</pre>
 </div>
-<div modified="20150510123553800" title="$:/state/tab/sidebar--1835078512">
+<div modified="20150510125839432" title="$:/state/showeditpreview">
+<pre>yes</pre>
+</div>
+<div modified="20150510125642078" title="$:/state/tab/sidebar--1835078512">
 <pre>$:/core/ui/SideBar/Tools</pre>
 </div>
-<div list="MainPage FilesToBeConverted" title="$:/StoryList">
+<div list="MainPage TestingPrinciples FilesToBeConverted" title="$:/StoryList">
 <pre></pre>
 </div>
 <div plugin-type="info" title="$:/temp/info-plugin" type="application/json">
@@ -5659,6 +5668,9 @@ Error message and password prompt
         }
     }
 }</pre>
+</div>
+<div created="20150510125654892" modified="20150510125705236" title="$:/temp/search">
+<pre></pre>
 </div>
 <div author="JeremyRuston" core-version="&gt;=5.0.0" dependents="$:/themes/tiddlywiki/vanilla" description="Emphasises individual tiddlers" name="Snow White" plugin-type="theme" title="$:/themes/tiddlywiki/snowwhite" type="application/json" version="5.1.8">
 <pre>{
@@ -5959,10 +5971,16 @@ Error message and password prompt
 * wigner-matrix.hxx
 * windows.h</pre>
 </div>
-<div created="20150510123649210" modified="20150510123918604" title="MainPage">
+<div created="20150510123649210" modified="20150510125405461" title="MainPage">
 <pre>MULI is the working name for the C++ 11 version of VIGRA. MULI will put special emphasis on the lessons learned over the years and on parallelization. 
 
-* FilesToBeConverted</pre>
+* FilesToBeConverted
+* TestingPrinciples</pre>
+</div>
+<div created="20150510125411943" modified="20150510125848161" title="TestingPrinciples">
+<pre>* each header file will have a test file with the same name
+** `include/muli/error.hxx` =&gt; `test/test_error.cxx`
+* cmake will find the test files automatically and configures the corresponding test executable</pre>
 </div>
 
 </div>
