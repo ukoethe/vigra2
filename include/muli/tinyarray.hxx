@@ -49,8 +49,8 @@ struct Invalid;
 #include <iterator>
 #include "config.hxx"
 #include "numeric_traits.hxx"
-// #include "error.hxx"
-// #include "mathutil.hxx"
+#include "error.hxx"
+#include "math.hxx"
 
 #ifdef MULI_CHECK_BOUNDS
 #define MULI_ASSERT_INSIDE(diff) \
@@ -151,20 +151,20 @@ class TinyArrayBase
   protected:
     using ShapeHelper = TinyShapeImpl<0, N...>;
     
-    static const bool derived_is_view = std::is_same<DERIVED, TinyArrayView<VALUETYPE, N...> >::value;
-    using data_array_type = typename std::conditional<derived_is_view, 
-                                                VALUETYPE *, 
-                                                VALUETYPE[ShapeHelper::total_size]>::type;
+    static const bool derived_is_array = std::is_same<DERIVED, TinyArray<VALUETYPE, N...> >::value;
+    using data_array_type = typename std::conditional<derived_is_array, 
+                                                VALUETYPE[ShapeHelper::total_size],
+                                                VALUETYPE *>::type;
     
-    template <int LEVEL, class V1, class ... V2>
-    void initImpl(V1 v1, V2... v2)
+    template <int LEVEL, class ... V2>
+    void initImpl(VALUETYPE v1, V2... v2)
     {
         data_[LEVEL] = v1;
         initImpl<LEVEL+1>(v2...);
     }
     
-    template <int LEVEL, class V1>
-    void initImpl(V1 v1)
+    template <int LEVEL>
+    void initImpl(VALUETYPE v1)
     {
         data_[LEVEL] = v1;
     }
@@ -187,8 +187,8 @@ class TinyArrayBase
     using difference_type        = std::ptrdiff_t;
     using index_type             = TinyArray<ArrayIndex, sizeof...(N)>;
     
-    static constexpr ArrayIndex static_ndim  = sizeof...(N);
-    static constexpr ArrayIndex static_size  = ShapeHelper::total_size;
+    static const ArrayIndex static_ndim  = sizeof...(N);
+    static const ArrayIndex static_size  = ShapeHelper::total_size;
     static constexpr index_type static_shape = index_type(N...);
     
     // constructors
@@ -198,21 +198,28 @@ class TinyArrayBase
   protected:
   
     TinyArrayBase(SkipInitialization)
-    {}
+    {
+        static_assert(static_size > 0, 
+                      "TinyArrayBase(): array must have non-zero size.");
+    }
     
-    // constructores to be used by TinyArray
+    // constructors to be used by TinyArray
     
     template <class OTHER, class OTHER_DERIVED>
     TinyArrayBase(TinyArrayBase<OTHER, OTHER_DERIVED, N...> const & other)
     {
+        static_assert(static_size > 0, 
+                      "TinyArrayBase(): array must have non-zero size.");
         for(ArrayIndex i=0; i<static_size; ++i)
-            data_[i] = other[i];
+            data_[i] = detail::RequiresExplicitCast<value_type>::cast(other[i]);
     }
     
     // constructor for zero or one argument
     // activate 'constexpr' in C++ 14
     /* constexpr */ TinyArrayBase(value_type v = value_type())
     {
+        static_assert(static_size > 0, 
+                      "TinyArrayBase(): array must have non-zero size.");
         for(ArrayIndex i=0; i<static_size; ++i)
             data_[i] = v;
     }
@@ -222,26 +229,35 @@ class TinyArrayBase
     constexpr TinyArrayBase(value_type v0, value_type v1, V ... v)
     : data_{v0, v1, v...}
     {
+        static_assert(static_size > 0, 
+                      "TinyArrayBase(): array must have non-zero size.");
         static_assert(sizeof...(V)+2 == static_size, 
                       "TinyArrayBase(): wrong number of arguments.");
     }
     
     constexpr TinyArrayBase(value_type const (&v)[static_ndim])
     : data_{v}
-    {}
+    {
+        static_assert(static_size > 0, 
+                      "TinyArrayBase(): array must have non-zero size.");
+    }
     
     template <class U>
     explicit TinyArrayBase(U const * u)
     {
+        static_assert(static_size > 0, 
+                      "TinyArrayBase(): array must have non-zero size.");
         for(ArrayIndex i=0; i<static_size; ++i)
-            data_[i] = u[i];
+            data_[i] = detail::RequiresExplicitCast<value_type>::cast(u[i]);
     }
     
     template <class U>
     explicit TinyArrayBase(U const * u, ReverseCopyTag)
     {
+        static_assert(static_size > 0, 
+                      "TinyArrayBase(): array must have non-zero size.");
         for(ArrayIndex i=0; i<static_size; ++i)
-            data_[i] = u[static_size-1-i];
+            data_[i] = detail::RequiresExplicitCast<value_type>::cast(u[static_size-1-i]);
     }
 
   public:
@@ -268,7 +284,7 @@ class TinyArrayBase
     TinyArrayBase & operator=(TinyArrayBase<OTHER, OTHER_DERIVED, N...> const & other)
     {
         for(ArrayIndex i=0; i<static_size; ++i)
-            data_[i] = other[i];
+            data_[i] = detail::RequiresExplicitCast<value_type>::cast(other[i]);
         return *this;
     }
     
@@ -285,6 +301,17 @@ class TinyArrayBase
         static_assert(sizeof...(V)+2 == static_size, 
                       "TinyArrayBase::init(): wrong number of arguments.");
         initImpl<0>(v0, v1, v...);
+        return static_cast<DERIVED &>(*this);
+    }
+    
+    template <class Iterator>
+    DERIVED & init(Iterator first, Iterator end)
+    {
+        ArrayIndex range = std::distance(first, end);
+        if(static_size < range)
+            range = static_size;
+        for(ArrayIndex i=0; i<range; ++i, ++first)
+            data_[i] = detail::RequiresExplicitCast<value_type>::cast(*first);
         return static_cast<DERIVED &>(*this);
     }
     
@@ -367,19 +394,13 @@ class TinyArrayBase
     
     // vector functions
     
-    Promote<value_type> squaredNorm() const
+    SquaredNormType<value_type> squaredNormImpl() const
     {
-        Promote<value_type> result = Promote<value_type>();
+        SquaredNormType<value_type> result = SquaredNormType<value_type>();
         for(ArrayIndex i=0; i<static_size; ++i)
-            result += data_[i]*data_[i];
+            result += squaredNorm(data_[i]);
         return result;
     }
-    
-    RealPromote<value_type> norm() const
-    {
-         return sqrt(this->squaredNorm());
-    }
-
 
         /** Return the minimal element.
         */
@@ -582,6 +603,40 @@ class TinyArrayBase
         }
     }
     
+        /// factory function for fixed-size unit matrix
+    template <ArrayIndex SIZE>
+    static inline 
+    TinyArray<value_type, SIZE, SIZE>
+    tinyEye()
+    {
+        TinyArray<value_type, SIZE, SIZE> res;
+        for(ArrayIndex k=0; k<SIZE; ++k)
+            res(k,k) = 1;
+        return res;
+    }
+
+        /// factory function for the fixed-size k-th unit vector 
+    template <ArrayIndex SIZE>
+    static inline 
+    TinyArray<value_type, SIZE>
+    unitVector(ArrayIndex k)
+    {
+        TinyArray<value_type, SIZE> res;
+        res(k) = 1;
+        return res;
+    }
+
+        /// factory function for fixed-size linear sequence starting at <tt>start</tt> with stepsize <tt>step</tt>
+    static inline 
+    TinyArray<value_type, N...>
+    linearSequence(value_type start = value_type(), value_type step = value_type(1))
+    {
+        TinyArray<value_type, N...> res;
+        for(ArrayIndex k=0; k < static_size; ++k, start += step)
+            res[k] = start;
+        return res;
+    }
+    
   protected:
     data_array_type data_;
 };
@@ -599,6 +654,24 @@ std::ostream & operator<<(std::ostream & o, TinyArrayBase<T, DERIVED, N...> cons
         o << v[0];
     for(ArrayIndex i=1; i < TinyArrayBase<T, DERIVED, N...>::static_size; ++i)
         o << ", " << v[i];
+    o << "}";
+    return o;
+}
+
+template <class T, class DERIVED, ArrayIndex N1, ArrayIndex N2>
+std::ostream & operator<<(std::ostream & o, TinyArrayBase<T, DERIVED, N1, N2> const & v)
+{
+    o << "{";
+    for(ArrayIndex i=0; i<N1; ++i)
+    {
+        if(i > 0)
+            o << ",\n ";
+        o << v(i,0);
+        for(ArrayIndex j=1; j<N2; ++j)
+        {
+            o << ", " << v(i, j);
+        }
+    }
     o << "}";
     return o;
 }
@@ -700,44 +773,10 @@ class TinyArray
     }
 };
 
-    /// factory function for fixed-size unit matrix
-template <class VALUETYPE, ArrayIndex N>
-inline 
-TinyArray<VALUETYPE, N, N>
-tinyEye()
-{
-    TinyArray<VALUETYPE, N, N> res;
-    for(ArrayIndex k=0; k<N; ++k)
-        res(k,k) = 1;
-    return res;
-}
-
-    /// factory function for the fixed-size k-th unit vector 
-template <class VALUETYPE, ArrayIndex N>
-inline 
-TinyArray<VALUETYPE, N>
-unitVector(ArrayIndex k)
-{
-    TinyArray<VALUETYPE, N> res;
-    res(k) = 1;
-    return res;
-}
-
-    /// factory function for fixed-size linear sequence starting at <tt>start</tt> with stepsize <tt>step</tt>
-template <class VALUETYPE, ArrayIndex ... N>
-inline 
-TinyArray<VALUETYPE, N...>
-linearSequence(VALUETYPE start = VALUETYPE(), VALUETYPE step = VALUETYPE(1))
-{
-    TinyArray<VALUETYPE, N...> res;
-    for(ArrayIndex k=0; k < TinySize<N...>::value; ++k)
-        res[k] = k;
-    return res;
-}
 
 /** \brief Wrapper for fixed size arrays.
 
-    This class wraps the mamory of an array of the specified VALUETYPE
+    This class wraps the memory of an array of the specified VALUETYPE
     with (possibly multi-dimensional) shape given by <tt>ArrayIndex....N</tt>.
     Thus, the array can be accessed with an interface similar to
     that of std::vector (except that there are no functions
@@ -752,6 +791,7 @@ linearSequence(VALUETYPE start = VALUETYPE(), VALUETYPE step = VALUETYPE(1))
     <ul>
         <li> \ref muli::TinyArrayBase
         <li> \ref muli::TinyArray
+        <li> \ref muli::TinySymmetricView
         <li> \ref TinyArrayOperators
     </ul>
 
@@ -803,12 +843,20 @@ class TinyArrayView
         BaseType::data_ = const_cast<pointer>(other.data());
     }
 
+        /** Reset to the other array's pointer.
+        */
+    template <class OTHER_DERIVED>
+    void reset(TinyArrayBase<value_type, OTHER_DERIVED, N...> const & other)
+    {
+        BaseType::data_ = const_cast<pointer>(other.data());
+    }
+
         /** Copy the data (not the pointer) of the rhs.
         */
     TinyArrayView & operator=(TinyArrayView const & r)
     {
         for(int k=0; k<static_size; ++k)
-            BaseType::data_[k] = r[k];
+            BaseType::data_[k] = detail::RequiresExplicitCast<value_type>::cast(r[k]);
         return *this;
     }
 
@@ -818,10 +866,237 @@ class TinyArrayView
     TinyArrayView & operator=(TinyArrayBase<U, OTHER_DERIVED, N...> const & r)
     {
         for(int k=0; k<static_size; ++k)
-            BaseType::data_[k] = static_cast<value_type>(r[k]);
+            BaseType::data_[k] = detail::RequiresExplicitCast<value_type>::cast(r[k]);
         return *this;
     }
 };
+
+/** \brief Wrapper for fixed size arrays.
+
+    This class wraps the memory of an 1D array of the specified VALUETYPE
+    with size <tt>N*(N+1)/2</tt> and interprets this array as a symmetric
+    matrix. Specifically, the data are interpreted as the row-wise
+    representation of the upper triangular part of the symmetric matrix.
+    All index access operations are overloaded such that the view appears 
+    as if it were a full matrix. The TinySymmetricView
+    does <em>not</em> assume ownership of the given memory.
+
+    \ref TinyArrayOperators "Arithmetic operations"
+    on TinySymmetricView are defined as component-wise applications of these
+    operations. 
+
+    <b>See also:</b>
+    <ul>
+        <li> \ref muli::TinyArrayBase
+        <li> \ref muli::TinyArray
+        <li> \ref muli::TinyArrayView
+        <li> \ref TinyArrayOperators
+    </ul>
+
+    <b>\#include</b> \<muli/tinyarray.hxx\><br>
+    Namespace: muli
+**/
+template <class VALUETYPE, ArrayIndex N>
+class TinySymmetricView
+: public TinyArrayBase<VALUETYPE, TinySymmetricView<VALUETYPE, N>, N*(N+1)/2>
+{
+    using BaseType = TinyArrayBase<VALUETYPE, TinySymmetricView<VALUETYPE, N>, N*(N+1)/2>;
+    
+  public:
+  
+    typedef typename BaseType::value_type value_type;
+    typedef typename BaseType::pointer pointer;
+    typedef typename BaseType::const_pointer const_pointer;
+    typedef typename BaseType::reference reference;
+    typedef typename BaseType::const_reference const_reference;
+    using index_type             = TinyArray<ArrayIndex, 2>;
+
+    static const ArrayIndex static_size = BaseType::static_size;
+    static const ArrayIndex static_ndim = 2;
+    static constexpr index_type static_shape = index_type(N, N);
+  
+    TinySymmetricView()
+    : BaseType(DontInit)
+    {
+        BaseType::data_ = nullptr;
+    }
+
+        /** Construct view for given data array
+        */
+    TinySymmetricView(const_pointer data)
+    : BaseType(DontInit)
+    {
+        BaseType::data_ = const_cast<pointer>(data);
+    }
+
+        /** Copy constructor (shallow copy).
+        */
+    TinySymmetricView(TinySymmetricView const & other)
+    : BaseType(DontInit)
+    {
+        BaseType::data_ = const_cast<pointer>(other.data());
+    }
+
+        /** Construct view from other TinyArray.
+        */
+    template <class OTHER_DERIVED>
+    TinySymmetricView(TinyArrayBase<value_type, OTHER_DERIVED, N*(N+1)/2> const & other)
+    : BaseType(DontInit)
+    {
+        BaseType::data_ = const_cast<pointer>(other.data());
+    }
+
+        /** Reset to the other array's pointer.
+        */
+    template <class OTHER_DERIVED>
+    void reset(TinyArrayBase<value_type, OTHER_DERIVED, N*(N+1)/2> const & other)
+    {
+        BaseType::data_ = const_cast<pointer>(other.data());
+    }
+
+        /** Copy the data (not the pointer) of the rhs.
+        */
+    TinySymmetricView & operator=(TinySymmetricView const & r)
+    {
+        for(int k=0; k<static_size; ++k)
+            BaseType::data_[k] = detail::RequiresExplicitCast<value_type>::cast(r[k]);
+        return *this;
+    }
+
+        /** Copy the data of the rhs with cast.
+        */
+    template <class U, class OTHER_DERIVED>
+    TinySymmetricView & operator=(TinyArrayBase<U, OTHER_DERIVED, N*(N+1)/2> const & r)
+    {
+        for(int k=0; k<static_size; ++k)
+            BaseType::data_[k] = detail::RequiresExplicitCast<value_type>::cast(r[k]);
+        return *this;
+    }
+    
+    // index access
+    
+    reference operator[](ArrayIndex i)
+    {
+        return BaseType::operator[](i);
+    }
+    
+    constexpr const_reference operator[](ArrayIndex i) const
+    {
+        return BaseType::operator[](i);
+    }
+    
+    reference at(ArrayIndex i)
+    {
+        return BaseType::at(i);
+    }
+    
+    const_reference at(ArrayIndex i) const
+    {
+        return BaseType::at(i);
+    }
+    
+    reference operator[](ArrayIndex const (&i)[2])
+    {
+        return this->operator()(i[0], i[1]);
+    }
+    
+    constexpr const_reference operator[](ArrayIndex const (&i)[2]) const
+    {
+        return this->operator()(i[0], i[1]);
+    }
+    
+    reference at(ArrayIndex const (&i)[static_ndim])
+    {
+        return this->at(i[0], i[1]);
+    }
+    
+    const_reference at(ArrayIndex const (&i)[static_ndim]) const
+    {
+        return this->at(i[0], i[1]);
+    }
+    
+    reference operator[](index_type const & i)
+    {
+        return this->operator()(i[0], i[1]);
+    }
+    
+    constexpr const_reference operator[](index_type const & i) const
+    {
+        return this->operator()(i[0], i[1]);
+    }
+    
+    reference at(index_type const & i)
+    {
+        return this->at(i[0], i[1]);
+    }
+    
+    const_reference at(index_type const & i) const
+    {
+        return this->at(i[0], i[1]);
+    }
+    
+    reference operator()(ArrayIndex i, ArrayIndex j)
+    {
+        if(i > j)
+            return BaseType::data_[i + N*j - (j*(j+1) >> 1)];
+        else
+            return BaseType::data_[N*i + j - (i*(i+1) >> 1)];
+    }
+    
+    constexpr const_reference operator()(ArrayIndex i, ArrayIndex j) const
+    {
+        if(i > j)
+            return BaseType::data_[i + N*j - (j*(j+1) >> 1)];
+        else
+            return BaseType::data_[N*i + j - (i*(i+1) >> 1)];
+    }
+    
+    reference at(ArrayIndex i, ArrayIndex j)
+    {
+        ArrayIndex k = (i > j)
+                           ? i + N*j - (j*(j+1) >> 1)
+                           : N*i + j - (i*(i+1) >> 1);
+        if(k < 0 || k >= static_size)
+            throw std::out_of_range("TinySymmetricView::at()");
+        return BaseType::data_[k];
+    }
+    
+    const_reference at(ArrayIndex i, ArrayIndex j) const
+    {
+        ArrayIndex k = (i > j)
+                           ? i + N*j - (j*(j+1) >> 1)
+                           : N*i + j - (i*(i+1) >> 1);
+        if(k < 0 || k >= static_size)
+            throw std::out_of_range("TinySymmetricView::at()");
+        return BaseType::data_[k];
+    }
+    
+    constexpr index_type shape() const { return static_shape; }
+    constexpr ArrayIndex ndim () const { return static_ndim; }
+};
+
+template <class T, ArrayIndex N>
+constexpr 
+typename TinySymmetricView<T, N>::index_type 
+TinySymmetricView<T, N>::static_shape;
+
+template <class T, ArrayIndex N>
+std::ostream & operator<<(std::ostream & o, TinySymmetricView<T, N> const & v)
+{
+    o << "{";
+    for(ArrayIndex i=0; i<N; ++i)
+    {
+        if(i > 0)
+            o << ",\n ";
+        o << v(i,0);
+        for(ArrayIndex j=1; j<N; ++j)
+        {
+            o << ", " << v(i, j);
+        }
+    }
+    o << "}";
+    return o;
+}
 
 /********************************************************/
 /*                                                      */
@@ -833,8 +1108,8 @@ class TinyArrayView
 
     \brief Implement basic arithmetic and equality for TinyArray.
 
-    These functions fulinit the requirements of a Linear Space (vector space).
-    Return types are determined according to \ref TinyArrayTraits.
+    These functions fulfill the requirements of a Linear Space (vector space).
+    Return types are determined according to \ref Promote or \ref RealPromote.
 
     <b>\#include</b> \<muli/TinyArray.hxx\><br>
     Namespace: muli
@@ -1189,18 +1464,18 @@ round(TinyArrayBase<V, D, N...> const & v)
     return res;
 }
 
-    // /** Apply roundi() function to each vector component, i.e. return an integer vector.
-    // */
-// template <class V, class D, ArrayIndex ... N>
-// inline
-// TinyArray<ArrayIndex, SIZE>
-// roundi(TinyArrayBase<V, D, N...> const & v)
-// {
-    // TinyArray<V, N...> res(DontInit);
-    // for(ArrayIndex k=0; k < TinySize<N...>::value; ++k)
-        // res[k] = roundi(v[k]);
-    // return res;
-// }
+    /** Apply roundi() function to each vector component, i.e. return an integer vector.
+    */
+template <class V, class D, ArrayIndex ... N>
+inline
+TinyArray<ArrayIndex, N...>
+roundi(TinyArrayBase<V, D, N...> const & v)
+{
+    TinyArray<ArrayIndex, N...> res(DontInit);
+    for(ArrayIndex k=0; k < TinySize<N...>::value; ++k)
+        res[k] = roundi(v[k]);
+    return res;
+}
 
 using std::sqrt;
 
@@ -1246,17 +1521,29 @@ cross(TinyArrayBase<V1, D1, 3> const & r1,
 }
 
     /// dot product
-template <class V1, class D1, class V2, class D2, ArrayIndex ... N>
+template <class V1, class D1, class V2, class D2, ArrayIndex N>
 inline
 Promote<V1, V2>
-dot(TinyArrayBase<V1, D1, N...> const & l,
-    TinyArrayBase<V2, D2, N...> const & r)
+dot(TinyArrayBase<V1, D1, N> const & l,
+    TinyArrayBase<V2, D2, N> const & r)
 {
     Promote<V1, V2> res = l[0] * r[0];
-    for(ArrayIndex k=1; k < TinySize<N...>::value; ++k)
+    for(ArrayIndex k=1; k < TinySize<N>::value; ++k)
         res += l[k] * r[k];
     return res;
 }
+
+// template <class V1, class D1, class V2, class D2, ArrayIndex ... N>
+// inline
+// Promote<V1, V2>
+// dot(TinyArrayBase<V1, D1, N...> const & l,
+    // TinyArrayBase<V2, D2, N...> const & r)
+// {
+    // Promote<V1, V2> res = l[0] * r[0];
+    // for(ArrayIndex k=1; k < TinySize<N...>::value; ++k)
+        // res += l[k] * r[k];
+    // return res;
+// }
 
     /// sum of the vector's elements
 template <class V, class D, ArrayIndex ... N>
@@ -1317,6 +1604,18 @@ cumprod(TinyArrayBase<V, D, N...> const & l)
 
 using std::min;
 
+template <class V1, class D1, class V2, class D2, ArrayIndex ... N>
+inline
+TinyArray<Promote<V1, V2>, N...>
+minImpl(TinyArrayBase<V1, D1, N...> const & l,
+        TinyArrayBase<V2, D2, N...> const & r)
+{
+    TinyArray<Promote<V1, V2>, N...> res(DontInit);
+    for(int k=0; k < TinySize<N...>::value; ++k)
+        res[k] =  min<Promote<V1, V2> >(l[k], r[k]);
+    return res;
+}
+
     /// element-wise minimum
 template <class V1, class D1, class V2, class D2, ArrayIndex ... N>
 inline
@@ -1324,23 +1623,40 @@ TinyArray<Promote<V1, V2>, N...>
 min(TinyArrayBase<V1, D1, N...> const & l,
     TinyArrayBase<V2, D2, N...> const & r)
 {
-    TinyArray<Promote<V1, V2>, N...> res(DontInit);
-    for(int k=0; k < TinySize<N...>::value; ++k)
-        res[k] = min<Promote<V1, V2> >(l[k], r[k]);
-    return res;
+    return minImpl(l, r);
 }
 
 // we also have to overload min for like-typed argument to prevent match of std::min()
 template <class V, class D, ArrayIndex ...N>
-inline
-TinyArray<V, N...>
+inline TinyArray<V, N...>
 min(TinyArrayBase<V, D, N...> const & l,
     TinyArrayBase<V, D, N...> const & r)
 {
-    TinyArray<V, N...> res(DontInit);
-    for(int k=0; k < TinySize<N...>::value; ++k)
-        res[k] = min(l[k], r[k]);
-    return res;
+    return minImpl(l, r);
+}
+
+template <class V, ArrayIndex ...N>
+inline TinyArray<V, N...>
+min(TinyArray<V, N...> const & l,
+    TinyArray<V, N...> const & r)
+{
+    return minImpl(l, r);
+}
+
+template <class V, ArrayIndex ...N>
+inline TinyArray<V, N...>
+min(TinyArrayView<V, N...> const & l,
+    TinyArrayView<V, N...> const & r)
+{
+    return minImpl(l, r);
+}
+
+template <class V, ArrayIndex N>
+inline TinyArray<V, N*(N+1)/2>
+min(TinySymmetricView<V, N> const & l,
+    TinySymmetricView<V, N> const & r)
+{
+    return minImpl(l, r);
 }
 
     /// minimum element
@@ -1354,6 +1670,18 @@ min(TinyArrayBase<V, D, N...> const & l)
 
 using std::max;
 
+template <class V1, class D1, class V2, class D2, ArrayIndex ... N>
+inline
+TinyArray<Promote<V1, V2>, N...>
+maxImpl(TinyArrayBase<V1, D1, N...> const & l,
+        TinyArrayBase<V2, D2, N...> const & r)
+{
+    TinyArray<Promote<V1, V2>, N...> res(DontInit);
+    for(int k=0; k < TinySize<N...>::value; ++k)
+        res[k] =  max<Promote<V1, V2> >(l[k], r[k]);
+    return res;
+}
+
     /// element-wise maximum
 template <class V1, class D1, class V2, class D2, ArrayIndex ... N>
 inline
@@ -1361,25 +1689,41 @@ TinyArray<Promote<V1, V2>, N...>
 max(TinyArrayBase<V1, D1, N...> const & l,
     TinyArrayBase<V2, D2, N...> const & r)
 {
-    TinyArray<Promote<V1, V2>, N...> res(DontInit);
-    for(int k=0; k < TinySize<N...>::value; ++k)
-        res[k] = max<Promote<V1, V2> >(l[k], r[k]);
-    return res;
+    return maxImpl(l, r);
 }
 
 // we also have to overload max for like-typed argument to prevent match of std::max()
 template <class V, class D, ArrayIndex ...N>
-inline
-TinyArray<V, N...>
+inline TinyArray<V, N...>
 max(TinyArrayBase<V, D, N...> const & l,
     TinyArrayBase<V, D, N...> const & r)
 {
-    TinyArray<V, N...> res(DontInit);
-    for(int k=0; k < TinySize<N...>::value; ++k)
-        res[k] = max(l[k], r[k]);
-    return res;
+    return maxImpl(l, r);
 }
 
+template <class V, ArrayIndex ...N>
+inline TinyArray<V, N...>
+max(TinyArray<V, N...> const & l,
+    TinyArray<V, N...> const & r)
+{
+    return maxImpl(l, r);
+}
+
+template <class V, ArrayIndex ...N>
+inline TinyArray<V, N...>
+max(TinyArrayView<V, N...> const & l,
+    TinyArrayView<V, N...> const & r)
+{
+    return maxImpl(l, r);
+}
+
+template <class V, ArrayIndex N>
+inline TinyArray<V, N*(N+1)/2>
+max(TinySymmetricView<V, N> const & l,
+    TinySymmetricView<V, N> const & r)
+{
+    return maxImpl(l, r);
+}
 
     /// maximum element
 template <class V, class D, ArrayIndex ... N>
@@ -1393,24 +1737,26 @@ max(TinyArrayBase<V, D, N...> const & l)
     /// squared norm
 template <class V, class D, ArrayIndex ... N>
 inline
-Promote<V>
+SquaredNormType<V>
 squaredNorm(TinyArrayBase<V, D, N...> const & t)
 {
-    return t.squaredNorm();
+    return t.squaredNormImpl();
 }
 
 template <class V, class D, ArrayIndex ... N>
-inline RealPromote<V>
+inline 
+NormType<V>
 sizeDividedSquaredNorm(TinyArrayBase<V, D, N...> const & t)
 {
-    return static_cast<RealPromote<V> >(t.squaredNorm()) / TinySize<N...>::value;
+    return NormType<V>(squaredNorm(t)) / TinySize<N...>::value;
 }
 
 template <class V, class D, ArrayIndex ... N>
-inline RealPromote<V>
+inline 
+NormType<V>
 sizeDividedNorm(TinyArrayBase<V, D, N...> const & t)
 {
-    return static_cast<RealPromote<V> >(t.norm()) / TinySize<N...>::value;
+    return NormType<V>(norm(t)) / TinySize<N...>::value;
 }
 
 using std::reverse;
@@ -1537,6 +1883,56 @@ clip(TinyArrayBase<V, D1, N...> const & t,
 }
 
 //@}
+
+
+template <class T, class D, ArrayIndex ...N>
+struct RealPromoteImpl<TinyArrayBase<T, D, N...> >
+{
+    typedef decltype(sqrt(TinyArrayBase<T, N...>())) type;
+};
+
+template <class T, ArrayIndex ...N>
+struct RealPromoteImpl<TinyArray<T, N...> >
+{
+    typedef decltype(sqrt(TinyArray<T, N...>())) type;
+};
+
+template <class T, ArrayIndex ...N>
+struct RealPromoteImpl<TinyArrayView<T, N...> >
+{
+    typedef decltype(sqrt(TinyArrayView<T, N...>())) type;
+};
+
+template <class T, ArrayIndex N>
+struct RealPromoteImpl<TinySymmetricView<T, N> >
+{
+    typedef decltype(sqrt(TinySymmetricView<T, N>())) type;
+};
+
+template <class T, class D, ArrayIndex ...N>
+struct SquaredNormTypeImpl<TinyArrayBase<T, D, N...> >
+{
+    typedef SquaredNormType<T> type;
+};
+
+template <class T, ArrayIndex ...N>
+struct SquaredNormTypeImpl<TinyArray<T, N...> >
+{
+    typedef SquaredNormType<T> type;
+};
+
+template <class T, ArrayIndex ...N>
+struct SquaredNormTypeImpl<TinyArrayView<T, N...> >
+{
+    typedef SquaredNormType<T> type;
+};
+
+template <class T, ArrayIndex N>
+struct SquaredNormTypeImpl<TinySymmetricView<T, N> >
+{
+    typedef SquaredNormType<T> type;
+};
+
 
 // mask cl.exe shortcomings [end]
 #if defined(_MSC_VER)
