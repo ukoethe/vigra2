@@ -1,13 +1,10 @@
 /************************************************************************/
 /*                                                                      */
-/*               Copyright 1998-2013 by Ullrich Koethe                  */
+/*               Copyright 2014-2015 by Ullrich Koethe                  */
 /*                                                                      */
-/*    This file is part of the MULI computer vision library.           */
-/*    The MULI Website is                                              */
-/*        http://hci.iwr.uni-heidelberg.de/vigra/                       */
-/*    Please direct questions, bug reports, and contributions to        */
-/*        ullrich.koethe@iwr.uni-heidelberg.de    or                    */
-/*        vigra@informatik.uni-hamburg.de                               */
+/*    This file is part of the MULI computer vision library.            */
+/*    The MULI Website is                                               */
+/*        http://ukoethe.github.io/muli                                 */
 /*                                                                      */
 /*    Permission is hereby granted, free of charge, to any person       */
 /*    obtaining a copy of this software and associated documentation    */
@@ -33,6 +30,7 @@
 /*                                                                      */
 /************************************************************************/
 
+#pragma once
 
 #ifndef MULI_CONFIG_VERSION_HXX
 #define MULI_CONFIG_VERSION_HXX
