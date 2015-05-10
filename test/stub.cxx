@@ -2,9 +2,12 @@
 /*                                                                      */
 /*               Copyright 2014-2015 by Ullrich Koethe                  */
 /*                                                                      */
-/*    This file is part of the MULI computer vision library.            */
-/*    The MULI Website is                                               */
-/*        http://ukoethe.github.io/muli                                 */
+/*    This file is part of the VIGRA2 computer vision library.          */
+/*    The VIGRA2 Website is                                             */
+/*        http://ukoethe.github.io/vigra2                               */
+/*    Please direct questions, bug reports, and contributions to        */
+/*        ullrich.koethe@iwr.uni-heidelberg.de    or                    */
+/*        vigra@informatik.uni-hamburg.de                               */
 /*                                                                      */
 /*    Permission is hereby granted, free of charge, to any person       */
 /*    obtaining a copy of this software and associated documentation    */
@@ -33,9 +36,9 @@
 #include <typeinfo>
 #include <iostream>
 #include <string>
-#include <muli/unittest.hxx>
+#include <vigra2/unittest.hxx>
 
-using namespace muli;
+using namespace vigra;
 
 struct MyTest
 {
@@ -63,10 +66,10 @@ struct MyTest
 };
 
 struct MyTestSuite
-: public muli::test_suite
+: public vigra::test_suite
 {
     MyTestSuite()
-    : muli::test_suite("MyTestSuite")
+    : vigra::test_suite("MyTestSuite")
     {
         add( testCase(&MyTest::test));
     }
@@ -76,7 +79,7 @@ int main(int argc, char ** argv)
 {
     MyTestSuite test;
 
-    int failed = test.run(muli::testsToBeExecuted(argc, argv));
+    int failed = test.run(vigra::testsToBeExecuted(argc, argv));
 
     std::cout << test.report() << std::endl;
 

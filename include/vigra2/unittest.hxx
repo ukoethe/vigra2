@@ -2,14 +2,14 @@
 /*                                                                      */
 /* a simple unit test framework, similar to Kent Beck's JUnit           */
 /*                                                                      */
-/*               Copyright 2002-2004 by Ullrich Koethe                  */
+/*               Copyright 2014-2015 by Ullrich Koethe                  */
 /*                                                                      */
-/*    This file is part of the MULI computer vision library.           */
-/*    The MULI Website is                                              */
-/*        http://hci.iwr.uni-heidelberg.de/muli/                       */
+/*    This file is part of the VIGRA2 computer vision library.          */
+/*    The VIGRA2 Website is                                             */
+/*        http://ukoethe.github.io/vigra2                               */
 /*    Please direct questions, bug reports, and contributions to        */
 /*        ullrich.koethe@iwr.uni-heidelberg.de    or                    */
-/*        muli@informatik.uni-hamburg.de                               */
+/*        vigra@informatik.uni-hamburg.de                               */
 /*                                                                      */
 /*    Permission is hereby granted, free of charge, to any person       */
 /*    obtaining a copy of this software and associated documentation    */
@@ -31,12 +31,12 @@
 /*    HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,      */
 /*    WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING      */
 /*    FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR     */
-/*    OTHER DEALINGS IN THE SOFTWARE.                                   */                
+/*    OTHER DEALINGS IN THE SOFTWARE.                                   */
 /*                                                                      */
 /************************************************************************/
 
-#ifndef MULI_UNIT_TEST_HPP
-#define MULI_UNIT_TEST_HPP
+#ifndef VIGRA_UNIT_TEST_HPP
+#define VIGRA_UNIT_TEST_HPP
 
 #include <vector>
 #include <string>
@@ -48,16 +48,16 @@
 #include <limits>
 #include <cfloat>
 #include <cmath>
-#include "muli/config.hxx"
+#include "config.hxx"
 
-#ifdef MULI_NO_WORKING_STRINGSTREAM 
+#ifdef VIGRA_NO_WORKING_STRINGSTREAM 
 #include <strstream>
-#define MULI_SSTREAM std::strstream
-#define MULI_SSTREAM_STR(s) ((s << char()), std::string(s.str()))
+#define VIGRA_SSTREAM std::strstream
+#define VIGRA_SSTREAM_STR(s) ((s << char()), std::string(s.str()))
 #else
 #include <sstream>
-#define MULI_SSTREAM std::basic_stringstream<char>
-#define MULI_SSTREAM_STR(s) s.str()
+#define VIGRA_SSTREAM std::basic_stringstream<char>
+#define VIGRA_SSTREAM_STR(s) s.str()
 #endif
 
 
@@ -82,7 +82,7 @@
 
 #elif defined(__CYGWIN__)
 
-#define MULI_CANT_CATCH_SIGNALS
+#define VIGRA_CANT_CATCH_SIGNALS
 
 #elif defined(__unix) || defined(unix)
 
@@ -93,60 +93,60 @@
 
 #else
 
-#define MULI_CANT_CATCH_SIGNALS
+#define VIGRA_CANT_CATCH_SIGNALS
 
 #endif
 
-#define MULI_TEST_CASE(function)  muli::create_test_case(function, #function "()")
+#define VIGRA_TEST_CASE(function)  vigra::create_test_case(function, #function "()")
 
-#define testCase MULI_TEST_CASE
+#define testCase VIGRA_TEST_CASE
 
-#define MULI_TEST_SUITE(testsuite)  ( new testsuite )
+#define VIGRA_TEST_SUITE(testsuite)  ( new testsuite )
 
-#define MULI_CHECKPOINT(message) \
-    muli::detail::checkpoint_impl(message, __FILE__, __LINE__)
+#define VIGRA_CHECKPOINT(message) \
+    vigra::detail::checkpoint_impl(message, __FILE__, __LINE__)
 
-#define MULI_ASSERT(predicate) \
-    muli::detail::should_impl((predicate), #predicate, __FILE__, __LINE__)
+#define VIGRA_ASSERT(predicate) \
+    vigra::detail::should_impl((predicate), #predicate, __FILE__, __LINE__)
 
-#define MULI_ASSERT_NOT(predicate) \
-    muli::detail::should_impl(!(predicate), "!(" #predicate ")", __FILE__, __LINE__)
+#define VIGRA_ASSERT_NOT(predicate) \
+    vigra::detail::should_impl(!(predicate), "!(" #predicate ")", __FILE__, __LINE__)
 
-#define should MULI_ASSERT
+#define should VIGRA_ASSERT
 
-#define shouldNot MULI_ASSERT_NOT
+#define shouldNot VIGRA_ASSERT_NOT
 
-#define MULI_ASSERT_MESSAGE(predicate, message) \
-    muli::detail::should_impl((predicate), message, __FILE__, __LINE__)
+#define VIGRA_ASSERT_MESSAGE(predicate, message) \
+    vigra::detail::should_impl((predicate), message, __FILE__, __LINE__)
 
-#define shouldMsg MULI_ASSERT_MESSAGE
+#define shouldMsg VIGRA_ASSERT_MESSAGE
 
-#define shouldMessage MULI_ASSERT_MESSAGE
+#define shouldMessage VIGRA_ASSERT_MESSAGE
 
 #define shouldEqual(left, right) \
-    muli::detail::equal_impl(left, right, #left " == " #right, __FILE__, __LINE__)
+    vigra::detail::equal_impl(left, right, #left " == " #right, __FILE__, __LINE__)
 
 #define shouldEqualMessage(left, right, message) \
-    muli::detail::equal_impl(left, right, message "\n" #left " == " #right, __FILE__, __LINE__)
+    vigra::detail::equal_impl(left, right, message "\n" #left " == " #right, __FILE__, __LINE__)
 
 #define shouldEqualTolerance(left, right, eps) \
-    muli::detail::tolerance_equal_impl(left, right, eps, #left " == " #right, __FILE__, __LINE__)
+    vigra::detail::tolerance_equal_impl(left, right, eps, #left " == " #right, __FILE__, __LINE__)
 
 #define shouldEqualToleranceMessage(left, right, eps, message) \
-    muli::detail::tolerance_equal_impl(left, right, eps, message "\n" #left " == " #right, __FILE__, __LINE__)
+    vigra::detail::tolerance_equal_impl(left, right, eps, message "\n" #left " == " #right, __FILE__, __LINE__)
 
 #define shouldEqualSequence(begin1, end1, begin2) \
-    muli::detail::sequence_equal_impl(begin1, end1, begin2, __FILE__, __LINE__)
+    vigra::detail::sequence_equal_impl(begin1, end1, begin2, __FILE__, __LINE__)
 
 #define shouldEqualSequenceTolerance(begin1, end1, begin2, eps) \
-    muli::detail::sequence_equal_tolerance_impl(begin1, end1, begin2, eps, __FILE__, __LINE__)
+    vigra::detail::sequence_equal_tolerance_impl(begin1, end1, begin2, eps, __FILE__, __LINE__)
 
-#define MULI_ERROR(message) \
-    muli::detail::should_impl(false, message, __FILE__, __LINE__)
+#define VIGRA_ERROR(message) \
+    vigra::detail::should_impl(false, message, __FILE__, __LINE__)
 
-#define failTest MULI_ERROR
+#define failTest VIGRA_ERROR
 
-namespace muli {
+namespace vigra {
 
 class test_suite;
 
@@ -154,8 +154,8 @@ namespace detail {
 
 struct errstream
 {
-    MULI_SSTREAM buf;
-    std::string str() { return MULI_SSTREAM_STR(buf); }
+    VIGRA_SSTREAM buf;
+    std::string str() { return VIGRA_SSTREAM_STR(buf); }
     template <class T>
     errstream & operator<<(T t) { buf << t;  return *this; }
 };
@@ -190,7 +190,7 @@ inline bool critical_error(int i)
 inline bool unexpected_error(int i)
 { return i < 0; }
 
-#ifndef MULI_CANT_CATCH_SIGNALS
+#ifndef VIGRA_CANT_CATCH_SIGNALS
 
 #ifdef _MSC_VER
 
@@ -336,7 +336,7 @@ int catch_signals( Generator function_object, detail::errstream & err, int timeo
 
 #endif  /* _MSC_VER || __unix */
 
-#else  /* MULI_CANT_CATCH_SIGNALS */
+#else  /* VIGRA_CANT_CATCH_SIGNALS */
 
 template< class Generator >  // Generator is function object returning int
 int catch_signals( Generator function_object, detail::errstream & err , int)
@@ -344,7 +344,7 @@ int catch_signals( Generator function_object, detail::errstream & err , int)
      return function_object();
 }
 
-#endif /* MULI_CANT_CATCH_SIGNALS */
+#endif /* VIGRA_CANT_CATCH_SIGNALS */
 
 } // namespace detail
 
@@ -366,7 +366,7 @@ int catch_exceptions( Generator function_object, detail::errstream & err, int ti
     //  arguments (ISO 15.3 paragraphs 18 & 19). Apparently const isn't
     //  required, but it doesn't hurt and some programmers ask for it.
 
-    // catch ( muli::ContractViolation & ex )
+    // catch ( vigra::ContractViolation & ex )
       // { detail::report_exception( err, "Contract exception: ", ex.what() ); }
     catch ( const char * ex )
       { detail::report_exception( err, "string exception: ", ex ); }
@@ -1138,7 +1138,7 @@ create_test_case(detail::test_functor<FCT> const & fct, char const * name)
     return new detail::functor_test_case<FCT>(fct.clone(), name);
 }
 
-} // namespace muli
+} // namespace vigra
 
 
 #if !defined(__GNUC__) || __GNUC__ >= 3
@@ -1179,4 +1179,4 @@ std::ostream & operator,(std::ostream & o,
 #endif
 
 
-#endif /* MULI_UNIT_TEST_HPP */
+#endif /* VIGRA_UNIT_TEST_HPP */

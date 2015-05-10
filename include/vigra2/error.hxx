@@ -2,9 +2,12 @@
 /*                                                                      */
 /*               Copyright 2014-2015 by Ullrich Koethe                  */
 /*                                                                      */
-/*    This file is part of the MULI computer vision library.            */
-/*    The MULI Website is                                               */
-/*        http://ukoethe.github.io/muli                                 */
+/*    This file is part of the VIGRA2 computer vision library.          */
+/*    The VIGRA2 Website is                                             */
+/*        http://ukoethe.github.io/vigra2                               */
+/*    Please direct questions, bug reports, and contributions to        */
+/*        ullrich.koethe@iwr.uni-heidelberg.de    or                    */
+/*        vigra@informatik.uni-hamburg.de                               */
 /*                                                                      */
 /*    Permission is hereby granted, free of charge, to any person       */
 /*    obtaining a copy of this software and associated documentation    */
@@ -32,25 +35,25 @@
 
 #pragma once
 
-#ifndef MULI_ERROR_HXX
-#define MULI_ERROR_HXX
+#ifndef VIGRA_ERROR_HXX
+#define VIGRA_ERROR_HXX
 
 #include <stdexcept>
 #include <sstream>
 #include <string>
 #include "config.hxx"
 
-namespace muli {
+namespace vigra {
 
 /** \page ErrorReporting Error Reporting
-    Exceptions and assertions provided by MULI
+    Exceptions and assertions provided by VIGRA
 
-    <b>\#include</b> \<muli/error.hxx\>
+    <b>\#include</b> \<vigra/error.hxx\>
     
-    MULI defines the following exception class:
+    VIGRA defines the following exception class:
     
     \code
-    namespace muli {
+    namespace vigra {
         class ContractViolation : public std::runtime_error;
     }
     \endcode
@@ -59,9 +62,9 @@ namespace muli {
     their PREDICATE evaluates to '<TT>false</TT>':
     
     \code
-    muli_precondition(PREDICATE, MESSAGE);
-    muli_postcondition(PREDICATE, MESSAGE);
-    muli_invariant(PREDICATE, MESSAGE);
+    vigra_precondition(PREDICATE, MESSAGE);
+    vigra_postcondition(PREDICATE, MESSAGE);
+    vigra_invariant(PREDICATE, MESSAGE);
     \endcode
     
     The MESSAGE is passed to the exception and can be retrieved via
@@ -70,15 +73,15 @@ namespace muli {
     the error are automatically included in the message. The macro
     
     \code
-    muli_assert(PREDICATE, MESSAGE);
+    vigra_assert(PREDICATE, MESSAGE);
     \endcode
     
-    is identical to <tt>muli_precondition()</tt> except that it is completely removed
+    is identical to <tt>vigra_precondition()</tt> except that it is completely removed
     when '<TT>NDEBUG</TT>' is defined. This is useful for tests that are only needed during 
     debugging, such as array index bound checking. The following macro
     
     \code
-    muli_fail(MESSAGE);
+    vigra_fail(MESSAGE);
     \endcode
     
     unconditionally throws a '<TT>std::runtime_error</TT>' constructed from the message 
@@ -87,9 +90,9 @@ namespace muli {
     <b> Usage:</b>
     
     Include-File:
-    \<muli/error.hxx\>
+    \<vigra/error.hxx\>
     <p>
-    Namespace: muli (except for the macros, of course)
+    Namespace: vigra (except for the macros, of course)
     
     \code
     int main(int argc, char ** argv)
@@ -99,10 +102,10 @@ namespace muli {
             const char* input_file_name = argv[1];
 
             // read input image
-            muli::ImageImportInfo info(input_file_name);
+            vigra::ImageImportInfo info(input_file_name);
 
             // fail if input image is not grayscale
-            muli_precondition(info.isGrayscale(), "Input image must be grayscale");
+            vigra_precondition(info.isGrayscale(), "Input image must be grayscale");
 
             ...// process image
         }
@@ -158,7 +161,7 @@ void throw_contract_error(bool predicate,
                           char const * file, int line)
 {
     if(!predicate)
-       throw muli::ContractViolation(prefix, message, file, line); 
+       throw vigra::ContractViolation(prefix, message, file, line); 
 }
 
 inline
@@ -167,7 +170,7 @@ void throw_contract_error(bool predicate,
                           char const * file, int line)
 {
     if(!predicate)
-       throw muli::ContractViolation(prefix, message.c_str(), file, line); 
+       throw vigra::ContractViolation(prefix, message.c_str(), file, line); 
 }
 
 inline
@@ -186,20 +189,20 @@ void throw_runtime_error(std::string message, char const * file, int line)
     throw std::runtime_error(what.str()); 
 }
 
-#define muli_precondition(PREDICATE, MESSAGE) \
-    muli::throw_contract_error((PREDICATE), "Precondition violation!", MESSAGE, __FILE__, __LINE__)
+#define vigra_precondition(PREDICATE, MESSAGE) \
+    vigra::throw_contract_error((PREDICATE), "Precondition violation!", MESSAGE, __FILE__, __LINE__)
 
-#define muli_assert(PREDICATE, MESSAGE) \
-    muli_precondition(PREDICATE, MESSAGE)
+#define vigra_assert(PREDICATE, MESSAGE) \
+    vigra_precondition(PREDICATE, MESSAGE)
 
-#define muli_postcondition(PREDICATE, MESSAGE) \
-    muli::throw_contract_error((PREDICATE), "Postcondition violation!", MESSAGE, __FILE__, __LINE__)
+#define vigra_postcondition(PREDICATE, MESSAGE) \
+    vigra::throw_contract_error((PREDICATE), "Postcondition violation!", MESSAGE, __FILE__, __LINE__)
 
-#define muli_invariant(PREDICATE, MESSAGE) \
-    muli::throw_contract_error((PREDICATE), "Invariant violation!", MESSAGE, __FILE__, __LINE__)
+#define vigra_invariant(PREDICATE, MESSAGE) \
+    vigra::throw_contract_error((PREDICATE), "Invariant violation!", MESSAGE, __FILE__, __LINE__)
             
-#define muli_fail(MESSAGE) \
-    muli::throw_runtime_error(MESSAGE, __FILE__, __LINE__)
+#define vigra_fail(MESSAGE) \
+    vigra::throw_runtime_error(MESSAGE, __FILE__, __LINE__)
 
 #else // NDEBUG
 
@@ -207,25 +210,25 @@ inline
 void throw_contract_error(bool predicate, char const * message)
 {
     if(!predicate)
-       throw muli::ContractViolation(message); 
+       throw vigra::ContractViolation(message); 
 }
 
-#define muli_precondition(PREDICATE, MESSAGE) \
-    muli::throw_contract_error((PREDICATE), "Precondition violation!", MESSAGE)
+#define vigra_precondition(PREDICATE, MESSAGE) \
+    vigra::throw_contract_error((PREDICATE), "Precondition violation!", MESSAGE)
 
-#define muli_assert(PREDICATE, MESSAGE)
+#define vigra_assert(PREDICATE, MESSAGE)
 
-#define muli_postcondition(PREDICATE, MESSAGE) \
-    muli::throw_contract_error((PREDICATE), "Postcondition violation!", MESSAGE)
+#define vigra_postcondition(PREDICATE, MESSAGE) \
+    vigra::throw_contract_error((PREDICATE), "Postcondition violation!", MESSAGE)
 
-#define muli_invariant(PREDICATE, MESSAGE) \
-    muli::throw_contract_error((PREDICATE), "Invariant violation!", MESSAGE)
+#define vigra_invariant(PREDICATE, MESSAGE) \
+    vigra::throw_contract_error((PREDICATE), "Invariant violation!", MESSAGE)
             
-#define muli_fail(MESSAGE) \
+#define vigra_fail(MESSAGE) \
     throw std::runtime_error(MESSAGE)
 
 #endif // NDEBUG
 
-} // namespace muli
+} // namespace vigra
 
-#endif // MULI_ERROR_HXX
+#endif // VIGRA_ERROR_HXX

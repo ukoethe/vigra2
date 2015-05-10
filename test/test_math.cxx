@@ -2,9 +2,12 @@
 /*                                                                      */
 /*               Copyright 2014-2015 by Ullrich Koethe                  */
 /*                                                                      */
-/*    This file is part of the MULI computer vision library.            */
-/*    The MULI Website is                                               */
-/*        http://ukoethe.github.io/muli                                 */
+/*    This file is part of the VIGRA2 computer vision library.          */
+/*    The VIGRA2 Website is                                             */
+/*        http://ukoethe.github.io/vigra2                               */
+/*    Please direct questions, bug reports, and contributions to        */
+/*        ullrich.koethe@iwr.uni-heidelberg.de    or                    */
+/*        vigra@informatik.uni-hamburg.de                               */
 /*                                                                      */
 /*    Permission is hereby granted, free of charge, to any person       */
 /*    obtaining a copy of this software and associated documentation    */
@@ -33,30 +36,30 @@
 #include <typeinfo>
 #include <iostream>
 #include <string>
-#include <muli/unittest.hxx>
-#include <muli/math.hxx>
-#include <muli/algorithm.hxx>
-#include <muli/bessel.hxx>
-#include <muli/clebsch-gordan.hxx>
-#include <muli/gaussians.hxx>
-#include <muli/polynomial.hxx>
-#include <muli/splines.hxx>
-#include <muli/autodiff.hxx>
-// #include <muli/array_vector.hxx>
-// #include <muli/rational.hxx>
-// #include <muli/fixedpoint.hxx>
-// #include <muli/linear_algebra.hxx>
-// #include <muli/singular_value_decomposition.hxx>
-// #include <muli/regression.hxx>
-// #include <muli/random.hxx>
-// #include <muli/tinyvector.hxx>
-// #include <muli/quaternion.hxx>
-// #include <muli/timing.hxx>
+#include <vigra2/unittest.hxx>
+#include <vigra2/math.hxx>
+#include <vigra2/algorithm.hxx>
+#include <vigra2/bessel.hxx>
+#include <vigra2/clebsch-gordan.hxx>
+#include <vigra2/gaussians.hxx>
+#include <vigra2/polynomial.hxx>
+#include <vigra2/splines.hxx>
+#include <vigra2/autodiff.hxx>
+// #include <vigra2/array_vector.hxx>
+// #include <vigra2/rational.hxx>
+// #include <vigra2/fixedpoint.hxx>
+// #include <vigra2/linear_algebra.hxx>
+// #include <vigra2/singular_value_decomposition.hxx>
+// #include <vigra2/regression.hxx>
+// #include <vigra2/random.hxx>
+// #include <vigra2/tinyvector.hxx>
+// #include <vigra2/quaternion.hxx>
+// #include <vigra2/timing.hxx>
 
-using namespace muli;
+using namespace vigra;
 
-#define MULI_TOLERANCE_MESSAGE "If this test fails, please adjust the tolerance threshold and report\n" \
-                       "your findings (including compiler information etc.) to the MULI mailing list:"
+#define VIGRA_TOLERANCE_MESSAGE "If this test fails, please adjust the tolerance threshold and report\n" \
+                       "your findings (including compiler information etc.) to the VIGRA mailing list:"
 
 static double coefficients[][12] =
 {
@@ -307,8 +310,8 @@ struct FunctionsTest
         shouldEqualTolerance(g3(0.5), 0.017747462392318277, epsilon);
         shouldEqualTolerance(g3(1.0), 0.030255614018806987, epsilon);
         shouldEqualTolerance(g3(-1.0), -0.030255614018806987, epsilon);
-        shouldEqualTolerance(g3(2.0*MULI_CSTD::sqrt(3.0)), 0, epsilon);
-        shouldEqualTolerance(g3(-2.0*MULI_CSTD::sqrt(3.0)), 0, epsilon);
+        shouldEqualTolerance(g3(2.0*VIGRA_CSTD::sqrt(3.0)), 0, epsilon);
+        shouldEqualTolerance(g3(-2.0*VIGRA_CSTD::sqrt(3.0)), 0, epsilon);
 
         shouldEqualTolerance(g4(0.0), 0.037400838787634318, epsilon);
         shouldEqualTolerance(g4(1.0), 0.017190689783413062, epsilon);
@@ -530,7 +533,7 @@ struct FunctionsTest
     {
         double a = 0.0, b = NumericTraits<double>::epsilon(), c = 1000.0, d = 1000.1;
 
-        using namespace muli;
+        using namespace vigra;
         should(closeAtTolerance(a, b));
         should(closeAtTolerance(c, c + b));
         should(!closeAtTolerance(c, d));
@@ -2684,10 +2687,10 @@ struct AutodiffTest
 
         // double eps = 1e-11;
 
-        // shouldEqualToleranceMessage(norm(a-u*diagonalMatrix(S)*transpose(v)), 0.0, eps, MULI_TOLERANCE_MESSAGE);
-        // shouldEqualToleranceMessage(norm(identityMatrix<double>(4) - transpose(u)*u), 0.0, eps, MULI_TOLERANCE_MESSAGE);
-        // shouldEqualToleranceMessage(norm(identityMatrix<double>(4) - transpose(v)*v), 0.0, eps, MULI_TOLERANCE_MESSAGE);
-        // shouldEqualToleranceMessage(norm(identityMatrix<double>(4) - v*transpose(v)), 0.0, eps, MULI_TOLERANCE_MESSAGE);
+        // shouldEqualToleranceMessage(norm(a-u*diagonalMatrix(S)*transpose(v)), 0.0, eps, VIGRA_TOLERANCE_MESSAGE);
+        // shouldEqualToleranceMessage(norm(identityMatrix<double>(4) - transpose(u)*u), 0.0, eps, VIGRA_TOLERANCE_MESSAGE);
+        // shouldEqualToleranceMessage(norm(identityMatrix<double>(4) - transpose(v)*v), 0.0, eps, VIGRA_TOLERANCE_MESSAGE);
+        // shouldEqualToleranceMessage(norm(identityMatrix<double>(4) - v*transpose(v)), 0.0, eps, VIGRA_TOLERANCE_MESSAGE);
     // }
 // };
 

@@ -2,9 +2,12 @@
 /*                                                                      */
 /*               Copyright 2014-2015 by Ullrich Koethe                  */
 /*                                                                      */
-/*    This file is part of the MULI computer vision library.            */
-/*    The MULI Website is                                               */
-/*        http://ukoethe.github.io/muli                                 */
+/*    This file is part of the VIGRA2 computer vision library.          */
+/*    The VIGRA2 Website is                                             */
+/*        http://ukoethe.github.io/vigra2                               */
+/*    Please direct questions, bug reports, and contributions to        */
+/*        ullrich.koethe@iwr.uni-heidelberg.de    or                    */
+/*        vigra@informatik.uni-hamburg.de                               */
 /*                                                                      */
 /*    Permission is hereby granted, free of charge, to any person       */
 /*    obtaining a copy of this software and associated documentation    */
@@ -32,8 +35,8 @@
 
 #pragma once
 
-#ifndef MULI_GAUSSIANS_HXX
-#define MULI_GAUSSIANS_HXX
+#ifndef VIGRA_GAUSSIANS_HXX
+#define VIGRA_GAUSSIANS_HXX
 
 #include <cmath>
 #include <vector>
@@ -41,7 +44,7 @@
 #include "math.hxx"
 #include "error.hxx"
 
-namespace muli {
+namespace vigra {
 
 #if 0
 /** \addtogroup MathFunctions Mathematical Functions
@@ -53,8 +56,8 @@ namespace muli {
     Implemented as a unary functor. Since it supports the <tt>radius()</tt> function
     it can also be used as a kernel in \ref resamplingConvolveImage().
 
-    <b>\#include</b> \<muli/gaussians.hxx\><br>
-    Namespace: muli
+    <b>\#include</b> \<vigra/gaussians.hxx\><br>
+    Namespace: vigra
 
     \ingroup MathFunctions
 */
@@ -92,7 +95,7 @@ class Gaussian
       order_(derivativeOrder),
       hermitePolynomial_(derivativeOrder / 2 + 1)
     {
-        muli_precondition(sigma_ > 0.0,
+        vigra_precondition(sigma_ > 0.0,
             "Gaussian::Gaussian(): sigma > 0 required.");
         switch(order_)
         {
@@ -227,7 +230,7 @@ void Gaussian<T>::calculateHermitePolynomial()
 
 ////@}
 
-} // namespace muli
+} // namespace vigra
 
 
-#endif /* MULI_GAUSSIANS_HXX */
+#endif /* VIGRA_GAUSSIANS_HXX */

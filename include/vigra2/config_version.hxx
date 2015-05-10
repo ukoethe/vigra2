@@ -2,9 +2,12 @@
 /*                                                                      */
 /*               Copyright 2014-2015 by Ullrich Koethe                  */
 /*                                                                      */
-/*    This file is part of the MULI computer vision library.            */
-/*    The MULI Website is                                               */
-/*        http://ukoethe.github.io/muli                                 */
+/*    This file is part of the VIGRA2 computer vision library.          */
+/*    The VIGRA2 Website is                                             */
+/*        http://ukoethe.github.io/vigra2                               */
+/*    Please direct questions, bug reports, and contributions to        */
+/*        ullrich.koethe@iwr.uni-heidelberg.de    or                    */
+/*        vigra@informatik.uni-hamburg.de                               */
 /*                                                                      */
 /*    Permission is hereby granted, free of charge, to any person       */
 /*    obtaining a copy of this software and associated documentation    */
@@ -32,12 +35,12 @@
 
 #pragma once
 
-#ifndef MULI_CONFIG_VERSION_HXX
-#define MULI_CONFIG_VERSION_HXX
+#ifndef VIGRA_CONFIG_VERSION_HXX
+#define VIGRA_CONFIG_VERSION_HXX
 
-    #define MULI_VERSION_MAJOR 0
-    #define MULI_VERSION_MINOR 1
-    #define MULI_VERSION_PATCH 0
-    #define MULI_VERSION "0.1.0"
+    #define VIGRA_VERSION_MAJOR 0
+    #define VIGRA_VERSION_MINOR 1
+    #define VIGRA_VERSION_PATCH 0
+    #define VIGRA_VERSION "0.1.0"
 
-#endif /* MULI_CONFIG_VERSION_HXX */
+#endif /* VIGRA_CONFIG_VERSION_HXX */

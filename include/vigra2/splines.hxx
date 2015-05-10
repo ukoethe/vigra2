@@ -2,9 +2,12 @@
 /*                                                                      */
 /*               Copyright 2014-2015 by Ullrich Koethe                  */
 /*                                                                      */
-/*    This file is part of the MULI computer vision library.            */
-/*    The MULI Website is                                               */
-/*        http://ukoethe.github.io/muli                                 */
+/*    This file is part of the VIGRA2 computer vision library.          */
+/*    The VIGRA2 Website is                                             */
+/*        http://ukoethe.github.io/vigra2                               */
+/*    Please direct questions, bug reports, and contributions to        */
+/*        ullrich.koethe@iwr.uni-heidelberg.de    or                    */
+/*        vigra@informatik.uni-hamburg.de                               */
 /*                                                                      */
 /*    Permission is hereby granted, free of charge, to any person       */
 /*    obtaining a copy of this software and associated documentation    */
@@ -32,8 +35,8 @@
 
 #pragma once
 
-#ifndef MULI_SPLINES_HXX
-#define MULI_SPLINES_HXX
+#ifndef VIGRA_SPLINES_HXX
+#define VIGRA_SPLINES_HXX
 
 #include <cmath>
 #include "config.hxx"
@@ -41,7 +44,7 @@
 #include "polynomial.hxx"
 // #include "fixedpoint.hxx"
 
-namespace muli {
+namespace vigra {
 
 namespace autodiff {
 
@@ -55,8 +58,8 @@ class DualVector;
 //@{
 /* B-Splines of arbitrary order and interpolating Catmull/Rom splines.
 
-    <b>\#include</b> \<muli/splines.hxx\><br>
-    Namespace: muli
+    <b>\#include</b> \<vigra/splines.hxx\><br>
+    Namespace: vigra
 */
 #ifndef NO_PARTIAL_TEMPLATE_SPECIALIZATION
 
@@ -78,11 +81,11 @@ class DualVector;
     where * denotes convolution, and <i>n</i> is the spline order given by the
     template parameter <tt>ORDER</tt>. These spline classes can be used as
     unary and binary functors, as kernels for \ref resamplingConvolveImage(),
-    and as arguments for \ref muli::SplineImageView. Note that the spline order
+    and as arguments for \ref vigra::SplineImageView. Note that the spline order
     is given as a template argument.
 
-    <b>\#include</b> \<muli/splines.hxx\><br>
-    Namespace: muli
+    <b>\#include</b> \<vigra/splines.hxx\><br>
+    Namespace: vigra
 */
 template <int ORDER, class T = double>
 class BSplineBase
@@ -227,7 +230,7 @@ BSplineBase<ORDER, T>::calculatePrefilterCoefficients()
         std::vector<double> roots;
         polynomialRealRoots(p, roots);
         for(unsigned int i = 0; i < roots.size(); ++i)
-            if(MULI_CSTD::fabs(roots[i]) < 1.0)
+            if(VIGRA_CSTD::fabs(roots[i]) < 1.0)
                 res.push_back(roots[i]);
     }
     return res;
@@ -259,7 +262,7 @@ BSplineBase<ORDER, T>::calculateWeightMatrix()
 
 /** Spline functors for arbitrary orders.
 
-    Provides the interface of \ref muli::BSplineBase with a more convenient
+    Provides the interface of \ref vigra::BSplineBase with a more convenient
     name -- see there for more documentation.
 */
 template <int ORDER, class T = double>
@@ -459,7 +462,7 @@ T BSpline<1, T>::exec(T x, unsigned int derivative_order) const
     {
         case 0:
         {
-            x = MULI_CSTD::fabs(x);
+            x = VIGRA_CSTD::fabs(x);
             return x < 1.0 ?
                     1.0 - x
                     : 0.0;
@@ -591,7 +594,7 @@ BSpline<2, T>::exec(first_argument_type x, second_argument_type derivative_order
     {
         case 0:
         {
-            x = MULI_CSTD::fabs(x);
+            x = VIGRA_CSTD::fabs(x);
             return x < 0.5 ?
                     0.75 - x*x
                     : x < 1.5 ?
@@ -732,7 +735,7 @@ class BSpline<3, T>
 };
 
 template <class T>
-std::vector<double> BSpline<3, T>::prefilterCoefficients_(1, MULI_CSTD::sqrt(3.0) - 2.0);
+std::vector<double> BSpline<3, T>::prefilterCoefficients_(1, VIGRA_CSTD::sqrt(3.0) - 2.0);
 
 template <class T>
 typename BSpline<3, T>::WeightMatrix BSpline<3, T>::weightMatrix_ = 
@@ -749,7 +752,7 @@ BSpline<3, T>::exec(first_argument_type x, second_argument_type derivative_order
     {
         case 0:
         {
-            x = MULI_CSTD::fabs(x);
+            x = VIGRA_CSTD::fabs(x);
             if(x < 1.0)
             {
                 return 2.0/3.0 + x*x*(-1.0 + 0.5*x);
@@ -767,7 +770,7 @@ BSpline<3, T>::exec(first_argument_type x, second_argument_type derivative_order
             double s = x < 0.0 ?
                          -1.0
                        :  1.0;
-            x = MULI_CSTD::fabs(x);
+            x = VIGRA_CSTD::fabs(x);
             return x < 1.0 ?
                      s*x*(-2.0 + 1.5*x)
                    : x < 2.0 ?
@@ -776,7 +779,7 @@ BSpline<3, T>::exec(first_argument_type x, second_argument_type derivative_order
         }
         case 2:
         {
-            x = MULI_CSTD::fabs(x);
+            x = VIGRA_CSTD::fabs(x);
             return x < 1.0 ?
                      3.0*x - 2.0
                    : x < 2.0 ?
@@ -924,7 +927,7 @@ BSpline<4, T>::exec(first_argument_type x, second_argument_type derivative_order
     {
         case 0:
         {
-            x = MULI_CSTD::fabs(x);
+            x = VIGRA_CSTD::fabs(x);
             if(x <= 0.5)
             {
                 return 115.0/192.0 + x*x*(-0.625 + x*x*0.25);
@@ -946,7 +949,7 @@ BSpline<4, T>::exec(first_argument_type x, second_argument_type derivative_order
             double s = x < 0.0 ?
                           -1.0 :
                            1.0;
-            x = MULI_CSTD::fabs(x);
+            x = VIGRA_CSTD::fabs(x);
             if(x <= 0.5)
             {
                 return s*x*(-1.25 + x*x);
@@ -965,7 +968,7 @@ BSpline<4, T>::exec(first_argument_type x, second_argument_type derivative_order
         }
         case 2:
         {
-            x = MULI_CSTD::fabs(x);
+            x = VIGRA_CSTD::fabs(x);
             if(x <= 0.5)
             {
                 return -1.25 + 3.0*x*x;
@@ -987,7 +990,7 @@ BSpline<4, T>::exec(first_argument_type x, second_argument_type derivative_order
             double s = x < 0.0 ?
                           -1.0 :
                            1.0;
-            x = MULI_CSTD::fabs(x);
+            x = VIGRA_CSTD::fabs(x);
             if(x <= 0.5)
             {
                 return s*x*6.0;
@@ -1152,7 +1155,7 @@ BSpline<5, T>::exec(first_argument_type x, second_argument_type derivative_order
     {
         case 0:
         {
-            x = MULI_CSTD::fabs(x);
+            x = VIGRA_CSTD::fabs(x);
             if(x <= 1.0)
             {
                 return 0.55 + x*x*(-0.5 + x*x*(0.25 - x/12.0));
@@ -1174,7 +1177,7 @@ BSpline<5, T>::exec(first_argument_type x, second_argument_type derivative_order
             double s = x < 0.0 ?
                           -1.0 :
                            1.0;
-            x = MULI_CSTD::fabs(x);
+            x = VIGRA_CSTD::fabs(x);
             if(x <= 1.0)
             {
                 return s*x*(-1.0 + x*x*(1.0 - 5.0/12.0*x));
@@ -1193,7 +1196,7 @@ BSpline<5, T>::exec(first_argument_type x, second_argument_type derivative_order
         }
         case 2:
         {
-            x = MULI_CSTD::fabs(x);
+            x = VIGRA_CSTD::fabs(x);
             if(x <= 1.0)
             {
                 return -1.0 + x*x*(3.0 -5.0/3.0*x);
@@ -1215,7 +1218,7 @@ BSpline<5, T>::exec(first_argument_type x, second_argument_type derivative_order
             double s = x < 0.0 ?
                           -1.0 :
                            1.0;
-            x = MULI_CSTD::fabs(x);
+            x = VIGRA_CSTD::fabs(x);
             if(x <= 1.0)
             {
                 return s*x*(6.0 - 5.0*x);
@@ -1234,7 +1237,7 @@ BSpline<5, T>::exec(first_argument_type x, second_argument_type derivative_order
         }
         case 4:
         {
-            x = MULI_CSTD::fabs(x);
+            x = VIGRA_CSTD::fabs(x);
             if(x <= 1.0)
             {
                 return 6.0 - 10.0*x;
@@ -1300,8 +1303,8 @@ typedef BSpline<5, double> QuinticBSplineKernel;
     interpolant can be created with only slightly more effort by recursive
     prefiltering followed by convolution with a 3rd order B-spline.
 
-    <b>\#include</b> \<muli/splines.hxx\><br>
-    Namespace: muli
+    <b>\#include</b> \<vigra/splines.hxx\><br>
+    Namespace: vigra
 */
 template <class T = double>
 class CatmullRomSpline
@@ -1340,7 +1343,7 @@ public:
     unsigned int derivativeOrder() const
         { return 0; }
 
-        /** Prefilter coefficients for compatibility with \ref muli::BSpline.
+        /** Prefilter coefficients for compatibility with \ref vigra::BSpline.
             (array has zero length, since prefiltering is not necessary).
         */
     std::vector<double> const & prefilterCoefficients() const
@@ -1359,7 +1362,7 @@ template <class T>
 typename CatmullRomSpline<T>::result_type
 CatmullRomSpline<T>::operator()(argument_type x) const
 {
-    x = MULI_CSTD::fabs(x);
+    x = VIGRA_CSTD::fabs(x);
     if (x <= 1.0)
     {
         return 1.0 + x * x * (-2.5 + 1.5 * x);
@@ -1377,7 +1380,7 @@ CatmullRomSpline<T>::operator()(argument_type x) const
 
 //@}
 
-} // namespace muli
+} // namespace vigra
 
 
-#endif /* MULI_SPLINES_HXX */
+#endif /* VIGRA_SPLINES_HXX */

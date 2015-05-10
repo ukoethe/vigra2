@@ -2,9 +2,12 @@
 /*                                                                      */
 /*               Copyright 2014-2015 by Ullrich Koethe                  */
 /*                                                                      */
-/*    This file is part of the MULI computer vision library.            */
-/*    The MULI Website is                                               */
-/*        http://ukoethe.github.io/muli                                 */
+/*    This file is part of the VIGRA2 computer vision library.          */
+/*    The VIGRA2 Website is                                             */
+/*        http://ukoethe.github.io/vigra2                               */
+/*    Please direct questions, bug reports, and contributions to        */
+/*        ullrich.koethe@iwr.uni-heidelberg.de    or                    */
+/*        vigra@informatik.uni-hamburg.de                               */
 /*                                                                      */
 /*    Permission is hereby granted, free of charge, to any person       */
 /*    obtaining a copy of this software and associated documentation    */
@@ -33,11 +36,11 @@
 #include <typeinfo>
 #include <iostream>
 #include <string>
-#include <muli/unittest.hxx>
-#include <muli/numeric_traits.hxx>
-#include <muli/tinyarray.hxx>
+#include <vigra2/unittest.hxx>
+#include <vigra2/numeric_traits.hxx>
+#include <vigra2/tinyarray.hxx>
 
-using namespace muli;
+using namespace vigra;
 
 struct NumericTraitsTest
 {

@@ -2,9 +2,12 @@
 /*                                                                      */
 /*               Copyright 2014-2015 by Ullrich Koethe                  */
 /*                                                                      */
-/*    This file is part of the MULI computer vision library.            */
-/*    The MULI Website is                                               */
-/*        http://ukoethe.github.io/muli                                 */
+/*    This file is part of the VIGRA2 computer vision library.          */
+/*    The VIGRA2 Website is                                             */
+/*        http://ukoethe.github.io/vigra2                               */
+/*    Please direct questions, bug reports, and contributions to        */
+/*        ullrich.koethe@iwr.uni-heidelberg.de    or                    */
+/*        vigra@informatik.uni-hamburg.de                               */
 /*                                                                      */
 /*    Permission is hereby granted, free of charge, to any person       */
 /*    obtaining a copy of this software and associated documentation    */
@@ -32,15 +35,15 @@
 
 #pragma once
 
-#ifndef MULI_AUTODIFF_HXX
-#define MULI_AUTODIFF_HXX
+#ifndef VIGRA_AUTODIFF_HXX
+#define VIGRA_AUTODIFF_HXX
 
 #include "config.hxx"
 #include "tinyarray.hxx"
 #include "math.hxx"
 #include <cmath>
 
-namespace muli {
+namespace vigra {
 
 namespace autodiff {
 
@@ -64,8 +67,8 @@ namespace autodiff {
     
     <b> Usage:</b>
     
-    <b>\#include</b> \<muli/autodiff.hxx\><br>
-    Namespace: muli::autodiff
+    <b>\#include</b> \<vigra/autodiff.hxx\><br>
+    Namespace: vigra::autodiff
 
     \code
     typedef DualVector<double, 2> N;  // for expressions with two arguments
@@ -305,7 +308,7 @@ inline DualVector<T, N> operator/(T v1, DualVector<T, N> const & v2)
     return DualVector<T, N>(v1 / v2.v, -v1*v2.d / sq(v2.v));
 }
 
-using muli::abs;
+using vigra::abs;
 // abs(x + h) => x + h or -(x + h)
 template <typename T, ArrayIndex N>
 inline DualVector<T, N> abs(DualVector<T, N> const & v)
@@ -341,7 +344,7 @@ inline DualVector<T, N> exp(DualVector<T, N> v)
     return v;
 }
 
-using muli::sqrt;
+using vigra::sqrt;
 // sqrt(a + h) => sqrt(a) + h / (2 sqrt(a))
 template <typename T, ArrayIndex N>
 inline DualVector<T, N> sqrt(DualVector<T, N> v)
@@ -371,8 +374,8 @@ inline DualVector<T, N> cos(DualVector<T, N> v)
     return v;
 }
 
-using muli::sin_pi;
-using muli::cos_pi;
+using vigra::sin_pi;
+using vigra::cos_pi;
 // sin_pi(a + h) => sin_pi(a) + pi cos_pi(a) h
 template <typename T, ArrayIndex N>
 inline DualVector<T, N> sin_pi(DualVector<T, N> v)
@@ -461,7 +464,7 @@ inline DualVector<T, N> tanh(DualVector<T, N> v)
     return v;
 }
 
-using muli::sq;
+using vigra::sq;
 // (a + h)^2 => a^2 + 2 a h
 template <class T, ArrayIndex N>
 inline DualVector<T, N> sq(DualVector<T, N> v)
@@ -482,7 +485,7 @@ inline DualVector<T, N> atan2(DualVector<T, N> v1, DualVector<T, N> const & v2)
 }
 
 
-using muli::pow;
+using vigra::pow;
 // (a+da)^p => a^p + p*a^(p-1) da
 template <typename T, ArrayIndex N> 
 inline DualVector<T, N> pow(DualVector<T, N> v, T p)
@@ -514,7 +517,7 @@ inline DualVector<T, N> pow(DualVector<T, N> v, DualVector<T, N> const & p)
     return v;
 }
 
-using muli::min;
+using vigra::min;
 template <class T, ArrayIndex N>
 inline DualVector<T, N> min(DualVector<T, N> const & v1, DualVector<T, N> const & v2)
 {
@@ -539,7 +542,7 @@ inline DualVector<T, N> min(DualVector<T, N> const & v1, T v2)
                : DualVector<T, N>(v2);
 }
 
-using muli::max;
+using vigra::max;
 template <class T, ArrayIndex N>
 inline DualVector<T, N> max(DualVector<T, N> const & v1, DualVector<T, N> const & v2)
 {
@@ -578,7 +581,7 @@ operator!=(DualVector<T, N> const & v1, DualVector<T, N> const & v2)
     return v1.v != v2.v || v1.d != v2.d;
 }
 
-#define MULI_DUALVECTOR_RELATIONAL_OPERATORS(op) \
+#define VIGRA_DUALVECTOR_RELATIONAL_OPERATORS(op) \
 template <class T, ArrayIndex N> \
 inline bool  \
 operator op(DualVector<T, N> const & v1, DualVector<T, N> const & v2) \
@@ -600,19 +603,19 @@ operator op(DualVector<T, N> const & v1, T v2) \
     return v1.v op v2; \
 }
 
-MULI_DUALVECTOR_RELATIONAL_OPERATORS(<)
-MULI_DUALVECTOR_RELATIONAL_OPERATORS(<=)
-MULI_DUALVECTOR_RELATIONAL_OPERATORS(>)
-MULI_DUALVECTOR_RELATIONAL_OPERATORS(>=)
+VIGRA_DUALVECTOR_RELATIONAL_OPERATORS(<)
+VIGRA_DUALVECTOR_RELATIONAL_OPERATORS(<=)
+VIGRA_DUALVECTOR_RELATIONAL_OPERATORS(>)
+VIGRA_DUALVECTOR_RELATIONAL_OPERATORS(>=)
 
-#undef MULI_DUALVECTOR_RELATIONAL_OPERATORS
+#undef VIGRA_DUALVECTOR_RELATIONAL_OPERATORS
 
 template <class T, ArrayIndex N>
 inline bool 
 closeAtTolerance(DualVector<T, N> const & v1, DualVector<T, N> const & v2, 
                  T epsilon = NumericTraits<T>::epsilon())
 {
-    return muli::closeAtTolerance(v1.v, v2.v, epsilon) && muli::closeAtTolerance(v1.d, v2.d, epsilon);
+    return vigra::closeAtTolerance(v1.v, v2.v, epsilon) && vigra::closeAtTolerance(v1.d, v2.d, epsilon);
 }
 
 } // namespace autodiff
@@ -626,6 +629,6 @@ operator<<(std::ostream & out, autodiff::DualVector<T, N> const & l)
     return out;
 }
 
-} // namespace muli
+} // namespace vigra
 
-#endif // MULI_AUTODIFF_HXX
+#endif // VIGRA_AUTODIFF_HXX

@@ -2,9 +2,12 @@
 /*                                                                      */
 /*               Copyright 2014-2015 by Ullrich Koethe                  */
 /*                                                                      */
-/*    This file is part of the MULI computer vision library.            */
-/*    The MULI Website is                                               */
-/*        http://ukoethe.github.io/muli                                 */
+/*    This file is part of the VIGRA2 computer vision library.          */
+/*    The VIGRA2 Website is                                             */
+/*        http://ukoethe.github.io/vigra2                               */
+/*    Please direct questions, bug reports, and contributions to        */
+/*        ullrich.koethe@iwr.uni-heidelberg.de    or                    */
+/*        vigra@informatik.uni-hamburg.de                               */
 /*                                                                      */
 /*    Permission is hereby granted, free of charge, to any person       */
 /*    obtaining a copy of this software and associated documentation    */
@@ -32,12 +35,12 @@
 
 #pragma once
 
-#ifndef MULI_SIZED_INT_HXX
-#define MULI_SIZED_INT_HXX
+#ifndef VIGRA_SIZED_INT_HXX
+#define VIGRA_SIZED_INT_HXX
 
 #include <cstdint>
 
-namespace muli {
+namespace vigra {
 
 using std::int8_t;
 using std::int16_t;
@@ -50,7 +53,7 @@ using std::uint64_t;
 using std::intmax_t;
 using std::uintmax_t;
 
-} // namespace muli
+} // namespace vigra
 
 #if 0 // the old method, maybe still needed for MSVC
 
@@ -58,54 +61,54 @@ using std::uintmax_t;
 #include <limits>
 
 #if   SHRT_MAX  == 0x7FL
-# define MULI_BITSOF_SHORT 8
+# define VIGRA_BITSOF_SHORT 8
 #elif SHRT_MAX  == 0x7FFFL
-# define MULI_BITSOF_SHORT 16
+# define VIGRA_BITSOF_SHORT 16
 #elif SHRT_MAX  == 0x7FFFFFFFL
-# define MULI_BITSOF_SHORT 32
+# define VIGRA_BITSOF_SHORT 32
 #elif SHRT_MAX  > 0xFFFFFFFFL
-# define MULI_BITSOF_SHORT 64
+# define VIGRA_BITSOF_SHORT 64
 #else
-# define MULI_BITSOF_SHORT -1
+# define VIGRA_BITSOF_SHORT -1
 #endif
 
 #if   INT_MAX  == 0x7FL
-# define MULI_BITSOF_INT 8
+# define VIGRA_BITSOF_INT 8
 #elif INT_MAX  == 0x7FFFL
-# define MULI_BITSOF_INT 16
+# define VIGRA_BITSOF_INT 16
 #elif INT_MAX  == 0x7FFFFFFFL
-# define MULI_BITSOF_INT 32
+# define VIGRA_BITSOF_INT 32
 #elif INT_MAX  > 0xFFFFFFFFL
-# define MULI_BITSOF_INT 64
+# define VIGRA_BITSOF_INT 64
 #else
-# define MULI_BITSOF_INT -1
+# define VIGRA_BITSOF_INT -1
 #endif
 
 #if   LONG_MAX  == 0x7FL
-# define MULI_BITSOF_LONG 8
+# define VIGRA_BITSOF_LONG 8
 #elif LONG_MAX  == 0x7FFFL
-# define MULI_BITSOF_LONG 16
+# define VIGRA_BITSOF_LONG 16
 #elif LONG_MAX  == 0x7FFFFFFFL
-# define MULI_BITSOF_LONG 32
+# define VIGRA_BITSOF_LONG 32
 #elif LONG_MAX  > 0xFFFFFFFFL
-# define MULI_BITSOF_LONG 64
+# define VIGRA_BITSOF_LONG 64
 #else
-# define MULI_BITSOF_LONG -1
+# define VIGRA_BITSOF_LONG -1
 #endif
 
 #if   LLONG_MAX  == 0x7FL
-# define MULI_BITSOF_LONG_LONG 8
+# define VIGRA_BITSOF_LONG_LONG 8
 #elif LLONG_MAX  == 0x7FFFL
-# define MULI_BITSOF_LONG_LONG 16
+# define VIGRA_BITSOF_LONG_LONG 16
 #elif LLONG_MAX  == 0x7FFFFFFFL
-# define MULI_BITSOF_LONG_LONG 32
+# define VIGRA_BITSOF_LONG_LONG 32
 #elif LLONG_MAX  > 0xFFFFFFFFL
-# define MULI_BITSOF_LONG_LONG 64
+# define VIGRA_BITSOF_LONG_LONG 64
 #else
-# define MULI_BITSOF_LONG_LONG -1
+# define VIGRA_BITSOF_LONG_LONG -1
 #endif
 
-namespace muli {
+namespace vigra {
 
 class Int_type_not_supported_on_this_platform {};
 
@@ -177,7 +180,7 @@ typedef IntTypeList<unsigned char,
     Since the C++ standard does only specify minimal sizes for the built-in 
     integer types, one cannot rely on them to have a specific size. But
     pixel types with a specific size are often required in image processing,
-    especially when reading or writing binary files. The MULI typedefs
+    especially when reading or writing binary files. The VIGRA typedefs
     are guaranteed to have exactly the correct size. If the system
     does not provide a suitable type, the typedef will evaluate to
     <tt>Int_type_not_supported_on_this_platform</tt>.
@@ -224,8 +227,8 @@ typedef uint32_t UIntBiggest;
 
 #endif // NO_PARTIAL_TEMPLATE_SPECIALIZATION
 
-} // namespace muli
+} // namespace vigra
 
 #endif // #if 0
 
-#endif /* MULI_SIZED_INT_HXX */
+#endif /* VIGRA_SIZED_INT_HXX */

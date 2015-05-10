@@ -2,9 +2,12 @@
 /*                                                                      */
 /*               Copyright 2014-2015 by Ullrich Koethe                  */
 /*                                                                      */
-/*    This file is part of the MULI computer vision library.            */
-/*    The MULI Website is                                               */
-/*        http://ukoethe.github.io/muli                                 */
+/*    This file is part of the VIGRA2 computer vision library.          */
+/*    The VIGRA2 Website is                                             */
+/*        http://ukoethe.github.io/vigra2                               */
+/*    Please direct questions, bug reports, and contributions to        */
+/*        ullrich.koethe@iwr.uni-heidelberg.de    or                    */
+/*        vigra@informatik.uni-hamburg.de                               */
 /*                                                                      */
 /*    Permission is hereby granted, free of charge, to any person       */
 /*    obtaining a copy of this software and associated documentation    */
@@ -32,8 +35,8 @@
 
 #pragma once
 
-#ifndef MULI_POLYNOMIAL_HXX
-#define MULI_POLYNOMIAL_HXX
+#ifndef VIGRA_POLYNOMIAL_HXX
+#define VIGRA_POLYNOMIAL_HXX
 
 #include <cmath>
 #include <complex>
@@ -44,7 +47,7 @@
 #include "math.hxx"
 #include "numeric_traits.hxx"
 
-namespace muli {
+namespace vigra {
 
 template <class T> class Polynomial;
 template <unsigned int MAXORDER, class T> class StaticPolynomial;
@@ -60,10 +63,10 @@ template <unsigned int MAXORDER, class T> class StaticPolynomial;
     The coefficient type <tt>T</tt> can be either a scalar or complex 
     (compatible to <tt>std::complex</tt>) type.
     
-    \see muli::Polynomial, muli::StaticPolynomial, polynomialRoots()
+    \see vigra::Polynomial, vigra::StaticPolynomial, polynomialRoots()
 
-    <b>\#include</b> \<muli/polynomial.hxx\><br>
-    Namespace: muli
+    <b>\#include</b> \<vigra/polynomial.hxx\><br>
+    Namespace: vigra
     
     \ingroup Polynomials
 */
@@ -79,7 +82,7 @@ class PolynomialView
         /** Promote type of <tt>value_type</tt>
             used for polynomial calculations
         */
-    typedef typename muli::RealPromote<T> RealPromote;
+    typedef typename vigra::RealPromote<T> RealPromote;
 
         /** Scalar type associated with <tt>RealPromote</tt>
         */
@@ -309,7 +312,7 @@ template <class T>
 void
 PolynomialView<T>::deflate(T const & v, unsigned int multiplicity)
 {
-    muli_precondition(order_ > 0,
+    vigra_precondition(order_ > 0,
         "PolynomialView<T>::deflate(): cannot deflate 0th order polynomial.");
     if(v == 0.0)
     {
@@ -377,7 +380,7 @@ template <class T>
 void
 PolynomialView<T>::deflateConjugatePair(Complex const & v)
 {
-    muli_precondition(order_ > 1,
+    vigra_precondition(order_ > 1,
         "PolynomialView<T>::deflateConjugatePair(): cannot deflate 2 roots "
         "from 1st order polynomial.");
     Real a = 2.0*v.real();
@@ -414,7 +417,7 @@ PolynomialView<T>::balance()
 {
     Real p0 = abs(coeffs_[0]), po = abs(coeffs_[order_]);
     Real norm = (p0 > 0.0)
-                    ? MULI_CSTD::sqrt(p0*po) 
+                    ? VIGRA_CSTD::sqrt(p0*po) 
                     : po;
     for(unsigned int i = 0; i<=order_; ++i)
         coeffs_[i] /= norm;
@@ -428,12 +431,12 @@ PolynomialView<T>::balance()
 
 /** Polynomial with internally managed array.
 
-    Most interesting functionality is inherited from \ref muli::PolynomialView.
+    Most interesting functionality is inherited from \ref vigra::PolynomialView.
 
-    \see muli::PolynomialView, muli::StaticPolynomial, polynomialRoots()
+    \see vigra::PolynomialView, vigra::StaticPolynomial, polynomialRoots()
 
-    <b>\#include</b> \<muli/polynomial.hxx\><br>
-    Namespace: muli
+    <b>\#include</b> \<vigra/polynomial.hxx\><br>
+    Namespace: vigra
     
     \ingroup Polynomials
 */
@@ -556,15 +559,15 @@ class Polynomial
 
 /** Polynomial with internally managed array of static length.
 
-    Most interesting functionality is inherited from \ref muli::PolynomialView.
-    This class differs from \ref muli::Polynomial in that it allocates
+    Most interesting functionality is inherited from \ref vigra::PolynomialView.
+    This class differs from \ref vigra::Polynomial in that it allocates
     its memory statically which is much faster. Therefore, <tt>StaticPolynomial</tt>
     can only represent polynomials up to the given <tt>MAXORDER</tt>.
 
-    \see muli::PolynomialView, muli::Polynomial, polynomialRoots()
+    \see vigra::PolynomialView, vigra::Polynomial, polynomialRoots()
 
-    <b>\#include</b> \<muli/polynomial.hxx\><br>
-    Namespace: muli
+    <b>\#include</b> \<vigra/polynomial.hxx\><br>
+    Namespace: vigra
     
     \ingroup Polynomials
 */
@@ -594,7 +597,7 @@ class StaticPolynomial
     StaticPolynomial(unsigned int order = 0, double epsilon = 1.0e-14)
     : BaseType(epsilon)
     {
-        muli_precondition(order <= MAXORDER,
+        vigra_precondition(order <= MAXORDER,
             "StaticPolynomial(): order exceeds MAXORDER.");
         std::fill_n(polynomial_, order+1, T());
         this->setCoeffs(polynomial_, order);
@@ -616,7 +619,7 @@ class StaticPolynomial
     StaticPolynomial(ITER i, unsigned int order)
     : BaseType()
     {
-        muli_precondition(order <= MAXORDER,
+        vigra_precondition(order <= MAXORDER,
             "StaticPolynomial(): order exceeds MAXORDER.");
         std::copy(i, i + order + 1, polynomial_);
         this->setCoeffs(polynomial_, order);
@@ -631,7 +634,7 @@ class StaticPolynomial
     StaticPolynomial(ITER i, unsigned int order, double epsilon)
     : BaseType(epsilon)
     {
-        muli_precondition(order <= MAXORDER,
+        vigra_precondition(order <= MAXORDER,
             "StaticPolynomial(): order exceeds MAXORDER.");
         std::copy(i, i + order + 1, polynomial_);
         this->setCoeffs(polynomial_, order);
@@ -685,7 +688,7 @@ class StaticPolynomial
     
     void setOrder(unsigned int order)
     {
-        muli_precondition(order <= MAXORDER,
+        vigra_precondition(order <= MAXORDER,
             "taticPolynomial::setOrder(): order exceeds MAXORDER.");
         this->order_ = order;
     }
@@ -747,7 +750,7 @@ laguerreStartingGuess(POLYNOMIAL const & p)
 {
     double N = p.order();
     typename POLYNOMIAL::value_type centroid = -p[p.order()-1] / N / p[p.order()];
-    double dist = MULI_CSTD::pow(std::abs(p(centroid) / p[p.order()]), 1.0 / N);
+    double dist = VIGRA_CSTD::pow(std::abs(p(centroid) / p[p.order()]), 1.0 / N);
     return centroid + dist;
 }
 
@@ -761,7 +764,7 @@ int laguerre1Root(POLYNOMIAL const & p, Complex & x, unsigned int multiplicity)
         count;
     double N = p.order();
     double eps  = p.epsilon(),
-           eps2 = MULI_CSTD::sqrt(eps);
+           eps2 = VIGRA_CSTD::sqrt(eps);
         
     if(multiplicity == 0)
         x = laguerreStartingGuess(p);
@@ -797,7 +800,7 @@ int laguerre1Root(POLYNOMIAL const & p, Complex & x, unsigned int multiplicity)
         // estimate root multiplicity according to Tien Chen
         if(g2 != 0.0)
         {
-            multiplicity = (unsigned int)MULI_CSTD::floor(N / 
+            multiplicity = (unsigned int)VIGRA_CSTD::floor(N / 
                                 (std::abs(N * complexDiv(h, g2) - 1.0) + 1.0) + 0.5);
             if(multiplicity < 1)
                 multiplicity = 1;
@@ -821,7 +824,7 @@ int laguerre1Root(POLYNOMIAL const & p, Complex & x, unsigned int multiplicity)
                 mayTryDerivative = false;
             }
         }
-        Complex sq = MULI_CSTD::sqrt((N - 1.0) * (N * h - g2));
+        Complex sq = VIGRA_CSTD::sqrt((N - 1.0) * (N * h - g2));
         Complex gp = g + sq;
         Complex gm = g - sq;
         if(std::abs(gp) < std::abs(gm))
@@ -834,7 +837,7 @@ int laguerre1Root(POLYNOMIAL const & p, Complex & x, unsigned int multiplicity)
         else
         {
             // re-initialisation trick due to Numerical Recipes
-            dx = (1.0 + ax) * Complex(MULI_CSTD::cos(double(count)), MULI_CSTD::sin(double(count)));
+            dx = (1.0 + ax) * Complex(VIGRA_CSTD::cos(double(count)), VIGRA_CSTD::sin(double(count)));
         }
         Complex x1 = x - dx;
 
@@ -901,14 +904,14 @@ struct PolynomialRootCompare
     The algorithm has been successfully used for polynomials up to order 80.
     The function stops and returns <tt>false</tt> if an iteration fails to converge within 
     80 steps. The type <tt>POLYNOMIAL</tt> must be compatible to 
-    \ref muli::PolynomialView, <tt>VECTOR</tt> must be compatible to <tt>std::vector</tt>
+    \ref vigra::PolynomialView, <tt>VECTOR</tt> must be compatible to <tt>std::vector</tt>
     with a <tt>value_type</tt> compatible to the type <tt>POLYNOMIAL::Complex</tt>.
 
     <b> Declaration:</b>
 
     pass arguments explicitly:
     \code
-    namespace muli {
+    namespace vigra {
         template <class POLYNOMIAL, class VECTOR>
         bool 
         polynomialRoots(POLYNOMIAL const & poriginal, VECTOR & roots, bool polishRoots = true);
@@ -918,8 +921,8 @@ struct PolynomialRootCompare
 
     <b> Usage:</b>
 
-    <b>\#include</b> \<muli/polynomial.hxx\><br>
-    Namespace: muli
+    <b>\#include</b> \<vigra/polynomial.hxx\><br>
+    Namespace: vigra
 
     \code
     // encode the polynomial  x^4 - 1
@@ -1045,7 +1048,7 @@ polynomialRoots(POLYNOMIAL const & poriginal, VECTOR & roots)
 
     pass arguments explicitly:
     \code
-    namespace muli {
+    namespace vigra {
         template <class POLYNOMIAL, class VECTOR>
         bool 
         polynomialRealRoots(POLYNOMIAL const & p, VECTOR & roots, bool polishRoots = true);
@@ -1055,8 +1058,8 @@ polynomialRoots(POLYNOMIAL const & poriginal, VECTOR & roots)
 
     <b> Usage:</b>
 
-    <b>\#include</b> \<muli/polynomial.hxx\><br>
-    Namespace: muli
+    <b>\#include</b> \<vigra/polynomial.hxx\><br>
+    Namespace: vigra
 
     \code
     // encode the polynomial  x^4 - 1
@@ -1092,12 +1095,12 @@ polynomialRealRoots(POLYNOMIAL const & poriginal, VECTOR & roots)
 
 //@}
 
-} // namespace muli
+} // namespace vigra
 
 namespace std {
 
 template <class T>
-ostream & operator<<(ostream & o, muli::PolynomialView<T> const & p)
+ostream & operator<<(ostream & o, vigra::PolynomialView<T> const & p)
 {
     for(unsigned int k=0; k < p.order(); ++k)
         o << p[k] << " ";
@@ -1107,4 +1110,4 @@ ostream & operator<<(ostream & o, muli::PolynomialView<T> const & p)
 
 } // namespace std 
 
-#endif // MULI_POLYNOMIAL_HXX
+#endif // VIGRA_POLYNOMIAL_HXX

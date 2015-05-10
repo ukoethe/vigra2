@@ -2,9 +2,12 @@
 /*                                                                      */
 /*               Copyright 2014-2015 by Ullrich Koethe                  */
 /*                                                                      */
-/*    This file is part of the MULI computer vision library.            */
-/*    The MULI Website is                                               */
-/*        http://ukoethe.github.io/muli                                 */
+/*    This file is part of the VIGRA2 computer vision library.          */
+/*    The VIGRA2 Website is                                             */
+/*        http://ukoethe.github.io/vigra2                               */
+/*    Please direct questions, bug reports, and contributions to        */
+/*        ullrich.koethe@iwr.uni-heidelberg.de    or                    */
+/*        vigra@informatik.uni-hamburg.de                               */
 /*                                                                      */
 /*    Permission is hereby granted, free of charge, to any person       */
 /*    obtaining a copy of this software and associated documentation    */
@@ -32,8 +35,8 @@
 
 #pragma once
 
-#ifndef MULI_MATH_HXX
-#define MULI_MATH_HXX
+#ifndef VIGRA_MATH_HXX
+#define VIGRA_MATH_HXX
 
 #ifdef _MSC_VER
 # pragma warning (disable: 4996) // hypot/_hypot confusion
@@ -44,16 +47,14 @@
 #include <complex>
 #include "config.hxx"
 #include "error.hxx"
-// #include "tuple.hxx"
 #include "sized_int.hxx"
 #include "numeric_traits.hxx"
-// #include "algorithm.hxx"
 
 /** \page MathConstants Mathematical Constants
 
     <TT>M_PI, M_SQRT2 etc.</TT>
 
-    <b>\#include</b> \<muli/mathutil.hxx\>
+    <b>\#include</b> \<vigra/mathutil.hxx\>
 
     Since mathematical constants such as <TT>M_PI</TT> and <TT>M_SQRT2</TT> 
     are not officially standardized, we provide definitions here for those 
@@ -113,7 +114,7 @@
 #    define M_EULER_GAMMA  0.5772156649015329
 #endif
 
-namespace muli {
+namespace vigra {
 
 /** \addtogroup MathFunctions Mathematical Functions
 
@@ -126,8 +127,8 @@ namespace muli {
 
         <tt>sq(x) = x*x</tt> is needed so often that it makes sense to define it as a function.
 
-        <b>\#include</b> \<muli/mathutil.hxx\><br>
-        Namespace: muli
+        <b>\#include</b> \<vigra/mathutil.hxx\><br>
+        Namespace: vigra
     */
 template <class T>
 inline Promote<T> sq(T t)
@@ -148,29 +149,29 @@ using std::abs;
 
 // define the missing variants of abs() to avoid 'ambiguous overload'
 // errors in template functions
-#define MULI_DEFINE_UNSIGNED_ABS(T) \
+#define VIGRA_DEFINE_UNSIGNED_ABS(T) \
     inline T abs(T t) { return t; }
 
-MULI_DEFINE_UNSIGNED_ABS(bool)
-MULI_DEFINE_UNSIGNED_ABS(unsigned char)
-MULI_DEFINE_UNSIGNED_ABS(unsigned short)
-MULI_DEFINE_UNSIGNED_ABS(unsigned int)
-MULI_DEFINE_UNSIGNED_ABS(unsigned long)
-MULI_DEFINE_UNSIGNED_ABS(unsigned long long)
+VIGRA_DEFINE_UNSIGNED_ABS(bool)
+VIGRA_DEFINE_UNSIGNED_ABS(unsigned char)
+VIGRA_DEFINE_UNSIGNED_ABS(unsigned short)
+VIGRA_DEFINE_UNSIGNED_ABS(unsigned int)
+VIGRA_DEFINE_UNSIGNED_ABS(unsigned long)
+VIGRA_DEFINE_UNSIGNED_ABS(unsigned long long)
 
-#undef MULI_DEFINE_UNSIGNED_ABS
+#undef VIGRA_DEFINE_UNSIGNED_ABS
 
-#define MULI_DEFINE_MISSING_ABS(T) \
+#define VIGRA_DEFINE_MISSING_ABS(T) \
     inline T abs(T t) { return t < 0 ? static_cast<T>(-t) : t; }
 
-MULI_DEFINE_MISSING_ABS(signed char)
-MULI_DEFINE_MISSING_ABS(signed short)
+VIGRA_DEFINE_MISSING_ABS(signed char)
+VIGRA_DEFINE_MISSING_ABS(signed short)
 
 #if defined(_MSC_VER) && _MSC_VER < 1600
-MULI_DEFINE_MISSING_ABS(signed long long)
+VIGRA_DEFINE_MISSING_ABS(signed long long)
 #endif
 
-#undef MULI_DEFINE_MISSING_ABS
+#undef VIGRA_DEFINE_MISSING_ABS
 
 template <class T>
 inline SquaredNormType<std::complex<T> >
@@ -183,9 +184,9 @@ squaredNorm(std::complex<T> const & t)
     /** \brief The squared norm of a numerical object.
 
         <ul>
-        <li>For scalar types: equals <tt>muli::sq(t)</tt>.
-        <li>For vectorial types (including TinyVector): equals <tt>muli::dot(t, t)</tt>.
-        <li>For complex number types: equals <tt>muli::sq(t.real()) + muli::sq(t.imag())</tt>.
+        <li>For scalar types: equals <tt>vigra::sq(t)</tt>.
+        <li>For vectorial types (including TinyVector): equals <tt>vigra::dot(t, t)</tt>.
+        <li>For complex number types: equals <tt>vigra::sq(t.real()) + vigra::sq(t.imag())</tt>.
         <li>For array and matrix types: results in the squared Frobenius norm (sum of squares of the matrix elements).
         </ul>
     */
@@ -198,8 +199,8 @@ SquaredNormType<T> squaredNorm(T const & t);
         For scalar types: implemented as <tt>abs(t)</tt><br>
         otherwise: implemented as <tt>sqrt(squaredNorm(t))</tt>.
 
-        <b>\#include</b> \<muli/mathutil.hxx\><br>
-        Namespace: muli
+        <b>\#include</b> \<vigra/mathutil.hxx\><br>
+        Namespace: vigra
     */
 template <class T>
 inline NormType<T>
@@ -208,26 +209,26 @@ norm(T const & t)
     return sqrt(NormType<T>(squaredNorm(t)));
 }
 
-#define MULI_DEFINE_NORM(T) \
+#define VIGRA_DEFINE_NORM(T) \
     inline SquaredNormType<T> squaredNorm(T t) { return sq(t); } \
     inline NormType<T> norm(T t) { return abs(t); }
 
-MULI_DEFINE_NORM(bool)
-MULI_DEFINE_NORM(signed char)
-MULI_DEFINE_NORM(unsigned char)
-MULI_DEFINE_NORM(short)
-MULI_DEFINE_NORM(unsigned short)
-MULI_DEFINE_NORM(int)
-MULI_DEFINE_NORM(unsigned int)
-MULI_DEFINE_NORM(long)
-MULI_DEFINE_NORM(unsigned long)
-MULI_DEFINE_NORM(long long)
-MULI_DEFINE_NORM(unsigned long long)
-MULI_DEFINE_NORM(float)
-MULI_DEFINE_NORM(double)
-MULI_DEFINE_NORM(long double)
+VIGRA_DEFINE_NORM(bool)
+VIGRA_DEFINE_NORM(signed char)
+VIGRA_DEFINE_NORM(unsigned char)
+VIGRA_DEFINE_NORM(short)
+VIGRA_DEFINE_NORM(unsigned short)
+VIGRA_DEFINE_NORM(int)
+VIGRA_DEFINE_NORM(unsigned int)
+VIGRA_DEFINE_NORM(long)
+VIGRA_DEFINE_NORM(unsigned long)
+VIGRA_DEFINE_NORM(long long)
+VIGRA_DEFINE_NORM(unsigned long long)
+VIGRA_DEFINE_NORM(float)
+VIGRA_DEFINE_NORM(double)
+VIGRA_DEFINE_NORM(long double)
 
-#undef MULI_DEFINE_NORM
+#undef VIGRA_DEFINE_NORM
 
 #ifndef _MSC_VER
 
@@ -253,24 +254,24 @@ inline bool isnan(REAL v)
 // scalar dot is needed for generic functions that should work with
 // scalars and vectors alike
 
-#define MULI_DEFINE_SCALAR_DOT(T) \
+#define VIGRA_DEFINE_SCALAR_DOT(T) \
     inline Promote<T> dot(T l, T r) { return l*r; }
 
-MULI_DEFINE_SCALAR_DOT(unsigned char)
-MULI_DEFINE_SCALAR_DOT(unsigned short)
-MULI_DEFINE_SCALAR_DOT(unsigned int)
-MULI_DEFINE_SCALAR_DOT(unsigned long)
-MULI_DEFINE_SCALAR_DOT(unsigned long long)
-MULI_DEFINE_SCALAR_DOT(signed char)
-MULI_DEFINE_SCALAR_DOT(signed short)
-MULI_DEFINE_SCALAR_DOT(signed int)
-MULI_DEFINE_SCALAR_DOT(signed long)
-MULI_DEFINE_SCALAR_DOT(signed long long)
-MULI_DEFINE_SCALAR_DOT(float)
-MULI_DEFINE_SCALAR_DOT(double)
-MULI_DEFINE_SCALAR_DOT(long double)
+VIGRA_DEFINE_SCALAR_DOT(unsigned char)
+VIGRA_DEFINE_SCALAR_DOT(unsigned short)
+VIGRA_DEFINE_SCALAR_DOT(unsigned int)
+VIGRA_DEFINE_SCALAR_DOT(unsigned long)
+VIGRA_DEFINE_SCALAR_DOT(unsigned long long)
+VIGRA_DEFINE_SCALAR_DOT(signed char)
+VIGRA_DEFINE_SCALAR_DOT(signed short)
+VIGRA_DEFINE_SCALAR_DOT(signed int)
+VIGRA_DEFINE_SCALAR_DOT(signed long)
+VIGRA_DEFINE_SCALAR_DOT(signed long long)
+VIGRA_DEFINE_SCALAR_DOT(float)
+VIGRA_DEFINE_SCALAR_DOT(double)
+VIGRA_DEFINE_SCALAR_DOT(long double)
 
-#undef MULI_DEFINE_SCALAR_DOT
+#undef VIGRA_DEFINE_SCALAR_DOT
 
 // support 'double' exponents for all floating point versions of pow()
 
@@ -289,8 +290,8 @@ inline long double pow(long double v, double e)
         // Defined for all floating point types. Rounds towards the nearest integer 
         // such that <tt>abs(round(t)) == round(abs(t))</tt> for all <tt>t</tt>.
 
-        // <b>\#include</b> \<muli/mathutil.hxx\><br>
-        // Namespace: muli
+        // <b>\#include</b> \<vigra/mathutil.hxx\><br>
+        // Namespace: vigra
     // */
 // #ifdef DOXYGEN // only for documentation
 // REAL round(REAL v);
@@ -323,8 +324,8 @@ inline long double pow(long double v, double e)
         Rounds to the nearest integer like round(), but casts the result to 
         <tt>int</tt> (this will be faster and is usually needed anyway).
 
-        <b>\#include</b> \<muli/mathutil.hxx\><br>
-        Namespace: muli
+        <b>\#include</b> \<vigra/mathutil.hxx\><br>
+        Namespace: vigra
     */
 inline int roundi(double t)
 {
@@ -340,8 +341,8 @@ inline int roundi(double t)
          see http://www.hackersdelight.org/).
         If \a x > 2^31, the function will return 0 because integer arithmetic is defined modulo 2^32.
 
-        <b>\#include</b> \<muli/mathutil.hxx\><br>
-        Namespace: muli
+        <b>\#include</b> \<vigra/mathutil.hxx\><br>
+        Namespace: vigra
     */
 inline uint32_t ceilPower2(uint32_t x) 
 {
@@ -362,8 +363,8 @@ inline uint32_t ceilPower2(uint32_t x)
         (function flp2() from Henry Warren: "Hacker's Delight", Addison-Wesley, 2003,
          see http://www.hackersdelight.org/).
 
-        <b>\#include</b> \<muli/mathutil.hxx\><br>
-        Namespace: muli
+        <b>\#include</b> \<vigra/mathutil.hxx\><br>
+        Namespace: vigra
     */
 inline uint32_t floorPower2(uint32_t x) 
 { 
@@ -406,8 +407,8 @@ int32_t IntLog2<T>::table[64] = {
         in \a x (algorithm nlz10() at http://www.hackersdelight.org/). But note that the functions
         \ref floorPower2() or \ref ceilPower2() are more efficient and should be preferred when possible.
 
-        <b>\#include</b> \<muli/mathutil.hxx\><br>
-        Namespace: muli
+        <b>\#include</b> \<vigra/mathutil.hxx\><br>
+        Namespace: vigra
     */
 inline int32_t log2i(uint32_t x) 
 { 
@@ -457,8 +458,8 @@ struct power_static<V, 0>
 
     /** \brief Exponentiation to a positive integer power by squaring.
 
-        <b>\#include</b> \<muli/mathutil.hxx\><br>
-        Namespace: muli
+        <b>\#include</b> \<vigra/mathutil.hxx\><br>
+        Namespace: vigra
     */
 template <unsigned n, class V>
 inline V power(const V & x)
@@ -569,8 +570,8 @@ using std::sqrt;
     
         Useful for fast fixed-point computations.
 
-        <b>\#include</b> \<muli/mathutil.hxx\><br>
-        Namespace: muli
+        <b>\#include</b> \<vigra/mathutil.hxx\><br>
+        Namespace: vigra
     */
 inline int32_t sqrti(int32_t v)
 {
@@ -583,32 +584,32 @@ inline int32_t sqrti(int32_t v)
 
         Useful for fast fixed-point computations.
 
-        <b>\#include</b> \<muli/mathutil.hxx\><br>
-        Namespace: muli
+        <b>\#include</b> \<vigra/mathutil.hxx\><br>
+        Namespace: vigra
     */
 inline uint32_t sqrti(uint32_t v)
 {
     return detail::IntSquareRoot<uint32_t>::exec(v);
 }
 
-#ifdef MULI_NO_HYPOT
+#ifdef VIGRA_NO_HYPOT
     /** \brief Compute the Euclidean distance (length of the hypotenuse of a right-angled triangle).
 
         The  hypot()  function  returns  the  sqrt(a*a  +  b*b).
         It is implemented in a way that minimizes round-off error.
 
-        <b>\#include</b> \<muli/mathutil.hxx\><br>
-        Namespace: muli
+        <b>\#include</b> \<vigra/mathutil.hxx\><br>
+        Namespace: vigra
     */
 inline double hypot(double a, double b) 
 { 
-    double absa = MULI_CSTD::fabs(a), absb = MULI_CSTD::fabs(b);
+    double absa = VIGRA_CSTD::fabs(a), absb = VIGRA_CSTD::fabs(b);
     if (absa > absb) 
-        return absa * MULI_CSTD::sqrt(1.0 + sq(absb/absa)); 
+        return absa * VIGRA_CSTD::sqrt(1.0 + sq(absb/absa)); 
     else 
         return absb == 0.0
                    ? 0.0
-                   : absb * MULI_CSTD::sqrt(1.0 + sq(absa/absb)); 
+                   : absb * VIGRA_CSTD::sqrt(1.0 + sq(absa/absb)); 
 }
 
 #else
@@ -621,8 +622,8 @@ using std::hypot;
 
         Returns 1, 0, or -1 depending on the sign of \a t, but with the same type as \a t.
 
-        <b>\#include</b> \<muli/mathutil.hxx\><br>
-        Namespace: muli
+        <b>\#include</b> \<vigra/mathutil.hxx\><br>
+        Namespace: vigra
     */
 template <class T>
 inline T sign(T t) 
@@ -638,8 +639,8 @@ inline T sign(T t)
 
         Returns 1, 0, or -1 depending on the sign of \a t, converted to int.
 
-        <b>\#include</b> \<muli/mathutil.hxx\><br>
-        Namespace: muli
+        <b>\#include</b> \<vigra/mathutil.hxx\><br>
+        Namespace: vigra
     */
 template <class T>
 inline int signi(T t) 
@@ -655,8 +656,8 @@ inline int signi(T t)
 
         Transfers the sign of \a t2 to \a t1.
 
-        <b>\#include</b> \<muli/mathutil.hxx\><br>
-        Namespace: muli
+        <b>\#include</b> \<vigra/mathutil.hxx\><br>
+        Namespace: vigra
     */
 template <class T1, class T2>
 inline T1 sign(T1 t1, T2 t2) 
@@ -682,22 +683,22 @@ bool odd(int t);
 
 #endif
 
-#define MULI_DEFINE_ODD_EVEN(T) \
+#define VIGRA_DEFINE_ODD_EVEN(T) \
     inline bool even(T t) { return (t&1) == 0; } \
     inline bool odd(T t)  { return (t&1) == 1; }
 
-MULI_DEFINE_ODD_EVEN(char)
-MULI_DEFINE_ODD_EVEN(short)
-MULI_DEFINE_ODD_EVEN(int)
-MULI_DEFINE_ODD_EVEN(long)
-MULI_DEFINE_ODD_EVEN(long long)
-MULI_DEFINE_ODD_EVEN(unsigned char)
-MULI_DEFINE_ODD_EVEN(unsigned short)
-MULI_DEFINE_ODD_EVEN(unsigned int)
-MULI_DEFINE_ODD_EVEN(unsigned long)
-MULI_DEFINE_ODD_EVEN(unsigned long long)
+VIGRA_DEFINE_ODD_EVEN(char)
+VIGRA_DEFINE_ODD_EVEN(short)
+VIGRA_DEFINE_ODD_EVEN(int)
+VIGRA_DEFINE_ODD_EVEN(long)
+VIGRA_DEFINE_ODD_EVEN(long long)
+VIGRA_DEFINE_ODD_EVEN(unsigned char)
+VIGRA_DEFINE_ODD_EVEN(unsigned short)
+VIGRA_DEFINE_ODD_EVEN(unsigned int)
+VIGRA_DEFINE_ODD_EVEN(unsigned long)
+VIGRA_DEFINE_ODD_EVEN(unsigned long long)
 
-#undef MULI_DEFINE_ODD_EVEN
+#undef VIGRA_DEFINE_ODD_EVEN
 
     /** \brief Compute the eigenvalues of a 2x2 real symmetric matrix.
       
@@ -706,8 +707,8 @@ MULI_DEFINE_ODD_EVEN(unsigned long long)
            \lambda_{1,2} = \frac{1}{2}\left(a_{00} + a_{11} \pm \sqrt{(a_{00} - a_{11})^2 + 4 a_{01}^2}\right)
         \f]
       
-        <b>\#include</b> \<muli/mathutil.hxx\><br>
-        Namespace: muli
+        <b>\#include</b> \<vigra/mathutil.hxx\><br>
+        Namespace: vigra
     */
 template <class T>
 void symmetric2x2Eigenvalues(T a00, T a01, T a11, T * r0, T * r1)
@@ -726,8 +727,8 @@ void symmetric2x2Eigenvalues(T a00, T a01, T a11, T * r0, T * r1)
         David Eberly: <a href="http://www.geometrictools.com/Documentation/EigenSymmetric3x3.pdf">
         <em>"Eigensystems for 3 × 3 Symmetric Matrices (Revisited)"</em></a>, Geometric Tools Documentation, 2006
         
-        <b>\#include</b> \<muli/mathutil.hxx\><br>
-        Namespace: muli
+        <b>\#include</b> \<vigra/mathutil.hxx\><br>
+        Namespace: vigra
     */
 template <class T>
 void symmetric3x3Eigenvalues(T a00, T a01, T a02, T a11, T a12, T a22,
@@ -773,10 +774,10 @@ T ellipticRD(T x, T y, T z)
         X = 1.0 - x/m;
         Y = 1.0 - y/m;
         Z = 1.0 - z/m;
-        if(std::max(std::max(MULI_CSTD::fabs(X), MULI_CSTD::fabs(Y)), MULI_CSTD::fabs(Z)) < 0.01)
+        if(std::max(std::max(VIGRA_CSTD::fabs(X), VIGRA_CSTD::fabs(Y)), VIGRA_CSTD::fabs(Z)) < 0.01)
             break;
-        double l = MULI_CSTD::sqrt(x*y) + MULI_CSTD::sqrt(x*z) + MULI_CSTD::sqrt(y*z);
-        s += f / (MULI_CSTD::sqrt(z)*(z + l));
+        double l = VIGRA_CSTD::sqrt(x*y) + VIGRA_CSTD::sqrt(x*z) + VIGRA_CSTD::sqrt(y*z);
+        s += f / (VIGRA_CSTD::sqrt(z)*(z + l));
         f /= 4.0;
         x = (x + l)/4.0;
         y = (y + l)/4.0;
@@ -788,7 +789,7 @@ T ellipticRD(T x, T y, T z)
     double d = a - 6.0*b;
     double e = d + 2.0*c;
     return 3.0*s + f*(1.0+d*(-3.0/14.0+d*9.0/88.0-Z*e*4.5/26.0)
-                      +Z*(e/6.0+Z*(-c*9.0/22.0+a*Z*3.0/26.0))) / MULI_CSTD::pow(m,1.5);
+                      +Z*(e/6.0+Z*(-c*9.0/22.0+a*Z*3.0/26.0))) / VIGRA_CSTD::pow(m,1.5);
 }
 
 template <class T>
@@ -801,16 +802,16 @@ T ellipticRF(T x, T y, T z)
         X = 1.0 - x/m;
         Y = 1.0 - y/m;
         Z = 1.0 - z/m;
-        if(std::max(std::max(MULI_CSTD::fabs(X), MULI_CSTD::fabs(Y)), MULI_CSTD::fabs(Z)) < 0.01)
+        if(std::max(std::max(VIGRA_CSTD::fabs(X), VIGRA_CSTD::fabs(Y)), VIGRA_CSTD::fabs(Z)) < 0.01)
             break;
-        double l = MULI_CSTD::sqrt(x*y) + MULI_CSTD::sqrt(x*z) + MULI_CSTD::sqrt(y*z);
+        double l = VIGRA_CSTD::sqrt(x*y) + VIGRA_CSTD::sqrt(x*z) + VIGRA_CSTD::sqrt(y*z);
         x = (x + l)/4.0;
         y = (y + l)/4.0;
         z = (z + l)/4.0;
     }
     double d = X*Y - sq(Z);
     double p = X*Y*Z;
-    return (1.0 - d/10.0 + p/14.0 + sq(d)/24.0 - d*p*3.0/44.0) / MULI_CSTD::sqrt(m);
+    return (1.0 - d/10.0 + p/14.0 + sq(d)/24.0 - d*p*3.0/44.0) / VIGRA_CSTD::sqrt(m);
 }
 
 } // namespace detail
@@ -828,13 +829,13 @@ T ellipticRF(T x, T y, T z)
         Note: In some libraries (e.g. Mathematica), the second parameter of the elliptic integral
         functions must be k^2 rather than k. Check the documentation when results disagree!
 
-        <b>\#include</b> \<muli/mathutil.hxx\><br>
-        Namespace: muli
+        <b>\#include</b> \<vigra/mathutil.hxx\><br>
+        Namespace: vigra
     */
 inline double ellipticIntegralF(double x, double k)
 {
-    double c2 = sq(MULI_CSTD::cos(x));
-    double s = MULI_CSTD::sin(x);
+    double c2 = sq(VIGRA_CSTD::cos(x));
+    double s = VIGRA_CSTD::sin(x);
     return s*detail::ellipticRF(c2, 1.0 - sq(k*s), 1.0);
 }
 
@@ -852,13 +853,13 @@ inline double ellipticIntegralF(double x, double k)
         Note: In some libraries (e.g. Mathematica), the second parameter of the elliptic integral
         functions must be k^2 rather than k. Check the documentation when results disagree!
       
-        <b>\#include</b> \<muli/mathutil.hxx\><br>
-        Namespace: muli
+        <b>\#include</b> \<vigra/mathutil.hxx\><br>
+        Namespace: vigra
     */
 inline double ellipticIntegralE(double x, double k)
 {
-    double c2 = sq(MULI_CSTD::cos(x));
-    double s = MULI_CSTD::sin(x);
+    double c2 = sq(VIGRA_CSTD::cos(x));
+    double s = VIGRA_CSTD::sin(x);
     k = sq(k*s);
     return s*(detail::ellipticRF(c2, 1.0-k, 1.0) - k/3.0*detail::ellipticRD(c2, 1.0-k, 1.0));
 }
@@ -870,8 +871,8 @@ namespace detail {
 template <class T>
 double erfImpl(T x)
 {
-    double t = 1.0/(1.0+0.5*MULI_CSTD::fabs(x));
-    double ans = t*MULI_CSTD::exp(-x*x-1.26551223+t*(1.00002368+t*(0.37409196+
+    double t = 1.0/(1.0+0.5*VIGRA_CSTD::fabs(x));
+    double ans = t*VIGRA_CSTD::exp(-x*x-1.26551223+t*(1.00002368+t*(0.37409196+
                                     t*(0.09678418+t*(-0.18628806+t*(0.27886807+
                                     t*(-1.13520398+t*(1.48851587+t*(-0.82215223+
                                     t*0.17087277)))))))));
@@ -886,7 +887,7 @@ double erfImpl(T x)
     /** \brief The error function.
 
         If <tt>erf()</tt> is not provided in the C standard math library (as it should according to the
-        new C99 standard ?), MULI implements <tt>erf()</tt> as an approximation of the error 
+        new C99 standard ?), VIGRA implements <tt>erf()</tt> as an approximation of the error 
         function
         
         \f[
@@ -895,8 +896,8 @@ double erfImpl(T x)
         
         according to the formula given in Press et al. "Numerical Recipes".
 
-        <b>\#include</b> \<muli/mathutil.hxx\><br>
-        Namespace: muli
+        <b>\#include</b> \<vigra/mathutil.hxx\><br>
+        Namespace: vigra
     */
 inline double erf(double x)
 {
@@ -916,8 +917,8 @@ double noncentralChi2CDFApprox(unsigned int degreesOfFreedom, T noncentrality, T
 {
     double a = degreesOfFreedom + noncentrality;
     double b = (a + noncentrality) / sq(a);
-    double t = (MULI_CSTD::pow((double)arg / a, 1.0/3.0) - (1.0 - 2.0 / 9.0 * b)) / MULI_CSTD::sqrt(2.0 / 9.0 * b);
-    return 0.5*(1.0 + erf(t/MULI_CSTD::sqrt(2.0)));
+    double t = (VIGRA_CSTD::pow((double)arg / a, 1.0/3.0) - (1.0 - 2.0 / 9.0 * b)) / VIGRA_CSTD::sqrt(2.0 / 9.0 * b);
+    return 0.5*(1.0 + erf(t/VIGRA_CSTD::sqrt(2.0)));
 }
 
 template <class T>
@@ -926,8 +927,8 @@ void noncentralChi2OneIteration(T arg, T & lans, T & dans, T & pans, unsigned in
     double tol = -50.0;
     if(lans < tol)
     {
-        lans = lans + MULI_CSTD::log(arg / j);
-        dans = MULI_CSTD::exp(lans);
+        lans = lans + VIGRA_CSTD::log(arg / j);
+        dans = VIGRA_CSTD::exp(lans);
     }
     else
     {
@@ -940,14 +941,14 @@ void noncentralChi2OneIteration(T arg, T & lans, T & dans, T & pans, unsigned in
 template <class T>
 std::pair<double, double> noncentralChi2CDF(unsigned int degreesOfFreedom, T noncentrality, T arg, T eps)
 {
-    muli_precondition(noncentrality >= 0.0 && arg >= 0.0 && eps > 0.0,
+    vigra_precondition(noncentrality >= 0.0 && arg >= 0.0 && eps > 0.0,
         "noncentralChi2P(): parameters must be positive.");
     if (arg == 0.0 && degreesOfFreedom > 0)
         return std::make_pair(0.0, 0.0);
 
     // Determine initial values
     double b1 = 0.5 * noncentrality,
-           ao = MULI_CSTD::exp(-b1),
+           ao = VIGRA_CSTD::exp(-b1),
            eps2 = eps / ao,
            lnrtpi2 = 0.22579135264473,
            probability, density, lans, dans, pans, sum, am, hold;
@@ -956,15 +957,15 @@ std::pair<double, double> noncentralChi2CDF(unsigned int degreesOfFreedom, T non
     if(degreesOfFreedom % 2)
     {
         i = 1;
-        lans = -0.5 * (arg + MULI_CSTD::log(arg)) - lnrtpi2;
-        dans = MULI_CSTD::exp(lans);
-        pans = erf(MULI_CSTD::sqrt(arg/2.0));
+        lans = -0.5 * (arg + VIGRA_CSTD::log(arg)) - lnrtpi2;
+        dans = VIGRA_CSTD::exp(lans);
+        pans = erf(VIGRA_CSTD::sqrt(arg/2.0));
     }
     else
     {
         i = 2;
         lans = -0.5 * arg;
-        dans = MULI_CSTD::exp(lans);
+        dans = VIGRA_CSTD::exp(lans);
         pans = 1.0 - dans;
     }
     
@@ -1003,7 +1004,7 @@ std::pair<double, double> noncentralChi2CDF(unsigned int degreesOfFreedom, T non
             break; // converged
     }
     if(m == maxit)
-        muli_fail("noncentralChi2P(): no convergence.");
+        vigra_fail("noncentralChi2P(): no convergence.");
     return std::make_pair(0.5 * ao * density, std::min(1.0, std::max(0.0, ao * probability)));
 }
 
@@ -1015,8 +1016,8 @@ std::pair<double, double> noncentralChi2CDF(unsigned int degreesOfFreedom, T non
         and tolerance \a accuracy at the given argument \a arg
         by calling <tt>noncentralChi2(degreesOfFreedom, 0.0, arg, accuracy)</tt>.
 
-        <b>\#include</b> \<muli/mathutil.hxx\><br>
-        Namespace: muli
+        <b>\#include</b> \<vigra/mathutil.hxx\><br>
+        Namespace: vigra
     */
 inline double chi2(unsigned int degreesOfFreedom, double arg, double accuracy = 1e-7)
 {
@@ -1030,8 +1031,8 @@ inline double chi2(unsigned int degreesOfFreedom, double arg, double accuracy = 
         a random number drawn from the distribution is below \a arg
         by calling <tt>noncentralChi2CDF(degreesOfFreedom, 0.0, arg, accuracy)</tt>.
 
-        <b>\#include</b> \<muli/mathutil.hxx\><br>
-        Namespace: muli
+        <b>\#include</b> \<vigra/mathutil.hxx\><br>
+        Namespace: vigra
     */
 inline double chi2CDF(unsigned int degreesOfFreedom, double arg, double accuracy = 1e-7)
 {
@@ -1046,8 +1047,8 @@ inline double chi2CDF(unsigned int degreesOfFreedom, double arg, double accuracy
         http://lib.stat.cmu.edu/apstat/231). The algorithm has linear complexity in the number of
         degrees of freedom.
 
-        <b>\#include</b> \<muli/mathutil.hxx\><br>
-        Namespace: muli
+        <b>\#include</b> \<vigra/mathutil.hxx\><br>
+        Namespace: vigra
     */
 inline double noncentralChi2(unsigned int degreesOfFreedom, 
               double noncentrality, double arg, double accuracy = 1e-7)
@@ -1064,8 +1065,8 @@ inline double noncentralChi2(unsigned int degreesOfFreedom,
         http://lib.stat.cmu.edu/apstat/231). The algorithm has linear complexity in the number of
         degrees of freedom (see noncentralChi2CDFApprox() for a constant-time algorithm).
 
-        <b>\#include</b> \<muli/mathutil.hxx\><br>
-        Namespace: muli
+        <b>\#include</b> \<vigra/mathutil.hxx\><br>
+        Namespace: vigra
     */
 inline double noncentralChi2CDF(unsigned int degreesOfFreedom, 
               double noncentrality, double arg, double accuracy = 1e-7)
@@ -1084,8 +1085,8 @@ inline double noncentralChi2CDF(unsigned int degreesOfFreedom,
         when noncentralChi2CDF() is too slow, and approximate values are sufficient. The accuracy is only 
         about 0.1 for few degrees of freedom, but reaches about 0.001 above dof = 5.
 
-        <b>\#include</b> \<muli/mathutil.hxx\><br>
-        Namespace: muli
+        <b>\#include</b> \<vigra/mathutil.hxx\><br>
+        Namespace: vigra
     */
 inline double noncentralChi2CDFApprox(unsigned int degreesOfFreedom, double noncentrality, double arg)
 {
@@ -1114,13 +1115,13 @@ T facLM(T l, T m)
         otherwise an exception is thrown. The standard Legendre polynomials are the 
         special case <tt>m == 0</tt>.
 
-        <b>\#include</b> \<muli/mathutil.hxx\><br>
-        Namespace: muli
+        <b>\#include</b> \<vigra/mathutil.hxx\><br>
+        Namespace: vigra
     */
 template <class REAL>
 REAL legendre(unsigned int l, int m, REAL x)
 {
-    muli_precondition(abs(x) <= 1.0, "legendre(): x must be in [-1.0, 1.0].");
+    vigra_precondition(abs(x) <= 1.0, "legendre(): x must be in [-1.0, 1.0].");
     if (m < 0)
     {
         m = -m;
@@ -1161,8 +1162,8 @@ REAL legendre(unsigned int l, int m, REAL x)
         Computes the value of the Legendre polynomial of order <tt>l</tt> for argument <tt>x</tt>.
         <tt>x</tt> must be in the range <tt>[-1.0, 1.0]</tt>, otherwise an exception is thrown.
 
-        <b>\#include</b> \<muli/mathutil.hxx\><br>
-        Namespace: muli
+        <b>\#include</b> \<vigra/mathutil.hxx\><br>
+        Namespace: vigra
     */
 template <class REAL>
 REAL legendre(unsigned int l, REAL x)
@@ -1176,8 +1177,8 @@ REAL legendre(unsigned int l, REAL x)
         to make sure that <tt>sin_pi(1.0) == 0.0</tt> (which does not hold for
         <tt>std::sin(M_PI)</tt> due to round-off error), and <tt>sin_pi(0.5) == 1.0</tt>.
 
-        <b>\#include</b> \<muli/mathutil.hxx\><br>
-        Namespace: muli
+        <b>\#include</b> \<vigra/mathutil.hxx\><br>
+        Namespace: vigra
     */
 template <class REAL>
 REAL sin_pi(REAL x)
@@ -1214,8 +1215,8 @@ REAL sin_pi(REAL x)
         Essentially calls <tt>std::cos(M_PI*x)</tt> but uses a more accurate implementation
         to make sure that <tt>cos_pi(1.0) == -1.0</tt> and <tt>cos_pi(0.5) == 0.0</tt>.
 
-        <b>\#include</b> \<muli/mathutil.hxx\><br>
-        Namespace: muli
+        <b>\#include</b> \<vigra/mathutil.hxx\><br>
+        Namespace: vigra
     */
 template <class REAL>
 REAL cos_pi(REAL x)
@@ -1364,7 +1365,7 @@ REAL GammaImpl<REAL>::gamma(REAL x)
     int i, k, m, ix = (int)x;
     double ga = 0.0, gr = 0.0, r = 0.0, z = 0.0;
 
-    muli_precondition(x <= 171.0,
+    vigra_precondition(x <= 171.0,
         "gamma(): argument cannot exceed 171.0.");
 
     if (x == ix) 
@@ -1379,7 +1380,7 @@ REAL GammaImpl<REAL>::gamma(REAL x)
         }
         else
         {
-            muli_precondition(false,
+            vigra_precondition(false,
                  "gamma(): gamma function is undefined for 0 and negative integers.");
         }
      }
@@ -1434,10 +1435,10 @@ REAL GammaImpl<REAL>::gamma(REAL x)
 template <class REAL>
 REAL GammaImpl<REAL>::loggamma(REAL x)
 {
-    muli_precondition(x > 0.0,
+    vigra_precondition(x > 0.0,
         "loggamma(): argument must be positive.");
     
-    muli_precondition(x <= 1.0e307,
+    vigra_precondition(x <= 1.0e307,
         "loggamma(): argument must not exceed 1e307.");
 
     double res;
@@ -1560,8 +1561,8 @@ REAL GammaImpl<REAL>::loggamma(REAL x)
         The argument must be <= 171.0 and cannot be zero or a negative integer. An
         exception is thrown when these conditions are violated.
 
-        <b>\#include</b> \<muli/mathutil.hxx\><br>
-        Namespace: muli
+        <b>\#include</b> \<vigra/mathutil.hxx\><br>
+        Namespace: vigra
     */
 inline double gamma(double x)
 {
@@ -1576,8 +1577,8 @@ inline double gamma(double x)
         
         The argument must be positive and < 1e30. An exception is thrown when these conditions are violated.
 
-        <b>\#include</b> \<muli/mathutil.hxx\><br>
-        Namespace: muli
+        <b>\#include</b> \<vigra/mathutil.hxx\><br>
+        Namespace: vigra
     */
 inline double loggamma(double x)
 {
@@ -1589,7 +1590,7 @@ inline double loggamma(double x)
 
 #if 1
 
-#define MULI_MATH_FUNC_HELPER(TYPE) \
+#define VIGRA_MATH_FUNC_HELPER(TYPE) \
     inline TYPE clipLower(const TYPE t){ \
         return t < static_cast<TYPE>(0.0) ? static_cast<TYPE>(0.0) : t; \
     } \
@@ -1624,26 +1625,26 @@ inline double loggamma(double x)
     } 
 
 
-MULI_MATH_FUNC_HELPER(unsigned char)
-MULI_MATH_FUNC_HELPER(unsigned short)
-MULI_MATH_FUNC_HELPER(unsigned int)
-MULI_MATH_FUNC_HELPER(unsigned long)
-MULI_MATH_FUNC_HELPER(unsigned long long)
-MULI_MATH_FUNC_HELPER(signed char)
-MULI_MATH_FUNC_HELPER(signed short)
-MULI_MATH_FUNC_HELPER(signed int)
-MULI_MATH_FUNC_HELPER(signed long)
-MULI_MATH_FUNC_HELPER(signed long long)
-MULI_MATH_FUNC_HELPER(float)
-MULI_MATH_FUNC_HELPER(double)
-MULI_MATH_FUNC_HELPER(long double)
+VIGRA_MATH_FUNC_HELPER(unsigned char)
+VIGRA_MATH_FUNC_HELPER(unsigned short)
+VIGRA_MATH_FUNC_HELPER(unsigned int)
+VIGRA_MATH_FUNC_HELPER(unsigned long)
+VIGRA_MATH_FUNC_HELPER(unsigned long long)
+VIGRA_MATH_FUNC_HELPER(signed char)
+VIGRA_MATH_FUNC_HELPER(signed short)
+VIGRA_MATH_FUNC_HELPER(signed int)
+VIGRA_MATH_FUNC_HELPER(signed long)
+VIGRA_MATH_FUNC_HELPER(signed long long)
+VIGRA_MATH_FUNC_HELPER(float)
+VIGRA_MATH_FUNC_HELPER(double)
+VIGRA_MATH_FUNC_HELPER(long double)
 
 
 
-#undef MULI_MATH_FUNC_HELPER
+#undef VIGRA_MATH_FUNC_HELPER
 
 #endif
 
-} // namespace muli
+} // namespace vigra
 
-#endif /* MULI_MATH_HXX */
+#endif /* VIGRA_MATH_HXX */

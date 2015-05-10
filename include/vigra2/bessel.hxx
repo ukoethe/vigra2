@@ -2,9 +2,12 @@
 /*                                                                      */
 /*               Copyright 2014-2015 by Ullrich Koethe                  */
 /*                                                                      */
-/*    This file is part of the MULI computer vision library.            */
-/*    The MULI Website is                                               */
-/*        http://ukoethe.github.io/muli                                 */
+/*    This file is part of the VIGRA2 computer vision library.          */
+/*    The VIGRA2 Website is                                             */
+/*        http://ukoethe.github.io/vigra2                               */
+/*    Please direct questions, bug reports, and contributions to        */
+/*        ullrich.koethe@iwr.uni-heidelberg.de    or                    */
+/*        vigra@informatik.uni-hamburg.de                               */
 /*                                                                      */
 /*    Permission is hereby granted, free of charge, to any person       */
 /*    obtaining a copy of this software and associated documentation    */
@@ -32,8 +35,8 @@
 
 #pragma once
 
-#ifndef MULI_BESSEL_HXX
-#define MULI_BESSEL_HXX
+#ifndef VIGRA_BESSEL_HXX
+#define VIGRA_BESSEL_HXX
 
 #include "math.hxx"
 #include <vector>
@@ -42,7 +45,7 @@
 #include <boost/math/special_functions/bessel.hpp>
 #endif
 
-namespace muli {
+namespace vigra {
 
 /** \addtogroup MathFunctions 
 */
@@ -268,8 +271,8 @@ void bessjyn(int n, REAL x,int &nm, double *jn, double *yn)
         it uses boost::math when <tt>HasBoostMath</tt> is \#defined, or native 
         implementations on gcc and MSVC otherwise.
 
-        <b>\#include</b> \<muli/bessel.hxx\><br>
-        Namespace: muli
+        <b>\#include</b> \<vigra/bessel.hxx\><br>
+        Namespace: vigra
     */
 inline double besselJ(int n, double x)
 {
@@ -279,7 +282,7 @@ inline double besselJ(int n, double x)
         return n == 0 ? 1.0 : 0.0;
 #if defined(HasBoostMath)
     return boost::math::cyl_bessel_j((double)n, x);
-#elif defined(__GNUC__) && !defined(MULI_NO_BESSEL)
+#elif defined(__GNUC__) && !defined(VIGRA_NO_BESSEL)
     return ::jn(n, x);
 #elif defined(_MSC_VER)
     return _jn(n, x);
@@ -304,8 +307,8 @@ inline double besselJ(int n, double x)
         it uses boost::math when <tt>HasBoostMath</tt> is \#defined, or native 
         implementations on gcc and MSVC otherwise.
 
-        <b>\#include</b> \<muli/bessel.hxx\><br>
-        Namespace: muli
+        <b>\#include</b> \<vigra/bessel.hxx\><br>
+        Namespace: vigra
     */
 inline double besselY(int n, double x)
 {
@@ -315,7 +318,7 @@ inline double besselY(int n, double x)
         return -std::numeric_limits<double>::infinity();
 #if defined(HasBoostMath)
     return boost::math::cyl_neumann((double)n, x);
-#elif defined(__GNUC__) && !defined(MULI_NO_BESSEL)
+#elif defined(__GNUC__) && !defined(VIGRA_NO_BESSEL)
     return ::yn(n, x);
 #elif defined(_MSC_VER)
     return _yn(n, x);
@@ -332,6 +335,6 @@ inline double besselY(int n, double x)
 
 //@}
 
-} // namespace muli
+} // namespace vigra
 
-#endif // MULI_BESSEL_HXX
+#endif // VIGRA_BESSEL_HXX

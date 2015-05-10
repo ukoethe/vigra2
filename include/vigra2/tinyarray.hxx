@@ -1,13 +1,13 @@
 /************************************************************************/
 /*                                                                      */
-/*               Copyright 1998-2002 by Ullrich Koethe                  */
+/*               Copyright 2014-2015 by Ullrich Koethe                  */
 /*                                                                      */
-/*    This file is part of the MULI computer vision library.           */
-/*    The MULI Website is                                              */
-/*        http://hci.iwr.uni-heidelberg.de/muli/                       */
+/*    This file is part of the VIGRA2 computer vision library.          */
+/*    The VIGRA2 Website is                                             */
+/*        http://ukoethe.github.io/vigra2                               */
 /*    Please direct questions, bug reports, and contributions to        */
 /*        ullrich.koethe@iwr.uni-heidelberg.de    or                    */
-/*        muli@informatik.uni-hamburg.de                               */
+/*        vigra@informatik.uni-hamburg.de                               */
 /*                                                                      */
 /*    Permission is hereby granted, free of charge, to any person       */
 /*    obtaining a copy of this software and associated documentation    */
@@ -33,8 +33,8 @@
 /*                                                                      */
 /************************************************************************/
 
-#ifndef MULI_TINYARRAY_HXX
-#define MULI_TINYARRAY_HXX
+#ifndef VIGRA_TINYARRAY_HXX
+#define VIGRA_TINYARRAY_HXX
 
 namespace lemon {
 
@@ -52,15 +52,15 @@ struct Invalid;
 #include "error.hxx"
 #include "math.hxx"
 
-#ifdef MULI_CHECK_BOUNDS
-#define MULI_ASSERT_INSIDE(diff) \
-  muli_precondition(diff >= 0, "Index out of bounds");\
-  muli_precondition(diff < TinySize<N...>::value, "Index out of bounds");
+#ifdef VIGRA_CHECK_BOUNDS
+#define VIGRA_ASSERT_INSIDE(diff) \
+  vigra_precondition(diff >= 0, "Index out of bounds");\
+  vigra_precondition(diff < TinySize<N...>::value, "Index out of bounds");
 #else
-#define MULI_ASSERT_INSIDE(diff)
+#define VIGRA_ASSERT_INSIDE(diff)
 #endif
 
-namespace muli {
+namespace vigra {
 
 // mask cl.exe shortcomings [begin]
 #if defined(_MSC_VER)
@@ -140,8 +140,8 @@ class TinyArrayView;
     \ref TinyArray and \ref TinyArrayView, and enables these classes
     to be freely mixed within expressions. It is typically not used directly.
 
-    <b>\#include</b> \<muli/tinyarray.hxx\><br>
-    Namespace: muli
+    <b>\#include</b> \<vigra/tinyarray.hxx\><br>
+    Namespace: vigra
 **/
 template <class VALUETYPE, class DERIVED, ArrayIndex ... N>
 class TinyArrayBase
@@ -688,8 +688,8 @@ std::ostream & operator<<(std::ostream & o, TinyArrayBase<T, DERIVED, N1, N2> co
 
     See also:<br>
     <UL style="list-style-image:url(documents/bullet.gif)">
-        <LI> \ref muli::TinyArrayBase
-        <LI> \ref muli::TinyArrayView
+        <LI> \ref vigra::TinyArrayBase
+        <LI> \ref vigra::TinyArrayView
         <LI> \ref TinyArrayOperators
     </UL>
 
@@ -787,14 +787,14 @@ class TinyArray
 
     <b>See also:</b>
     <ul>
-        <li> \ref muli::TinyArrayBase
-        <li> \ref muli::TinyArray
-        <li> \ref muli::TinySymmetricView
+        <li> \ref vigra::TinyArrayBase
+        <li> \ref vigra::TinyArray
+        <li> \ref vigra::TinySymmetricView
         <li> \ref TinyArrayOperators
     </ul>
 
-    <b>\#include</b> \<muli/tinyarray.hxx\><br>
-    Namespace: muli
+    <b>\#include</b> \<vigra/tinyarray.hxx\><br>
+    Namespace: vigra
 **/
 template <class VALUETYPE, ArrayIndex ... N>
 class TinyArrayView
@@ -885,14 +885,14 @@ class TinyArrayView
 
     <b>See also:</b>
     <ul>
-        <li> \ref muli::TinyArrayBase
-        <li> \ref muli::TinyArray
-        <li> \ref muli::TinyArrayView
+        <li> \ref vigra::TinyArrayBase
+        <li> \ref vigra::TinyArray
+        <li> \ref vigra::TinyArrayView
         <li> \ref TinyArrayOperators
     </ul>
 
-    <b>\#include</b> \<muli/tinyarray.hxx\><br>
-    Namespace: muli
+    <b>\#include</b> \<vigra/tinyarray.hxx\><br>
+    Namespace: vigra
 **/
 template <class VALUETYPE, ArrayIndex N>
 class TinySymmetricView
@@ -1109,8 +1109,8 @@ std::ostream & operator<<(std::ostream & o, TinySymmetricView<T, N> const & v)
     These functions fulfill the requirements of a Linear Space (vector space).
     Return types are determined according to \ref Promote or \ref RealPromote.
 
-    <b>\#include</b> \<muli/TinyArray.hxx\><br>
-    Namespace: muli
+    <b>\#include</b> \<vigra/TinyArray.hxx\><br>
+    Namespace: vigra
 */
 //@{
     /// element-wise equal
@@ -1821,7 +1821,7 @@ transpose(TinyArrayBase<V1, D1, N> const & v,
     TinyArray<V1, N> res(DontInit);
     for(int k=0; k < N; ++k)
     {
-        MULI_ASSERT_INSIDE(permutation[k]);
+        VIGRA_ASSERT_INSIDE(permutation[k]);
         res[k] = v[permutation[k]];
     }
     return res;
@@ -2001,9 +2001,9 @@ struct SquaredNormTypeImpl<TinySymmetricView<T, N> >
 #pragma warning( pop )
 #endif
 
-} // namespace muli
+} // namespace vigra
 
-#undef MULI_ASSERT_INSIDE
+#undef VIGRA_ASSERT_INSIDE
 
 
-#endif // MULI_TINYARRAY_HXX
+#endif // VIGRA_TINYARRAY_HXX

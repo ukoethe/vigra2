@@ -2,9 +2,12 @@
 /*                                                                      */
 /*               Copyright 2014-2015 by Ullrich Koethe                  */
 /*                                                                      */
-/*    This file is part of the MULI computer vision library.            */
-/*    The MULI Website is                                               */
-/*        http://ukoethe.github.io/muli                                 */
+/*    This file is part of the VIGRA2 computer vision library.          */
+/*    The VIGRA2 Website is                                             */
+/*        http://ukoethe.github.io/vigra2                               */
+/*    Please direct questions, bug reports, and contributions to        */
+/*        ullrich.koethe@iwr.uni-heidelberg.de    or                    */
+/*        vigra@informatik.uni-hamburg.de                               */
 /*                                                                      */
 /*    Permission is hereby granted, free of charge, to any person       */
 /*    obtaining a copy of this software and associated documentation    */
@@ -37,8 +40,8 @@
 #include <typeinfo>
 #include <iostream>
 #include <string>
-#include <muli/unittest.hxx>
-#include <muli/error.hxx>
+#include <vigra2/unittest.hxx>
+#include <vigra2/error.hxx>
 
 struct ErrorTest
 {
@@ -46,10 +49,10 @@ struct ErrorTest
     {
         try
         {
-            muli_precondition(0, "Intentional error");
+            vigra_precondition(0, "Intentional error");
             failTest("no exception thrown");
         }
-        catch(muli::ContractViolation & c)
+        catch(vigra::ContractViolation & c)
         {
             std::string expected("\nPrecondition violation!\nIntentional error");
             std::string message(c.what());
@@ -57,10 +60,10 @@ struct ErrorTest
         }
         try
         {
-            muli_assert(0, "Intentional error");
+            vigra_assert(0, "Intentional error");
             failTest("no exception thrown");
         }
-        catch(muli::ContractViolation & c)
+        catch(vigra::ContractViolation & c)
         {
             std::string expected("\nPrecondition violation!\nIntentional error");
             std::string message(c.what());
@@ -72,10 +75,10 @@ struct ErrorTest
     {
         try
         {
-            muli_postcondition(0, "Intentional error");
+            vigra_postcondition(0, "Intentional error");
             failTest("no exception thrown");
         }
-        catch(muli::ContractViolation & c)
+        catch(vigra::ContractViolation & c)
         {
             std::string expected("\nPostcondition violation!\nIntentional error");
             std::string message(c.what());
@@ -87,10 +90,10 @@ struct ErrorTest
     {
         try
         {
-            muli_invariant(0, "Intentional error");
+            vigra_invariant(0, "Intentional error");
             failTest("no exception thrown");
         }
-        catch(muli::ContractViolation & c)
+        catch(vigra::ContractViolation & c)
         {
             std::string expected("\nInvariant violation!\nIntentional error");
             std::string message(c.what());
@@ -100,10 +103,10 @@ struct ErrorTest
 };
 
 struct ErrorTestSuite
-: public muli::test_suite
+: public vigra::test_suite
 {
     ErrorTestSuite()
-    : muli::test_suite("ErrorTest")
+    : vigra::test_suite("ErrorTest")
     {
         add( testCase(&ErrorTest::testPrecondition));
         add( testCase(&ErrorTest::testPostcondition));
@@ -115,7 +118,7 @@ int main(int argc, char ** argv)
 {
     ErrorTestSuite test;
 
-    int failed = test.run(muli::testsToBeExecuted(argc, argv));
+    int failed = test.run(vigra::testsToBeExecuted(argc, argv));
 
     std::cout << test.report() << std::endl;
 

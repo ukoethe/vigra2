@@ -2,9 +2,12 @@
 /*                                                                      */
 /*               Copyright 2014-2015 by Ullrich Koethe                  */
 /*                                                                      */
-/*    This file is part of the MULI computer vision library.            */
-/*    The MULI Website is                                               */
-/*        http://ukoethe.github.io/muli                                 */
+/*    This file is part of the VIGRA2 computer vision library.          */
+/*    The VIGRA2 Website is                                             */
+/*        http://ukoethe.github.io/vigra2                               */
+/*    Please direct questions, bug reports, and contributions to        */
+/*        ullrich.koethe@iwr.uni-heidelberg.de    or                    */
+/*        vigra@informatik.uni-hamburg.de                               */
 /*                                                                      */
 /*    Permission is hereby granted, free of charge, to any person       */
 /*    obtaining a copy of this software and associated documentation    */
@@ -33,12 +36,12 @@
 #include <typeinfo>
 #include <iostream>
 #include <string>
-#include <muli/unittest.hxx>
+#include <vigra2/unittest.hxx>
 
-#include <muli/tinyarray.hxx>
-#include <muli/algorithm.hxx>
+#include <vigra2/tinyarray.hxx>
+#include <vigra2/algorithm.hxx>
 
-using namespace muli;
+using namespace vigra;
 
 static float di[] = {1, 2, 4, 5, 8, 10 };
 static float df[] = {1.2f, 2.4f, 3.6f, 4.8f, 8.1f, 9.7f };
@@ -526,13 +529,13 @@ struct TinyArrayTest
 };
 
 struct TinyArrayTestSuite
-: public muli::test_suite
+: public vigra::test_suite
 {
     typedef TinyArrayTest<TinyArray<unsigned char, 3>,
                           TinyArray<int, 3>,
                           TinyArray<float, 3>, 3> Tests;
     TinyArrayTestSuite()
-    : muli::test_suite("TinyArrayTest")
+    : vigra::test_suite("TinyArrayTest")
     {
         add( testCase(&Tests::test2D));
         add( testCase(&Tests::testConstruction));
@@ -547,7 +550,7 @@ int main(int argc, char ** argv)
 {
     TinyArrayTestSuite test;
 
-    int failed = test.run(muli::testsToBeExecuted(argc, argv));
+    int failed = test.run(vigra::testsToBeExecuted(argc, argv));
 
     std::cout << test.report() << std::endl;
 

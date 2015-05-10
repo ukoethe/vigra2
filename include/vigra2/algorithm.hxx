@@ -2,9 +2,12 @@
 /*                                                                      */
 /*               Copyright 2014-2015 by Ullrich Koethe                  */
 /*                                                                      */
-/*    This file is part of the MULI computer vision library.            */
-/*    The MULI Website is                                               */
-/*        http://ukoethe.github.io/muli                                 */
+/*    This file is part of the VIGRA2 computer vision library.          */
+/*    The VIGRA2 Website is                                             */
+/*        http://ukoethe.github.io/vigra2                               */
+/*    Please direct questions, bug reports, and contributions to        */
+/*        ullrich.koethe@iwr.uni-heidelberg.de    or                    */
+/*        vigra@informatik.uni-hamburg.de                               */
 /*                                                                      */
 /*    Permission is hereby granted, free of charge, to any person       */
 /*    obtaining a copy of this software and associated documentation    */
@@ -32,8 +35,8 @@
 
 #pragma once
 
-#ifndef MULI_ALGORITHM_HXX
-#define MULI_ALGORITHM_HXX
+#ifndef VIGRA_ALGORITHM_HXX
+#define VIGRA_ALGORITHM_HXX
 
 #include "sized_int.hxx"
 #include "numeric_traits.hxx"
@@ -42,7 +45,7 @@
 #include <functional>
 #include <iterator>
 
-namespace muli {
+namespace vigra {
 
 /** \addtogroup MathFunctions
 */
@@ -60,8 +63,8 @@ namespace muli {
         bool f = *first < NumericTraits<typename std::iterator_traits<Iterator>::value_type>::max();
         \endcode
 
-        <b>\#include</b> \<muli/algorithm.hxx\><br>
-        Namespace: muli
+        <b>\#include</b> \<vigra/algorithm.hxx\><br>
+        Namespace: vigra
     */
 template <class Iterator>
 Iterator argMin(Iterator first, Iterator last)
@@ -88,8 +91,8 @@ Iterator argMin(Iterator first, Iterator last)
         bool f = NumericTraits<typename std::iterator_traits<Iterator>::value_type>::min() < *first;
         \endcode
 
-        <b>\#include</b> \<muli/algorithm.hxx\><br>
-        Namespace: muli
+        <b>\#include</b> \<vigra/algorithm.hxx\><br>
+        Namespace: vigra
     */
 template <class Iterator>
 Iterator argMax(Iterator first, Iterator last)
@@ -121,8 +124,8 @@ Iterator argMax(Iterator first, Iterator last)
         bool f = *first < NumericTraits<typename std::iterator_traits<Iterator>::value_type>::max();
         \endcode
 
-        <b>\#include</b> \<muli/algorithm.hxx\><br>
-        Namespace: muli
+        <b>\#include</b> \<vigra/algorithm.hxx\><br>
+        Namespace: vigra
     */
 template <class Iterator, class UnaryFunctor>
 Iterator argMinIf(Iterator first, Iterator last, UnaryFunctor condition)
@@ -157,8 +160,8 @@ Iterator argMinIf(Iterator first, Iterator last, UnaryFunctor condition)
         bool f = NumericTraits<typename std::iterator_traits<Iterator>::value_type>::min() < *first;
         \endcode
 
-        <b>\#include</b> \<muli/algorithm.hxx\><br>
-        Namespace: muli
+        <b>\#include</b> \<vigra/algorithm.hxx\><br>
+        Namespace: vigra
     */
 template <class Iterator, class UnaryFunctor>
 Iterator argMaxIf(Iterator first, Iterator last, UnaryFunctor condition)
@@ -184,7 +187,7 @@ Iterator argMaxIf(Iterator first, Iterator last, UnaryFunctor condition)
         <b> Declaration:</b>
 
         \code
-        namespace muli {
+        namespace vigra {
             template <class Iterator, class Value>
             void linearSequence(Iterator first, Iterator last, 
                           Value const & start = 0, Value const & step = 1);
@@ -200,8 +203,8 @@ Iterator argMaxIf(Iterator first, Iterator last, UnaryFunctor condition)
         start += step;
         \endcode
 
-        <b>\#include</b> \<muli/algorithm.hxx\><br>
-        Namespace: muli
+        <b>\#include</b> \<vigra/algorithm.hxx\><br>
+        Namespace: vigra
     */
 template <class Iterator, class Value>
 void linearSequence(Iterator first, Iterator last, Value start, Value step)
@@ -234,7 +237,7 @@ void linearSequence(Iterator first, Iterator last)
     // <b> Declarations:</b>
 
     // \code
-    // namespace muli {
+    // namespace vigra {
         // template <class InputIterator, class Functor>
         // void
         // inspectSequence(InputIterator first, InputIterator last, Functor & f);
@@ -243,16 +246,16 @@ void linearSequence(Iterator first, Iterator last)
 
     // <b> Usage:</b>
 
-    // <b>\#include</b> \<muli/algorithm.hxx\><br>
-    // Namespace: muli
+    // <b>\#include</b> \<vigra/algorithm.hxx\><br>
+    // Namespace: vigra
 
     // \code
     // std::vector array(100);
 
     // // init functor
-    // muli::FindMinMax<int> minmax;
+    // vigra::FindMinMax<int> minmax;
 
-    // muli::inspectSequence(array.begin(), array.end(), minmax);
+    // vigra::inspectSequence(array.begin(), array.end(), minmax);
 
     // cout << "Min: " << minmax.min << " Max: " << minmax.max;
 
@@ -319,12 +322,12 @@ struct IndexCompare
         function <tt>makeIndexComparator()</tt> creates a sorting predicate
         for this task, given a sorting predicate for the data array.
         
-        \see muli::indexSort(), muli::applyPermutation()
+        \see vigra::indexSort(), vigra::applyPermutation()
         
         <b>Usage:</b>
 
-        <b>\#include</b> \<muli/algorithm.hxx\><br>
-        Namespace: muli
+        <b>\#include</b> \<vigra/algorithm.hxx\><br>
+        Namespace: vigra
         
         \code
         const std:vector<double> data(...);  // data is immutable
@@ -339,7 +342,7 @@ struct IndexCompare
         <b>Declarations:</b>
 
         \code
-        namespace muli {
+        namespace vigra {
             // compare using std::less
             template <class ArrayLike>
             auto makeIndexComparator(ArrayLike a);
@@ -372,8 +375,8 @@ makeIndexComparator(ArrayLike a)
         
         <b>Usage:</b>
 
-        <b>\#include</b> \<muli/algorithm.hxx\><br>
-        Namespace: muli
+        <b>\#include</b> \<vigra/algorithm.hxx\><br>
+        Namespace: vigra
         
         \code
         const std:vector<double> data(...);  // data is immutable
@@ -387,7 +390,7 @@ makeIndexComparator(ArrayLike a)
         <b> Declarations:</b>
 
         \code
-        namespace muli {
+        namespace vigra {
             // compare using std::less
             template <class Iterator, class IndexIterator>
             void indexSort(Iterator first, Iterator last, IndexIterator index_first);
@@ -406,8 +409,8 @@ makeIndexComparator(ArrayLike a)
         bool res = compare(first[*index_first], first[*index_first]);
         \endcode
 
-        <b>\#include</b> \<muli/algorithm.hxx\><br>
-        Namespace: muli
+        <b>\#include</b> \<vigra/algorithm.hxx\><br>
+        Namespace: vigra
     */
 template <class Iterator, class IndexIterator, class Compare>
 void indexSort(Iterator first, Iterator last, IndexIterator index_first, Compare c)
@@ -432,7 +435,7 @@ void indexSort(Iterator first, Iterator last, IndexIterator index_first)
         <b> Declaration:</b>
 
         \code
-        namespace muli {
+        namespace vigra {
             template <class IndexIterator, class InIterator, class OutIterator>
             void applyPermutation(IndexIterator index_first, IndexIterator index_last, 
                                   InIterator in, OutIterator out);
@@ -448,8 +451,8 @@ void indexSort(Iterator first, Iterator last, IndexIterator index_first)
         *out = in[*index_first];
         \endcode
 
-        <b>\#include</b> \<muli/algorithm.hxx\><br>
-        Namespace: muli
+        <b>\#include</b> \<vigra/algorithm.hxx\><br>
+        Namespace: vigra
     */
 template <class IndexIterator, class InIterator, class OutIterator>
 void applyPermutation(IndexIterator index_first, IndexIterator index_last, 
@@ -468,7 +471,7 @@ void applyPermutation(IndexIterator index_first, IndexIterator index_last,
         <b> Declaration:</b>
 
         \code
-        namespace muli {
+        namespace vigra {
             template <class InIterator, class OutIterator>
             void inversePermutation(InIterator first, InIterator last, 
                                     OutIterator out);
@@ -483,8 +486,8 @@ void applyPermutation(IndexIterator index_first, IndexIterator index_last,
         *out = in[*index_first];
         \endcode
 
-        <b>\#include</b> \<muli/algorithm.hxx\><br>
-        Namespace: muli
+        <b>\#include</b> \<vigra/algorithm.hxx\><br>
+        Namespace: vigra
     */
 template <class InIterator, class OutIterator>
 void inversePermutation(InIterator first, InIterator last, 
@@ -791,6 +794,6 @@ void updateMax(T & x, const T & y)
 
 //@}
 
-} // namespace muli
+} // namespace vigra
 
-#endif /* MULI_ALGORITHM_HXX */
+#endif /* VIGRA_ALGORITHM_HXX */

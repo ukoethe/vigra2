@@ -2,9 +2,12 @@
 /*                                                                      */
 /*               Copyright 2014-2015 by Ullrich Koethe                  */
 /*                                                                      */
-/*    This file is part of the MULI computer vision library.            */
-/*    The MULI Website is                                               */
-/*        http://ukoethe.github.io/muli                                 */
+/*    This file is part of the VIGRA2 computer vision library.          */
+/*    The VIGRA2 Website is                                             */
+/*        http://ukoethe.github.io/vigra2                               */
+/*    Please direct questions, bug reports, and contributions to        */
+/*        ullrich.koethe@iwr.uni-heidelberg.de    or                    */
+/*        vigra@informatik.uni-hamburg.de                               */
 /*                                                                      */
 /*    Permission is hereby granted, free of charge, to any person       */
 /*    obtaining a copy of this software and associated documentation    */
@@ -32,8 +35,8 @@
 
 #pragma once
 
-#ifndef MULI_NUMERIC_TRAITS_HXX
-#define MULI_NUMERIC_TRAITS_HXX
+#ifndef VIGRA_NUMERIC_TRAITS_HXX
+#define VIGRA_NUMERIC_TRAITS_HXX
 
 #include <type_traits>
 #include <cmath>    // abs(double)
@@ -41,7 +44,7 @@
 #include <complex>
 #include "config.hxx"
 
-namespace muli {
+namespace vigra {
 
 // Promote types
 
@@ -546,6 +549,6 @@ inline bool greaterEqualAtTolerance(T1 l, T2 r)
     return greaterEqualAtTolerance(l, r, T(2.0) * NumericTraits<T>::epsilon());
 }
 
-} // namespace muli
+} // namespace vigra
 
-#endif // MULI_NUMERIC_TRAITS_HXX
+#endif // VIGRA_NUMERIC_TRAITS_HXX

@@ -2,9 +2,12 @@
 /*                                                                      */
 /*               Copyright 2014-2015 by Ullrich Koethe                  */
 /*                                                                      */
-/*    This file is part of the MULI computer vision library.            */
-/*    The MULI Website is                                               */
-/*        http://ukoethe.github.io/muli                                 */
+/*    This file is part of the VIGRA2 computer vision library.          */
+/*    The VIGRA2 Website is                                             */
+/*        http://ukoethe.github.io/vigra2                               */
+/*    Please direct questions, bug reports, and contributions to        */
+/*        ullrich.koethe@iwr.uni-heidelberg.de    or                    */
+/*        vigra@informatik.uni-hamburg.de                               */
 /*                                                                      */
 /*    Permission is hereby granted, free of charge, to any person       */
 /*    obtaining a copy of this software and associated documentation    */
@@ -32,8 +35,8 @@
 
 #pragma once
 
-#ifndef MULI_CLEBSCH_GORDAN_HXX
-#define MULI_CLEBSCH_GORDAN_HXX
+#ifndef VIGRA_CLEBSCH_GORDAN_HXX
+#define VIGRA_CLEBSCH_GORDAN_HXX
 
 #include "config.hxx"
 #include "numeric_traits.hxx"
@@ -42,7 +45,7 @@
 #include <vector>
 #include <sstream>
 
-namespace muli {
+namespace vigra {
 
 namespace {
 
@@ -78,20 +81,20 @@ void ThreeJSymbolM(double l1, double l2, double l3, double m1,
     {
         errflag = 1;
         err << "ThreeJSymbolM: l1-abs(m1) less than zero or l1+abs(m1) not integer.\n";
-        muli_precondition(false, err.str());
+        vigra_precondition(false, err.str());
     } 
     else if (l1+l2-l3 < -eps || l1-l2+l3 < -eps || -(l1) + l2+l3 < -eps) 
     {
         errflag = 2;
         err << " ThreeJSymbolM: l1, l2, l3 do not satisfy triangular condition:"
             << l1 << " " << l2 << " " << l3 << "\n";
-        muli_precondition(false, err.str());
+        vigra_precondition(false, err.str());
     } 
     else if (std::fmod(l1 + l2 + l3 + eps, one) >= eps + eps) 
     {
         errflag = 3;
         err << " ThreeJSymbolM: l1+l2+l3 not integer.\n";
-        muli_precondition(false, err.str());
+        vigra_precondition(false, err.str());
     }
 
     // limits for m2
@@ -102,7 +105,7 @@ void ThreeJSymbolM(double l1, double l2, double l3, double m1,
     if (std::fmod(m2max - m2min + eps, one) >= eps + eps) {
         errflag = 4;
         err << " ThreeJSymbolM: m2max-m2min not integer.\n";
-        muli_precondition(false, err.str());
+        vigra_precondition(false, err.str());
     }
     if (m2min < m2max - eps) 
         goto L20;
@@ -112,7 +115,7 @@ void ThreeJSymbolM(double l1, double l2, double l3, double m1,
     //  Check error condition 5.
     errflag = 5;
     err << " ThreeJSymbolM: m2min greater than m2max.\n";
-    muli_precondition(false, err.str());
+    vigra_precondition(false, err.str());
 
     // This is reached in case that m2 and m3 can take only one value.
 L10:
@@ -133,7 +136,7 @@ L20:
 
     errflag = 6;
     err << " ThreeJSymbolM: Dimension of result array for 3j coefficients too small.\n";
-    muli_precondition(false, err.str());
+    vigra_precondition(false, err.str());
 
     //  Start of forward recursion from m2 = m2min
 
@@ -384,7 +387,7 @@ double clebschGordan (double l1, double m1, double l2, double m2, double l3, dou
     {
         errflag = 7;
         Err << " clebschGordan: m1 + m2 - m3 is not zero.\n";
-        muli_precondition(false, Err.str());
+        vigra_precondition(false, Err.str());
     }                                                                   
     // calculate minimum storage size needed for ThreeJSymbolM()
     // if the dimension becomes negative the 3-j routine will capture it
@@ -412,12 +415,12 @@ double clebschGordan (double l1, double m1, double l2, double m2, double l3, dou
     else
     {
         Err << " clebschGordan: 3jM-sym error.\n";
-        muli_precondition(false, Err.str());
+        vigra_precondition(false, Err.str());
     }
     return CG;                                                          
 }
 
-} // namespace muli 
+} // namespace vigra 
 
-#endif // MULI_CLEBSCH_GORDAN_HXX
+#endif // VIGRA_CLEBSCH_GORDAN_HXX
 
