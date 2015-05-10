@@ -43,8 +43,7 @@
 
 namespace muli {
 
-template<class A>
-struct NumericTraits;
+// Promote types
 
 template <class T1, class T2 = T1>
 using Promote = decltype(*(T1*)0 + *(T2*)0);
@@ -52,19 +51,35 @@ using Promote = decltype(*(T1*)0 + *(T2*)0);
 template <bool Cond, class T1, class T2 = T1>
 using PromoteIf = typename std::enable_if<Cond, Promote<T1, T2> >::type;
 
+// RealPromote types
+
 template <class T>
 struct RealPromoteImpl
 {
     typedef decltype(sqrt(*(T*)0)) type;
 };
 
+template <>
+struct RealPromoteImpl<float>
+{
+    typedef float type; // explicit specialization because sqrt(float) may be double
+};
+
+template <>
+struct RealPromoteImpl<long double>
+{
+    typedef long double type; // likewise
+};
+
 template <class T1, class T2 = T1>
 using RealPromote = typename RealPromoteImpl<Promote<T1, T2> >::type;
+
+// norm and squared norm types
 
 template <class T>
 struct SquaredNormTypeImpl
 {
-    typedef typename NumericTraits<T>::promote_type type;
+    typedef Promote<T> type;
 };
 
 template <class T>
@@ -72,6 +87,8 @@ using SquaredNormType = typename SquaredNormTypeImpl<T>::type;
 
 template <class T>
 using NormType = RealPromote<SquaredNormType<T> >;
+
+// NumericTraits
 
 struct Error_NumericTraits_not_specialized_for_this_case { };
 struct Error_NumericTraits_char_is_not_a_numeric_type__use_signed_char_or_unsigned_char { };
@@ -295,6 +312,8 @@ struct NumericTraits<std::complex<T> >
     static type fromRealPromote(real_promote_type v) { return type(v); }
 };
 
+// RequiresExplicitCast
+
 namespace detail {
 
 template <class T>
@@ -413,7 +432,7 @@ struct RequiresExplicitCast<double> {
 
 } // namespace detail
 
-
+// comparison with tolerance
 
 namespace numeric_traits_detail {
 

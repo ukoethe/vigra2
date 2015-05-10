@@ -35,6 +35,7 @@
 #include <string>
 #include <muli/unittest.hxx>
 #include <muli/numeric_traits.hxx>
+#include <muli/tinyarray.hxx>
 
 using namespace muli;
 
@@ -46,11 +47,30 @@ struct NumericTraitsTest
     
     void testPromote()
     {
-        should((std::is_same<unsigned int, muli::Promote<unsigned int, short> >::value));
-        should((std::is_same<int, muli::Promote<unsigned char> >::value));
-        should((std::is_same<double, muli::RealPromote<unsigned char> >::value));
-        should((std::is_same<float, muli::RealPromote<float> >::value));
-        should((std::is_same<float, muli::RealPromote<float, int> >::value));
+        should((std::is_same<unsigned int, Promote<unsigned int, short> >::value));
+        should((std::is_same<int, Promote<unsigned char> >::value));
+        should((std::is_same<float, Promote<float> >::value));
+        
+        should((std::is_same<double, RealPromote<unsigned char> >::value));
+        should((std::is_same<long double, RealPromote<long double> >::value));
+        should((std::is_same<float, RealPromote<float> >::value));
+        should((std::is_same<float, RealPromote<float, int> >::value));
+        
+        should((std::is_same<int, SquaredNormType<int> >::value));
+        should((std::is_same<unsigned int, SquaredNormType<unsigned int> >::value));
+        should((std::is_same<int, SquaredNormType<unsigned char> >::value));
+        should((std::is_same<float, SquaredNormType<float> >::value));
+        should((std::is_same<long double, SquaredNormType<long double> >::value));
+        should((std::is_same<int, SquaredNormType<TinyArray<int, 1> > >::value));
+        should((std::is_same<int, SquaredNormType<TinyArray<TinyArray<int, 1>, 1> > >::value));
+        
+        should((std::is_same<double, NormType<int> >::value));
+        should((std::is_same<double, NormType<unsigned int> >::value));
+        should((std::is_same<double, NormType<unsigned char> >::value));
+        should((std::is_same<float, NormType<float> >::value));
+        should((std::is_same<long double, NormType<long double> >::value));
+        should((std::is_same<double, NormType<TinyArray<int, 1> > >::value));
+        should((std::is_same<double, NormType<TinyArray<TinyArray<int, 1>, 1> > >::value));
     }
     
     void testNumericTraits()
@@ -146,10 +166,10 @@ struct NumericTraitsTest
 };
 
 struct NumericTraitsTestSuite
-: public muli::test_suite
+: public test_suite
 {
     NumericTraitsTestSuite()
-    : muli::test_suite("NumericTraitsTest")
+    : test_suite("NumericTraitsTest")
     {
         add( testCase(&NumericTraitsTest::testPromote));
         add( testCase(&NumericTraitsTest::testNumericTraits));
@@ -161,7 +181,7 @@ int main(int argc, char ** argv)
 {
     NumericTraitsTestSuite test;
 
-    int failed = test.run(muli::testsToBeExecuted(argc, argv));
+    int failed = test.run(testsToBeExecuted(argc, argv));
 
     std::cout << test.report() << std::endl;
 
