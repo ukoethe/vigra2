@@ -6,34 +6,34 @@ cmake_minimum_required(VERSION 2.6)
 #
 ##################################################
 
-PROJECT(muli)
+PROJECT(vigra2)
 
 # read the current version from config_version.hxx
-file(READ ${muli_SOURCE_DIR}/include/muli/config_version.hxx MULI_VERSION_FILE)
-string(REGEX MATCH "MULI_VERSION_MAJOR[ \t\n]+[^ \t\n]+" MULI_VERSION_MAJOR ${MULI_VERSION_FILE})
-string(REGEX REPLACE "MULI_VERSION_MAJOR[ \t\n]" "" MULI_VERSION_MAJOR ${MULI_VERSION_MAJOR})
-string(REGEX MATCH "MULI_VERSION_MINOR[ \t\n]+[^ \t\n]+" MULI_VERSION_MINOR ${MULI_VERSION_FILE})
-string(REGEX REPLACE "MULI_VERSION_MINOR[ \t\n]" "" MULI_VERSION_MINOR ${MULI_VERSION_MINOR})
-string(REGEX MATCH "MULI_VERSION_PATCH[ \t\n]+[^ \t\n]+" MULI_VERSION_PATCH ${MULI_VERSION_FILE})
-string(REGEX REPLACE "MULI_VERSION_PATCH[ \t\n]" "" MULI_VERSION_PATCH ${MULI_VERSION_PATCH})
+file(READ ${vigra2_SOURCE_DIR}/include/vigra2/config_version.hxx VIGRA_VERSION_FILE)
+string(REGEX MATCH "VIGRA_VERSION_MAJOR[ \t\n]+[^ \t\n]+" VIGRA_VERSION_MAJOR ${VIGRA_VERSION_FILE})
+string(REGEX REPLACE "VIGRA_VERSION_MAJOR[ \t\n]" "" VIGRA_VERSION_MAJOR ${VIGRA_VERSION_MAJOR})
+string(REGEX MATCH "VIGRA_VERSION_MINOR[ \t\n]+[^ \t\n]+" VIGRA_VERSION_MINOR ${VIGRA_VERSION_FILE})
+string(REGEX REPLACE "VIGRA_VERSION_MINOR[ \t\n]" "" VIGRA_VERSION_MINOR ${VIGRA_VERSION_MINOR})
+string(REGEX MATCH "VIGRA_VERSION_PATCH[ \t\n]+[^ \t\n]+" VIGRA_VERSION_PATCH ${VIGRA_VERSION_FILE})
+string(REGEX REPLACE "VIGRA_VERSION_PATCH[ \t\n]" "" VIGRA_VERSION_PATCH ${VIGRA_VERSION_PATCH})
 
-SET(muli_version_short ${MULI_VERSION_MAJOR}.${MULI_VERSION_MINOR})
-SET(muli_version ${MULI_VERSION_MAJOR}.${MULI_VERSION_MINOR}.${MULI_VERSION_PATCH})
-message(STATUS "Configuring MULI version ${muli_version}")
+SET(vigra_version_short ${VIGRA_VERSION_MAJOR}.${VIGRA_VERSION_MINOR})
+SET(vigra_version ${VIGRA_VERSION_MAJOR}.${VIGRA_VERSION_MINOR}.${VIGRA_VERSION_PATCH})
+message(STATUS "Configuring VIGRA version ${vigra_version}")
 
-# SET(CMAKE_MODULE_PATH  ${CMAKE_MODULE_PATH}  ${muli_SOURCE_DIR}/config)
+SET(CMAKE_MODULE_PATH  ${CMAKE_MODULE_PATH}  ${vigra2_SOURCE_DIR}/config)
 
-# include(VigraSetDefaults)
-# include(VigraCMakeUtils)
+include(VigraSetDefaults)
+include(VigraCMakeUtils)
 
-INCLUDE_DIRECTORIES(${muli_SOURCE_DIR}/include)
+INCLUDE_DIRECTORIES(${vigra2_SOURCE_DIR}/include)
 
-IF(MULI_STATIC_LIB)
+IF(VIGRA_STATIC_LIB)
     SET(LIBTYPE STATIC)
-    ADD_DEFINITIONS(-DMULI_STATIC_LIB)
-ELSE(MULI_STATIC_LIB)
+    ADD_DEFINITIONS(-DVIGRA_STATIC_LIB)
+ELSE(VIGRA_STATIC_LIB)
     SET(LIBTYPE SHARED)
-ENDIF(MULI_STATIC_LIB)
+ENDIF(VIGRA_STATIC_LIB)
 
 IF (MSVC)
     ADD_DEFINITIONS(-D_CRT_SECURE_NO_DEPRECATE -D_SCL_SECURE_NO_DEPRECATE)
@@ -61,8 +61,8 @@ ENDIF ()
 
             # message ("Detected GCC version ${CMAKE_CXX_COMPILER_VERSION}")
             # if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "4.4.0")
-                # MESSAGE(WARNING "GNU c++ < 4.4 cannot build MULINumPy; disabling (found GCC ${CMAKE_CXX_COMPILER_VERSION})")
-                # SET(WITH_MULINUMPY 0)
+                # MESSAGE(WARNING "GNU c++ < 4.4 cannot build VigraNumPy; disabling (found GCC ${CMAKE_CXX_COMPILER_VERSION})")
+                # SET(WITH_VIGRANUMPY 0)
             # elseif(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "4.5.0")
                 # # gcc 4.4.x syntax is -ftemplate-depth-900 (not =900)
                 # SET(CMAKE_CXX_FLAGS "-ftemplate-depth-900 ${CMAKE_CXX_FLAGS}" CACHE STRING  "Flags used by the compiler during all build types" FORCE)        
@@ -87,19 +87,19 @@ ENDIF ()
 # ##################################################
 
 # INCLUDE(VigraFindPackage)
-# MULI_FIND_PACKAGE(ZLIB)
-# MULI_FIND_PACKAGE(TIFF NAMES libtiff_i libtiff) # prefer DLL on Windows
-# MULI_FIND_PACKAGE(JPEG NAMES libjpeg)
-# MULI_FIND_PACKAGE(PNG)
-# MULI_FIND_PACKAGE(FFTW3 NAMES libfftw3-3 libfftw-3.3)
-# MULI_FIND_PACKAGE(FFTW3F NAMES libfftw3f-3 libfftwf-3.3)
+# VIGRA_FIND_PACKAGE(ZLIB)
+# VIGRA_FIND_PACKAGE(TIFF NAMES libtiff_i libtiff) # prefer DLL on Windows
+# VIGRA_FIND_PACKAGE(JPEG NAMES libjpeg)
+# VIGRA_FIND_PACKAGE(PNG)
+# VIGRA_FIND_PACKAGE(FFTW3 NAMES libfftw3-3 libfftw-3.3)
+# VIGRA_FIND_PACKAGE(FFTW3F NAMES libfftw3f-3 libfftwf-3.3)
 
 # IF(WITH_OPENEXR)
-    # MULI_FIND_PACKAGE(OpenEXR)
+    # VIGRA_FIND_PACKAGE(OpenEXR)
 # ENDIF()
 
 # IF(WITH_HDF5)
-    # MULI_FIND_PACKAGE(HDF5)
+    # VIGRA_FIND_PACKAGE(HDF5)
 # ENDIF()
 
 # set(WITH_BOOST "OFF")
@@ -109,7 +109,7 @@ ENDIF ()
     # set(WITH_BOOST "ON")
 # ENDIF()
 
-# IF(WITH_MULINUMPY)
+# IF(WITH_VIGRANUMPY)
     # set(WITH_BOOST "ON")
     # set(WITH_BOOST_COMPONENTS ${WITH_BOOST_COMPONENTS} python)
 # ENDIF()
@@ -121,7 +121,7 @@ ENDIF ()
 # ENDIF()
 
 # IF(WITH_BOOST)
-    # MULI_FIND_PACKAGE( Boost 1.40.0 COMPONENTS ${WITH_BOOST_COMPONENTS})
+    # VIGRA_FIND_PACKAGE( Boost 1.40.0 COMPONENTS ${WITH_BOOST_COMPONENTS})
     
     # if(Boost_FOUND AND WITH_BOOST_COMPONENTS)
         # # configure boost's autolink magic to use the right library name
@@ -134,15 +134,15 @@ ENDIF ()
 # ENDIF()
 
 # IF(WITH_LEMON)
-    # MULI_FIND_PACKAGE(LEMON)
+    # VIGRA_FIND_PACKAGE(LEMON)
 # ENDIF()
 
 # SET(DOXYGEN_SKIP_DOT TRUE)
 # FIND_PACKAGE(Doxygen)
 # FIND_PACKAGE(PythonInterp 2)
 
-# IF(WITH_MULINUMPY)
-    # FIND_PACKAGE( MULINUMPY_DEPENDENCIES )
+# IF(WITH_VIGRANUMPY)
+    # FIND_PACKAGE( VIGRANUMPY_DEPENDENCIES )
 # ENDIF()
 
 # IF(WITH_VALGRIND)
@@ -154,7 +154,7 @@ ENDIF ()
 # include(VigraConfigureThreading)
 
 # include(VigraDetectCppVersion)
-# MULI_DETECT_CPP_VERSION()
+# VIGRA_DETECT_CPP_VERSION()
 
 # ##################################################
 # #
@@ -162,11 +162,11 @@ ENDIF ()
 # #
 # ##################################################
 
-# ADD_CUSTOM_TARGET(check)
-# ADD_CUSTOM_TARGET(ctest COMMAND ${CMAKE_CTEST_COMMAND})
+ADD_CUSTOM_TARGET(check)
+ADD_CUSTOM_TARGET(ctest COMMAND ${CMAKE_CTEST_COMMAND})
 
-# ADD_CUSTOM_TARGET(check_cpp)
-# ADD_DEPENDENCIES(check check_cpp)
+ADD_CUSTOM_TARGET(check_cpp)
+ADD_DEPENDENCIES(check check_cpp)
 
 
 # OPTION(CREATE_CTEST_TARGETS "Create special targets for CTest" OFF)
@@ -174,12 +174,12 @@ ENDIF ()
   # INCLUDE(CTest)
 # ENDIF()
 
-# IF(WITH_MULINUMPY)
+# IF(WITH_VIGRANUMPY)
     # ADD_CUSTOM_TARGET(check_python)
     # ADD_DEPENDENCIES(check check_python)
 # ENDIF()
 
-# ENABLE_TESTING()
+ENABLE_TESTING()
 
 # ##################################################
 # #
@@ -190,7 +190,7 @@ ENDIF ()
 # ADD_CUSTOM_TARGET(doc)
 
 # # Automatically push the latest documentation to github's gh-pages.
-# # This only works when ${DOCDIR} refers to a MULI repository that is 
+# # This only works when ${DOCDIR} refers to a VIGRA repository that is 
 # # checked out in branch 'gh-pages', and the present repository is 
 # # in branch 'master' (these conditions are checked in the script).
 # if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
@@ -224,8 +224,8 @@ ENDIF ()
 ADD_SUBDIRECTORY(test)
 # ADD_SUBDIRECTORY(docsrc)
 
-# IF(WITH_MULINUMPY)
-    # ADD_SUBDIRECTORY(mulinumpy)
+# IF(WITH_VIGRANUMPY)
+    # ADD_SUBDIRECTORY(vigranumpy)
 # ENDIF()
 
 # IF(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/private/CMakeLists.txt)
@@ -241,7 +241,7 @@ ADD_SUBDIRECTORY(test)
 # #
 # ##################################################
 
-# INSTALL(DIRECTORY ${PROJECT_SOURCE_DIR}/include/muli
+# INSTALL(DIRECTORY ${PROJECT_SOURCE_DIR}/include/vigra2
         # DESTINATION include)
 
 # ##################################################
@@ -253,7 +253,7 @@ ADD_SUBDIRECTORY(test)
 
 # ##################################################
 # #
-# #     add target muli-$version-src.tar.gz
+# #     add target vigra-$version-src.tar.gz
 # #
 # ##################################################
 
@@ -269,11 +269,11 @@ ADD_SUBDIRECTORY(test)
 # add_custom_target(PACKAGE_SRC_TAR
                    # COMMAND ${CMAKE_COMMAND} -P package-src.cmake
                    # WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
-                   # COMMENT "Creating ${PROJECT_BINARY_DIR}/muli-${muli_version}-src.tar.gz")        
+                   # COMMENT "Creating ${PROJECT_BINARY_DIR}/vigra-${vigra_version}-src.tar.gz")        
 
 # ADD_DEPENDENCIES(PACKAGE_SRC_TAR check)
 # ADD_DEPENDENCIES(PACKAGE_SRC_TAR doc_cpp)
-# IF(WITH_MULINUMPY AND PYTHON_SPHINX)
+# IF(WITH_VIGRANUMPY AND PYTHON_SPHINX)
     # ADD_DEPENDENCIES(PACKAGE_SRC_TAR doc_python)
 # ENDIF()
 
@@ -284,11 +284,11 @@ ADD_SUBDIRECTORY(test)
 # ##################################################
 
 # IF(NOT WIN32)
-# # muli-config script for (non-CMake-based) third party packages
-# CONFIGURE_FILE(${PROJECT_SOURCE_DIR}/config/muli-config.in
-        # ${PROJECT_BINARY_DIR}/bin/muli-config
+# # vigra-config script for (non-CMake-based) third party packages
+# CONFIGURE_FILE(${PROJECT_SOURCE_DIR}/config/vigra-config.in
+        # ${PROJECT_BINARY_DIR}/bin/vigra-config
         # @ONLY IMMEDIATE)
-# INSTALL(FILES ${PROJECT_BINARY_DIR}/bin/muli-config
+# INSTALL(FILES ${PROJECT_BINARY_DIR}/bin/vigra-config
         # DESTINATION bin
         # PERMISSIONS
             # OWNER_READ OWNER_WRITE OWNER_EXECUTE
@@ -312,19 +312,19 @@ ADD_SUBDIRECTORY(test)
 
 # # config file for CMake FIND_PACKAGE command
 # CONFIGURE_FILE(${PROJECT_SOURCE_DIR}/config/VigraConfig.cmake.in
-        # ${PROJECT_BINARY_DIR}/lib/muli/CMake/VigraConfig.cmake
+        # ${PROJECT_BINARY_DIR}/lib/vigra2/CMake/VigraConfig.cmake
         # @ONLY IMMEDIATE)
 # CONFIGURE_FILE(${PROJECT_SOURCE_DIR}/config/VigraConfigVersion.cmake.in
-        # ${PROJECT_BINARY_DIR}/lib/muli/CMake/VigraConfigVersion.cmake
+        # ${PROJECT_BINARY_DIR}/lib/vigra2/CMake/VigraConfigVersion.cmake
         # @ONLY IMMEDIATE)
 
 # # export targets:
-# INSTALL(EXPORT muli-targets
-        # DESTINATION lib${LIB_SUFFIX}/muli)
-# INSTALL(FILES ${PROJECT_BINARY_DIR}/lib/muli/CMake/VigraConfig.cmake
-            # ${PROJECT_BINARY_DIR}/lib/muli/CMake/VigraConfigVersion.cmake
-        # DESTINATION lib${LIB_SUFFIX}/muli)
-# EXPORT(TARGETS muliimpex FILE muli-targets.cmake)
+# INSTALL(EXPORT vigra-targets
+        # DESTINATION lib${LIB_SUFFIX}/vigra2)
+# INSTALL(FILES ${PROJECT_BINARY_DIR}/lib/vigra2/CMake/VigraConfig.cmake
+            # ${PROJECT_BINARY_DIR}/lib/vigra2/CMake/VigraConfigVersion.cmake
+        # DESTINATION lib${LIB_SUFFIX}/vigra2)
+# EXPORT(TARGETS vigraimpex FILE vigra-targets.cmake)
 
 # ##################################################
 # #
@@ -333,7 +333,7 @@ ADD_SUBDIRECTORY(test)
 # ##################################################
 
 # MESSAGE( STATUS "---------------------------------------------------------" )
-# MESSAGE( STATUS "MULI configuration information:" )
+# MESSAGE( STATUS "VIGRA configuration information:" )
 # MESSAGE( STATUS "---------------------------------------------------------" )
 
 # IF(ZLIB_FOUND)
@@ -398,20 +398,20 @@ ADD_SUBDIRECTORY(test)
     # MESSAGE( STATUS "  LEMON graph library not found (support disabled)" )
 # ENDIF()
 
-# IF(WITH_MULINUMPY)
-    # IF(MULINUMPY_DEPENDENCIES_FOUND)
-        # MESSAGE( STATUS "  Using Python libraries: ${MULINUMPY_LIBRARIES}" )
+# IF(WITH_VIGRANUMPY)
+    # IF(VIGRANUMPY_DEPENDENCIES_FOUND)
+        # MESSAGE( STATUS "  Using Python libraries: ${VIGRANUMPY_LIBRARIES}" )
         # MESSAGE( STATUS "  Using Numpy includes:   ${PYTHON_NUMPY_INCLUDE_DIR}" )
     # ELSE()
-        # MESSAGE( STATUS "  Vigranumpy dependencies not found (mulinumpy disabled)" )
+        # MESSAGE( STATUS "  Vigranumpy dependencies not found (vigranumpy disabled)" )
     # ENDIF()
 # ELSE()
-  # MESSAGE( STATUS "  Vigranumpy disabled by user (WITH_MULINUMPY=0)" )
+  # MESSAGE( STATUS "  Vigranumpy disabled by user (WITH_VIGRANUMPY=0)" )
 # ENDIF()
 
 # MESSAGE( STATUS "---------------------------------------------------------" )
 
-# IF(MULI_STATIC_LIB)
+# IF(VIGRA_STATIC_LIB)
     # MESSAGE( STATUS "  building static lib" )
 # ELSE()
     # MESSAGE( STATUS "  building shared lib" )
@@ -434,27 +434,27 @@ ADD_SUBDIRECTORY(test)
 # endif()
 
 # IF(DOXYGEN_FOUND AND PYTHONINTERP_FOUND)
-  # MESSAGE( STATUS "  muli manuals will be installed at: "
-    # "${CMAKE_INSTALL_PREFIX}/${DOCINSTALL}/muli/index.html")
+  # MESSAGE( STATUS "  vigra manuals will be installed at: "
+    # "${CMAKE_INSTALL_PREFIX}/${DOCINSTALL}/vigra2/index.html")
 # ELSE()
-  # MESSAGE( STATUS "  muli manuals cannot be generated (Doxygen or Python not found)")
+  # MESSAGE( STATUS "  vigra manuals cannot be generated (Doxygen or Python not found)")
 # ENDIF()
 
-# IF(WITH_MULINUMPY AND MULINUMPY_DEPENDENCIES_FOUND)
-  # MESSAGE( STATUS "  mulinumpy will be installed at ${CMAKE_INSTALL_PREFIX}/${MULINUMPY_INSTALL_DIR}" )
+# IF(WITH_VIGRANUMPY AND VIGRANUMPY_DEPENDENCIES_FOUND)
+  # MESSAGE( STATUS "  vigranumpy will be installed at ${CMAKE_INSTALL_PREFIX}/${VIGRANUMPY_INSTALL_DIR}" )
   # IF(PYTHON_SPHINX)
-    # MESSAGE( STATUS "  mulinumpy manuals will be installed at: "
-      # "${CMAKE_INSTALL_PREFIX}/${DOCINSTALL}/mulinumpy/html/index.html")
+    # MESSAGE( STATUS "  vigranumpy manuals will be installed at: "
+      # "${CMAKE_INSTALL_PREFIX}/${DOCINSTALL}/vigranumpy/html/index.html")
   # ELSE(PYTHON_SPHINX)
-    # MESSAGE( STATUS "  mulinumpy manuals cannot be generated "
+    # MESSAGE( STATUS "  vigranumpy manuals cannot be generated "
       # "(Sphinx missing)")
   # ENDIF(PYTHON_SPHINX)
 # ELSE()
-  # MESSAGE( STATUS "  mulinumpy will NOT be installed" )
+  # MESSAGE( STATUS "  vigranumpy will NOT be installed" )
 # ENDIF()
 
 # IF(NOT TIFF_FOUND OR NOT JPEG_FOUND OR NOT PNG_FOUND OR NOT FFTW3_FOUND OR
-   # NOT HDF5_FOUND OR NOT MULINUMPY_DEPENDENCIES_FOUND)
+   # NOT HDF5_FOUND OR NOT VIGRANUMPY_DEPENDENCIES_FOUND)
   # MESSAGE( STATUS "" )
   # MESSAGE( STATUS "Consider setting DEPENDENCY_SEARCH_PREFIX to find missing libraries" )
 # ENDIF()
