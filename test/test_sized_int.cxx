@@ -33,16 +33,58 @@
 /*                                                                      */
 /************************************************************************/
 
-#pragma once
+#include <typeinfo>
+#include <iostream>
+#include <string>
+#include <type_traits>
+#include <vigra2/unittest.hxx>
+#include <vigra2/sized_int.hxx>
 
-#ifndef VIGRA_STUB_HXX
-#define VIGRA_STUB_HXX
+struct SizedIntTest
+{
+    SizedIntTest()
+    {
+    }
+    
+    void test()
+    {
+        shouldEqual(sizeof(vigra::int8_t), 1u);
+        shouldEqual(sizeof(vigra::int16_t), 2u);
+        shouldEqual(sizeof(vigra::int32_t), 4u);
+        shouldEqual(sizeof(vigra::int64_t), 8u);
+        shouldEqual(sizeof(vigra::uint8_t), 1u);
+        shouldEqual(sizeof(vigra::uint16_t), 2u);
+        shouldEqual(sizeof(vigra::uint32_t), 4u);
+        shouldEqual(sizeof(vigra::uint64_t), 8u);
+        
+        should(std::is_integral<vigra::int8_t>::value);
+        should(std::is_integral<vigra::int16_t>::value);
+        should(std::is_integral<vigra::int32_t>::value);
+        should(std::is_integral<vigra::int64_t>::value);
+        should(std::is_integral<vigra::uint8_t>::value);
+        should(std::is_integral<vigra::uint16_t>::value);
+        should(std::is_integral<vigra::uint32_t>::value);
+        should(std::is_integral<vigra::uint64_t>::value);
+    }
+};
 
-#include "config.hxx"
+struct SizedIntTestSuite
+: public vigra::test_suite
+{
+    SizedIntTestSuite()
+    : vigra::test_suite("SizedIntTest")
+    {
+        add( testCase(&SizedIntTest::test));
+    }
+};
 
-namespace vigra {
+int main(int argc, char ** argv)
+{
+    SizedIntTestSuite test;
 
+    int failed = test.run(vigra::testsToBeExecuted(argc, argv));
 
-} // namespace vigra
+    std::cout << test.report() << std::endl;
 
-#endif // VIGRA_STUB_HXX
+    return (failed != 0);
+}

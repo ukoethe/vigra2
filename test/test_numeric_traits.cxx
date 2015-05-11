@@ -38,7 +38,6 @@
 #include <string>
 #include <vigra2/unittest.hxx>
 #include <vigra2/numeric_traits.hxx>
-#include <vigra2/tinyarray.hxx>
 
 using namespace vigra;
 
@@ -64,16 +63,12 @@ struct NumericTraitsTest
         should((std::is_same<int, SquaredNormType<unsigned char> >::value));
         should((std::is_same<float, SquaredNormType<float> >::value));
         should((std::is_same<long double, SquaredNormType<long double> >::value));
-        should((std::is_same<int, SquaredNormType<TinyArray<int, 1> > >::value));
-        should((std::is_same<int, SquaredNormType<TinyArray<TinyArray<int, 1>, 1> > >::value));
         
         should((std::is_same<double, NormType<int> >::value));
         should((std::is_same<double, NormType<unsigned int> >::value));
         should((std::is_same<double, NormType<unsigned char> >::value));
         should((std::is_same<float, NormType<float> >::value));
         should((std::is_same<long double, NormType<long double> >::value));
-        should((std::is_same<double, NormType<TinyArray<int, 1> > >::value));
-        should((std::is_same<double, NormType<TinyArray<TinyArray<int, 1>, 1> > >::value));
     }
     
     void testNumericTraits()
@@ -88,10 +83,10 @@ struct NumericTraitsTest
             shouldEqual(SHRT_MIN, T::min());
             shouldEqual(SHRT_MAX, T::max());
             
-            should((std::is_same<int, T::promote_type>::value));
-            should((std::is_same<unsigned int, T::unsigned_type>::value));
-            should((std::is_same<double, T::real_promote_type>::value));
-            should((std::is_same<std::complex<double>, T::complex_promote_type>::value));
+            should((std::is_same<int, T::Promote>::value));
+            should((std::is_same<unsigned int, T::UnsignedPromote>::value));
+            should((std::is_same<double, T::RealPromote>::value));
+            should((std::is_same<std::complex<double>, T::ComplexPromote>::value));
             
             shouldEqual(T::fromPromote(INT_MIN), T::min());
             shouldEqual(T::fromPromote(INT_MAX), T::max());
@@ -110,10 +105,10 @@ struct NumericTraitsTest
             shouldEqual(0, T::min());
             shouldEqual(USHRT_MAX, T::max());
             
-            should((std::is_same<int, T::promote_type>::value));
-            should((std::is_same<unsigned int, T::unsigned_type>::value));
-            should((std::is_same<double, T::real_promote_type>::value));
-            should((std::is_same<std::complex<double>, T::complex_promote_type>::value));
+            should((std::is_same<int, T::Promote>::value));
+            should((std::is_same<unsigned int, T::UnsignedPromote>::value));
+            should((std::is_same<double, T::RealPromote>::value));
+            should((std::is_same<std::complex<double>, T::ComplexPromote>::value));
             
             shouldEqual(T::fromPromote(INT_MIN), T::min());
             shouldEqual(T::fromPromote(INT_MAX), T::max());
@@ -132,10 +127,10 @@ struct NumericTraitsTest
             shouldEqual(-FLT_MAX, T::min());
             shouldEqual(FLT_MAX, T::max());
             
-            should((std::is_same<float, T::promote_type>::value));
-            should((std::is_same<float, T::unsigned_type>::value));
-            should((std::is_same<float, T::real_promote_type>::value));
-            should((std::is_same<std::complex<float>, T::complex_promote_type>::value));
+            should((std::is_same<float, T::Promote>::value));
+            should((std::is_same<float, T::UnsignedPromote>::value));
+            should((std::is_same<float, T::RealPromote>::value));
+            should((std::is_same<std::complex<float>, T::ComplexPromote>::value));
             
             shouldEqual(T::fromPromote(-FLT_MAX), T::min());
             shouldEqual(T::fromPromote(FLT_MAX), T::max());
@@ -165,6 +160,37 @@ struct NumericTraitsTest
         should(!greaterEqualAtTolerance(T::zero(), T::one()));
         should(greaterEqualAtTolerance(T::zero(), T::one(), 2.0f));
         should(greaterEqualAtTolerance(T::one(), T::zero()));
+
+        double a = 0.0, b = NumericTraits<double>::epsilon(), c = 1000.0, d = 1000.1;
+
+        using namespace vigra;
+        should(closeAtTolerance(a, b));
+        should(closeAtTolerance(c, c + b));
+        should(!closeAtTolerance(c, d));
+        should(closeAtTolerance(c, d, 0.01));
+        should(closeAtTolerance(-a, -b));
+        should(closeAtTolerance(-c, -c + b));
+        should(!closeAtTolerance(-c, -d));
+        should(closeAtTolerance(-c, -d, 0.01));
+        should(!closeAtTolerance(c, -c));
+        should(!closeAtTolerance(a, c));
+        should(!closeAtTolerance(c, d));
+        should(!closeAtTolerance(-a, -c));
+        should(!closeAtTolerance(-c, -d));
+
+        should(lessEqualAtTolerance(a, c));
+        should(lessEqualAtTolerance(c, c));
+        should(lessEqualAtTolerance(c, c-b));
+        should(lessEqualAtTolerance(c, d));
+        should(!lessEqualAtTolerance(d, c));
+        should(lessEqualAtTolerance(d, c, 0.01));
+
+        should(greaterEqualAtTolerance(c, a));
+        should(greaterEqualAtTolerance(c, c));
+        should(greaterEqualAtTolerance(c-b, c));
+        should(greaterEqualAtTolerance(d, c));
+        should(!greaterEqualAtTolerance(c, d));
+        should(greaterEqualAtTolerance(c, d, 0.01));
     }
 };
 

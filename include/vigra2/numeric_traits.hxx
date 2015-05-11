@@ -99,52 +99,52 @@ struct Error_NumericTraits_char_is_not_a_numeric_type__use_signed_char_or_unsign
 template<class A>
 struct NumericTraits
 {
-    typedef Error_NumericTraits_not_specialized_for_this_case type;
-    typedef Error_NumericTraits_not_specialized_for_this_case promote_type;
-    typedef Error_NumericTraits_not_specialized_for_this_case unsigned_type;
-    typedef Error_NumericTraits_not_specialized_for_this_case real_promote_type;
-    typedef Error_NumericTraits_not_specialized_for_this_case complex_promote_type;
-    typedef Error_NumericTraits_not_specialized_for_this_case value_type;
+    typedef Error_NumericTraits_not_specialized_for_this_case Type;
+    typedef Error_NumericTraits_not_specialized_for_this_case Promote;
+    typedef Error_NumericTraits_not_specialized_for_this_case UnsignedPromote;
+    typedef Error_NumericTraits_not_specialized_for_this_case RealPromote;
+    typedef Error_NumericTraits_not_specialized_for_this_case ComplexPromote;
+    typedef Error_NumericTraits_not_specialized_for_this_case ValueType;
 };
 
 template<>
 struct NumericTraits<char>
 {
-    typedef Error_NumericTraits_char_is_not_a_numeric_type__use_signed_char_or_unsigned_char type;
-    typedef Error_NumericTraits_char_is_not_a_numeric_type__use_signed_char_or_unsigned_char promote_type;
-    typedef Error_NumericTraits_char_is_not_a_numeric_type__use_signed_char_or_unsigned_char unsigned_type;
-    typedef Error_NumericTraits_char_is_not_a_numeric_type__use_signed_char_or_unsigned_char real_promote_type;
-    typedef Error_NumericTraits_char_is_not_a_numeric_type__use_signed_char_or_unsigned_char complex_promote_type;
-    typedef Error_NumericTraits_char_is_not_a_numeric_type__use_signed_char_or_unsigned_char value_type;
+    typedef Error_NumericTraits_char_is_not_a_numeric_type__use_signed_char_or_unsigned_char Type;
+    typedef Error_NumericTraits_char_is_not_a_numeric_type__use_signed_char_or_unsigned_char Promote;
+    typedef Error_NumericTraits_char_is_not_a_numeric_type__use_signed_char_or_unsigned_char UnsignedPromote;
+    typedef Error_NumericTraits_char_is_not_a_numeric_type__use_signed_char_or_unsigned_char RealPromote;
+    typedef Error_NumericTraits_char_is_not_a_numeric_type__use_signed_char_or_unsigned_char ComplexPromote;
+    typedef Error_NumericTraits_char_is_not_a_numeric_type__use_signed_char_or_unsigned_char ValueType;
 };
 
 template<>
 struct NumericTraits<bool>
 {
-    typedef bool type;
-    typedef int promote_type;
-    typedef unsigned int unsigned_type;
-    typedef double real_promote_type;
-    typedef std::complex<real_promote_type> complex_promote_type;
-    typedef type value_type;
+    typedef bool Type;
+    typedef int Promote;
+    typedef unsigned int UnsignedPromote;
+    typedef double RealPromote;
+    typedef std::complex<RealPromote> ComplexPromote;
+    typedef Type ValueType;
 
     static constexpr bool zero() noexcept { return false; }
     static constexpr bool one() noexcept { return true; }
     static constexpr bool nonZero() noexcept { return true; }
-    static constexpr type epsilon() noexcept { return true; }
-    static constexpr type smallestPositive() noexcept { return true; }
+    static constexpr Type epsilon() noexcept { return true; }
+    static constexpr Type smallestPositive() noexcept { return true; }
     static constexpr bool min() noexcept { return false; }
     static constexpr bool max() noexcept { return true; }
     
     static const bool minConst = false;
     static const bool maxConst = true;
     
-    static promote_type toPromote(bool v) { return v ? 1 : 0; }
-    static real_promote_type toRealPromote(bool v) { return v ? 1.0 : 0.0; }
-    static bool fromPromote(promote_type v) { 
+    static Promote toPromote(bool v) { return v ? 1 : 0; }
+    static RealPromote toRealPromote(bool v) { return v ? 1.0 : 0.0; }
+    static bool fromPromote(Promote v) { 
         return (v == 0) ? false : true; 
     }
-    static bool fromRealPromote(real_promote_type v) {
+    static bool fromRealPromote(RealPromote v) {
         return (v == 0.0) ? false : true; 
     }
 };
@@ -152,42 +152,42 @@ struct NumericTraits<bool>
 template<class T>
 struct SignedNumericTraits
 {
-    typedef T             type;
-    typedef type          value_type;
-    typedef Promote<type> promote_type;
-    typedef typename std::make_unsigned<promote_type>::type unsigned_type;
-    typedef RealPromote<type> real_promote_type;
-    typedef std::complex<real_promote_type> complex_promote_type;
+    typedef T             Type;
+    typedef Type          ValueType;
+    typedef vigra::Promote<Type> Promote;
+    typedef typename std::make_unsigned<Promote>::type UnsignedPromote;
+    typedef vigra::RealPromote<Type> RealPromote;
+    typedef std::complex<RealPromote> ComplexPromote;
     
-    static constexpr type zero() noexcept    { return 0; }
-    static constexpr type one() noexcept     { return 1; }
-    static constexpr type nonZero() noexcept { return 1; }
-    static constexpr type epsilon() noexcept { return 1; }
-    static constexpr type smallestPositive() noexcept { return 1; }
-    static constexpr type min() noexcept     { return std::numeric_limits<T>::min(); }
-    static constexpr type max() noexcept     { return std::numeric_limits<T>::max(); }
+    static constexpr Type zero() noexcept    { return 0; }
+    static constexpr Type one() noexcept     { return 1; }
+    static constexpr Type nonZero() noexcept { return 1; }
+    static constexpr Type epsilon() noexcept { return 1; }
+    static constexpr Type smallestPositive() noexcept { return 1; }
+    static constexpr Type min() noexcept     { return std::numeric_limits<T>::min(); }
+    static constexpr Type max() noexcept     { return std::numeric_limits<T>::max(); }
     
-    static const type minConst = min();
-    static const type maxConst = max();
+    static const Type minConst = min();
+    static const Type maxConst = max();
     
-    static promote_type      toPromote(type v)     { return v; }
-    static real_promote_type toRealPromote(type v) { return v; }
+    static Promote      toPromote(Type v)     { return v; }
+    static RealPromote toRealPromote(Type v) { return v; }
     
-    static type fromPromote(promote_type v) 
+    static Type fromPromote(Promote v) 
     {
-        return v <= static_cast<promote_type>(min())
+        return v <= static_cast<Promote>(min())
                    ? min()
-                   : v >= static_cast<promote_type>(max()) 
+                   : v >= static_cast<Promote>(max()) 
                           ? max()
-                          : static_cast<type>(v);
+                          : static_cast<Type>(v);
     }
-    static type fromRealPromote(real_promote_type v) 
+    static Type fromRealPromote(RealPromote v) 
     {
-        return v <= static_cast<real_promote_type>(min())
+        return v <= static_cast<RealPromote>(min())
                    ? min()
-                   : v >= static_cast<real_promote_type>(max())
+                   : v >= static_cast<RealPromote>(max())
                           ? max()
-                          : static_cast<type>(std::round(v));
+                          : static_cast<Type>(std::round(v));
     }
 };
 
@@ -205,42 +205,42 @@ struct NumericTraits<signed long long> : public SignedNumericTraits<signed long 
 template<class T>
 struct UnsignedNumericTraits
 {
-    typedef T             type;
-    typedef type          value_type;
-    typedef Promote<type> promote_type;
-    typedef typename std::make_unsigned<promote_type>::type unsigned_type;
-    typedef RealPromote<type> real_promote_type;
-    typedef std::complex<real_promote_type> complex_promote_type;
+    typedef T             Type;
+    typedef Type          ValueType;
+    typedef vigra::Promote<Type> Promote;
+    typedef typename std::make_unsigned<Promote>::type UnsignedPromote;
+    typedef vigra::RealPromote<Type> RealPromote;
+    typedef std::complex<RealPromote> ComplexPromote;
     
-    static constexpr type zero() noexcept    { return 0; }
-    static constexpr type one() noexcept     { return 1; }
-    static constexpr type nonZero() noexcept { return 1; }
-    static constexpr type epsilon() noexcept { return 1; }
-    static constexpr type smallestPositive() noexcept { return 1; }
-    static constexpr type min() noexcept     { return std::numeric_limits<T>::min(); }
-    static constexpr type max() noexcept     { return std::numeric_limits<T>::max(); }
+    static constexpr Type zero() noexcept    { return 0; }
+    static constexpr Type one() noexcept     { return 1; }
+    static constexpr Type nonZero() noexcept { return 1; }
+    static constexpr Type epsilon() noexcept { return 1; }
+    static constexpr Type smallestPositive() noexcept { return 1; }
+    static constexpr Type min() noexcept     { return std::numeric_limits<T>::min(); }
+    static constexpr Type max() noexcept     { return std::numeric_limits<T>::max(); }
     
-    static const type minConst = min();
-    static const type maxConst = max();
+    static const Type minConst = min();
+    static const Type maxConst = max();
     
-    static promote_type      toPromote(type v)     { return v; }
-    static real_promote_type toRealPromote(type v) { return v; }
+    static Promote      toPromote(Type v)     { return v; }
+    static RealPromote toRealPromote(Type v) { return v; }
     
-    static type fromPromote(promote_type v) 
+    static Type fromPromote(Promote v) 
     {
-        return v <= static_cast<promote_type>(zero())
+        return v <= static_cast<Promote>(zero())
                    ? zero()
-                   : v >= static_cast<promote_type>(max()) 
+                   : v >= static_cast<Promote>(max()) 
                           ? max()
-                          : static_cast<type>(v);
+                          : static_cast<Type>(v);
     }
-    static type fromRealPromote(real_promote_type v) 
+    static Type fromRealPromote(RealPromote v) 
     {
-        return v <= static_cast<real_promote_type>(zero())
+        return v <= static_cast<RealPromote>(zero())
                    ? zero()
-                   : v >= static_cast<real_promote_type>(max())
+                   : v >= static_cast<RealPromote>(max())
                           ? max()
-                          : static_cast<type>(std::round(v));
+                          : static_cast<Type>(std::round(v));
     }
 };
 
@@ -258,31 +258,31 @@ struct NumericTraits<unsigned long long> : public UnsignedNumericTraits<unsigned
 template<class T>
 struct FloatNumericTraits
 {
-    typedef T    type;
-    typedef type value_type;    
-    typedef type promote_type;
-    typedef type unsigned_type;
-    typedef type real_promote_type;
-    typedef std::complex<real_promote_type> complex_promote_type;
+    typedef T    Type;
+    typedef Type ValueType;    
+    typedef Type Promote;
+    typedef Type UnsignedPromote;
+    typedef Type RealPromote;
+    typedef std::complex<RealPromote> ComplexPromote;
     
-    static constexpr type zero() noexcept { return 0.0; }
-    static constexpr type one() noexcept { return 1.0; }
-    static constexpr type nonZero() noexcept { return 1.0; }
-    static constexpr type epsilon() noexcept { return std::numeric_limits<type>::epsilon(); }
-    static constexpr type smallestPositive() noexcept { return std::numeric_limits<type>::min(); }
-    static constexpr type min() noexcept { return std::numeric_limits<type>::lowest(); }
-    static constexpr type max() noexcept { return std::numeric_limits<type>::max(); }
+    static constexpr Type zero() noexcept { return 0.0; }
+    static constexpr Type one() noexcept { return 1.0; }
+    static constexpr Type nonZero() noexcept { return 1.0; }
+    static constexpr Type epsilon() noexcept { return std::numeric_limits<Type>::epsilon(); }
+    static constexpr Type smallestPositive() noexcept { return std::numeric_limits<Type>::min(); }
+    static constexpr Type min() noexcept { return std::numeric_limits<Type>::lowest(); }
+    static constexpr Type max() noexcept { return std::numeric_limits<Type>::max(); }
     
-    static promote_type toPromote(type v) { return v; }
-    static real_promote_type toRealPromote(type v) { return v; }
-    static type fromPromote(promote_type v) { return v; }
-    static type fromRealPromote(real_promote_type v) 
+    static Promote toPromote(Type v) { return v; }
+    static RealPromote toRealPromote(Type v) { return v; }
+    static Type fromPromote(Promote v) { return v; }
+    static Type fromRealPromote(RealPromote v) 
     {
-        return v <= static_cast<real_promote_type>(min())
+        return v <= static_cast<RealPromote>(min())
                    ? min()
-                   : v >= static_cast<real_promote_type>(max())
+                   : v >= static_cast<RealPromote>(max())
                           ? max()
-                          : static_cast<type>(v);
+                          : static_cast<Type>(v);
     }
 };
 
@@ -297,22 +297,22 @@ struct NumericTraits<long double> : public FloatNumericTraits<long double> {};
 template<class T>
 struct NumericTraits<std::complex<T> >
 {
-    typedef std::complex<T> type;
-    typedef std::complex<typename NumericTraits<T>::promote_type> promote_type;
-    typedef std::complex<typename NumericTraits<T>::unsigned_type> unsigned_type;
-    typedef std::complex<typename NumericTraits<T>::real_promote_type> real_promote_type;
-    typedef std::complex<real_promote_type> complex_promote_type;
-    typedef T value_type;
+    typedef std::complex<T> Type;
+    typedef std::complex<typename NumericTraits<T>::Promote> Promote;
+    typedef std::complex<typename NumericTraits<T>::UnsignedPromote> UnsignedPromote;
+    typedef std::complex<typename NumericTraits<T>::RealPromote> RealPromote;
+    typedef std::complex<RealPromote> ComplexPromote;
+    typedef T ValueType;
 
-    static type zero() { return type(0.0); }
-    static type one() { return type(1.0); }
-    static type nonZero() { return one(); }
-    static type epsilon() { return type(NumericTraits<T>::epsilon()); }
-    static type smallestPositive() { return type(NumericTraits<T>::smallestPositive()); }
+    static Type zero() { return Type(0.0); }
+    static Type one() { return Type(1.0); }
+    static Type nonZero() { return one(); }
+    static Type epsilon() { return Type(NumericTraits<T>::epsilon()); }
+    static Type smallestPositive() { return Type(NumericTraits<T>::smallestPositive()); }
 
-    static promote_type toPromote(type const & v) { return v; }
-    static type fromPromote(promote_type const & v) { return v; }
-    static type fromRealPromote(real_promote_type v) { return type(v); }
+    static Promote toPromote(Type const & v) { return v; }
+    static Type fromPromote(Promote const & v) { return v; }
+    static Type fromRealPromote(RealPromote v) { return Type(v); }
 };
 
 // RequiresExplicitCast

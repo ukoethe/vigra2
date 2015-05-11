@@ -86,11 +86,11 @@ class PolynomialView
 
         /** Scalar type associated with <tt>RealPromote</tt>
         */
-    typedef typename NumericTraits<RealPromote>::value_type Real;
+    typedef typename NumericTraits<RealPromote>::ValueType Real;
 
         /** Complex type associated with <tt>RealPromote</tt>
         */
-    typedef typename NumericTraits<RealPromote>::complex_promote_type Complex;
+    typedef typename NumericTraits<RealPromote>::ComplexPromote Complex;
 
         /** Iterator for the coefficient sequence
         */
@@ -757,7 +757,7 @@ laguerreStartingGuess(POLYNOMIAL const & p)
 template <class POLYNOMIAL, class Complex>
 int laguerre1Root(POLYNOMIAL const & p, Complex & x, unsigned int multiplicity)
 {
-    typedef typename NumericTraits<Complex>::value_type Real;
+    typedef typename NumericTraits<Complex>::ValueType Real;
     
     double frac[] = {0.0, 0.5, 0.25, 0.75, 0.13, 0.38, 0.62, 0.88, 1.0};
     int maxiter = 80, 
@@ -1076,7 +1076,7 @@ polynomialRoots(POLYNOMIAL const & poriginal, VECTOR & roots)
 template <class POLYNOMIAL, class VECTOR>
 bool polynomialRealRoots(POLYNOMIAL const & p, VECTOR & roots, bool polishRoots)
 {
-    typedef typename NumericTraits<typename VECTOR::value_type>::complex_promote_type Complex;
+    typedef typename NumericTraits<typename VECTOR::value_type>::ComplexPromote Complex;
     std::vector<Complex> croots;
     if(!polynomialRoots(p, croots, polishRoots))
         return false;

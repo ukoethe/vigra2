@@ -37,47 +37,128 @@
 #include <iostream>
 #include <string>
 #include <vigra2/unittest.hxx>
+#include <vigra2/algorithm.hxx>
 
 using namespace vigra;
 
-struct MyTest
+struct AlgorithmTest
 {
-    MyTest()
+    AlgorithmTest()
     {
     }
     
-    void test()
+    void testArgMinMax()
     {
+        double data[] = {1.0, 5.0,
+                         3.0, 2.0,
+                        -2.0, 4.0};
+        double *end = data + 6;
+
+        shouldEqual(argMin(data, end), data+4);
+        shouldEqual(argMax(data, end), data+1);
+        shouldEqual(argMinIf(data, end, [](double x) { return x > 0.0; }), data);
+        shouldEqual(argMinIf(data, end, [](double x) { return x > 5.0; }), end);
+        shouldEqual(argMaxIf(data, end, [](double x) { return x < 5.0; }), data+5);
+        shouldEqual(argMaxIf(data, end, [](double x) { return x < -2.0; }), end);
     }
-    
-    void testException()
+
+    void testAlgorithms()
     {
-        try
+        static const int size = 6;
+        int index[size];
+
+        linearSequence(index, index+size);
+        int indexref[size] = {0, 1, 2, 3, 4, 5};
+        shouldEqualSequence(index, index+size, indexref);
+
+        linearSequence(index, index+size, 5, 5);
+        int indexref2[size] = {5, 10, 15, 20, 25, 30};
+        shouldEqualSequence(index, index+size, indexref2);
+
+        double data[size] = {1.0, 5.0,
+                         3.0, 2.0,
+                        -2.0, 4.0};
+
+        indexSort(data, data+size, index, std::greater<double>());
+        int sortref[size] = {1, 5, 2, 3, 0, 4};
+        shouldEqualSequence(index, index+size, sortref);
+
+        indexSort(data, data+size, index);
+        int sortref2[size] = {4, 0, 3, 2, 5, 1};
+        shouldEqualSequence(index, index+size, sortref2);
+
+        double res[size];
+        applyPermutation(index, index+size, data, res);
+        double ref[size] = {-2.0, 1.0, 2.0, 3.0, 4.0, 5.0 };
+        shouldEqualSequence(res, res+size, ref);
+
+        int inverse[size];
+        inversePermutation(index, index+size, inverse);
+        int inverseref[size] = {1, 5, 3, 2, 0, 4};
+        shouldEqualSequence(inverse, inverse+size, inverseref);
+
+        applyPermutation(inverse, inverse+size, ref, res);
+        shouldEqualSequence(res, res+size, data);
+    }
+
+    void testChecksum()
+    {
+        std::string s("");
+        uint32_t crc = checksum(s.c_str(), s.size());
+        shouldEqual(crc, 0u);
+
+        s = "hello world";
+        crc = checksum(s.c_str(), s.size());
+        shouldEqual(crc, 222957957u);
+
+        s = "hallo world";
+        crc = checksum(s.c_str(), s.size());
+        shouldEqual(crc, 77705727u);
+
+        int split = 5;
+        std::string s1 = s.substr(0, split), s2 = s.substr(split);
+        crc = checksum(s1.c_str(), s1.size());
+        crc = concatenateChecksum(crc, s2.c_str(), s2.size());
+        shouldEqual(crc, 77705727u);
+
+        const int size = 446;
+        char t[size+1] =  
+            "Lorem ipsum dolor sit amet, consectetur adipisicing elit, "
+            "sed do eiusmod tempor incididunt ut labore et dolore magna "
+            "aliqua. Ut enim ad minim veniam, quis nostrud exercitation "
+            "ullamco laboris nisi ut aliquip ex ea commodo consequat. "
+            "Duis aute irure dolor in reprehenderit in voluptate velit "
+            "esse cillum dolore eu fugiat nulla pariatur. Excepteur "
+            "sint occaecat cupidatat non proident, sunt in culpa qui "
+            "officia deserunt mollit anim id est laborum.";
+
+        crc = checksum(t, size);
+        shouldEqual(crc, 2408722991u);
+
+        for(split = 64; split < 80; ++split) // check alignment
         {
-            failTest("no exception thrown");
-        }
-        catch(std::runtime_error & e)
-        {
-            std::string expected("expected message");
-            std::string message(e.what());
-            should(0 == expected.compare(message.substr(0,expected.size())));
+            crc = checksum(t, split);
+            crc = concatenateChecksum(crc, t+split, size-split);
+            shouldEqual(crc, 2408722991u);
         }
     }
 };
 
-struct MyTestSuite
+struct AlgorithmTestSuite
 : public vigra::test_suite
 {
-    MyTestSuite()
-    : vigra::test_suite("MyTestSuite")
+    AlgorithmTestSuite()
+    : vigra::test_suite("AlgorithmTest")
     {
-        add( testCase(&MyTest::test));
+        add( testCase(&AlgorithmTest::testArgMinMax));
+        add( testCase(&AlgorithmTest::testAlgorithms));
+        add( testCase(&AlgorithmTest::testChecksum));
     }
 };
 
 int main(int argc, char ** argv)
 {
-    MyTestSuite test;
+    AlgorithmTestSuite test;
 
     int failed = test.run(vigra::testsToBeExecuted(argc, argv));
 

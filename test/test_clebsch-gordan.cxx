@@ -33,16 +33,53 @@
 /*                                                                      */
 /************************************************************************/
 
-#pragma once
+#include <typeinfo>
+#include <iostream>
+#include <string>
+#include <vigra2/unittest.hxx>
+#include <vigra2/clebsch-gordan.hxx>
 
-#ifndef VIGRA_STUB_HXX
-#define VIGRA_STUB_HXX
+using namespace vigra;
 
-#include "config.hxx"
+struct ClebschGordanTest
+{
+    ClebschGordanTest()
+    {
+    }
+    
+    void test()
+    {
+        shouldEqualTolerance(clebschGordan(0.5, 0.5, 0.5, 0.5, 1.0, 1.0), std::sqrt(1.0), 1e-15);
+        shouldEqualTolerance(clebschGordan(0.5, 0.5, 0.5, -0.5, 1.0, 0.0), std::sqrt(0.5), 1e-15);
+        shouldEqualTolerance(clebschGordan(0.5, -0.5, 0.5, 0.5, 1.0, 0.0), std::sqrt(0.5), 1e-15);
+        shouldEqualTolerance(clebschGordan(0.5, 0.5, 0.5, -0.5, 0.0, 0.0), std::sqrt(0.5), 1e-15);
+        shouldEqualTolerance(clebschGordan(0.5, -0.5, 0.5, 0.5, 0.0, 0.0), -std::sqrt(0.5), 1e-15);
 
-namespace vigra {
+        shouldEqualTolerance(clebschGordan(2.0, 2.0, 0.5, 0.5, 2.5, 2.5), std::sqrt(1.0), 1e-15);
+        shouldEqualTolerance(clebschGordan(2.0, 2.0, 0.5, -0.5, 2.5, 1.5), std::sqrt(0.2), 1e-15);
+        shouldEqualTolerance(clebschGordan(2.0, 1.0, 0.5, 0.5, 2.5, 1.5), std::sqrt(0.8), 1e-15);
+        shouldEqualTolerance(clebschGordan(2.0, 2.0, 0.5, -0.5, 1.5, 1.5), std::sqrt(0.8), 1e-15);
+        shouldEqualTolerance(clebschGordan(2.0, 1.0, 0.5, 0.5, 1.5, 1.5), -std::sqrt(0.2), 1e-15);
+    }
+};
 
+struct ClebschGordanTestSuite
+: public vigra::test_suite
+{
+    ClebschGordanTestSuite()
+    : vigra::test_suite("ClebschGordanTest")
+    {
+        add( testCase(&ClebschGordanTest::test));
+    }
+};
 
-} // namespace vigra
+int main(int argc, char ** argv)
+{
+    ClebschGordanTestSuite test;
 
-#endif // VIGRA_STUB_HXX
+    int failed = test.run(vigra::testsToBeExecuted(argc, argv));
+
+    std::cout << test.report() << std::endl;
+
+    return (failed != 0);
+}

@@ -33,16 +33,55 @@
 /*                                                                      */
 /************************************************************************/
 
-#pragma once
+#include <typeinfo>
+#include <iostream>
+#include <string>
+#include <vigra2/unittest.hxx>
 
-#ifndef VIGRA_STUB_HXX
-#define VIGRA_STUB_HXX
+using namespace vigra;
 
-#include "config.hxx"
+struct MyTest
+{
+    MyTest()
+    {
+    }
+    
+    void test()
+    {
+    }
+    
+    void testException()
+    {
+        try
+        {
+            failTest("no exception thrown");
+        }
+        catch(std::runtime_error & e)
+        {
+            std::string expected("expected message");
+            std::string message(e.what());
+            should(0 == expected.compare(message.substr(0,expected.size())));
+        }
+    }
+};
 
-namespace vigra {
+struct MyTestSuite
+: public vigra::test_suite
+{
+    MyTestSuite()
+    : vigra::test_suite("MyTestSuite")
+    {
+        add( testCase(&MyTest::test));
+    }
+};
 
+int main(int argc, char ** argv)
+{
+    MyTestSuite test;
 
-} // namespace vigra
+    int failed = test.run(vigra::testsToBeExecuted(argc, argv));
 
-#endif // VIGRA_STUB_HXX
+    std::cout << test.report() << std::endl;
+
+    return (failed != 0);
+}

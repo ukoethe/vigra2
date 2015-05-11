@@ -1,5 +1,6 @@
 
 /lib/
+/include/vigra/
 /bin/
 /build*/
 /doc/

@@ -85,7 +85,7 @@ namespace autodiff {
     the derivative w.r.t 'x' shall be the element 0 of the gradient vector, and the
     derivative w.r.t. 's' shall be element 1.
 */
-template <class T, ArrayIndex N>
+template <class T, int N>
 class DualVector
 {
   public:
@@ -223,7 +223,7 @@ class DualVector
     /** Given a vector 'v' of expression arguments, create the corresponding
         vector of dual numbers for automatic differentiation.
     */
-template <class T, ArrayIndex N>
+template <class T, int N>
 TinyArray<DualVector<T, N>, N>
 dualMatrix(TinyArray<T, N> const & v)
 {
@@ -236,73 +236,73 @@ dualMatrix(TinyArray<T, N> const & v)
     return res;
 }
 
-template <class T, ArrayIndex N>
+template <class T, int N>
 inline DualVector<T, N> operator+(DualVector<T, N> v1, DualVector<T, N> const & v2)
 {
     return v1 += v2;
 }
 
-template <class T, ArrayIndex N>
+template <class T, int N>
 inline DualVector<T, N> operator+(DualVector<T, N> v1, T v2)
 {
     return v1 += v2;
 }
 
-template <class T, ArrayIndex N>
+template <class T, int N>
 inline DualVector<T, N> operator+(T v1, DualVector<T, N> v2)
 {
     return v2 += v1;
 }
 
-template <class T, ArrayIndex N>
+template <class T, int N>
 inline DualVector<T, N> operator-(DualVector<T, N> v1, DualVector<T, N> const & v2)
 {
     return v1 -= v2;
 }
 
-template <class T, ArrayIndex N>
+template <class T, int N>
 inline DualVector<T, N> operator-(DualVector<T, N> v1, T v2)
 {
     return v1 -= v2;
 }
 
-template <class T, ArrayIndex N>
+template <class T, int N>
 inline DualVector<T, N> operator-(T v1, DualVector<T, N> const & v2)
 {
     return DualVector<T, N>(v1 - v2.v, -v2.d);
 }
 
-template <class T, ArrayIndex N>
+template <class T, int N>
 inline DualVector<T, N> operator*(DualVector<T, N> v1, DualVector<T, N> const & v2)
 {
     return v1 *= v2;
 }
 
-template <class T, ArrayIndex N>
+template <class T, int N>
 inline DualVector<T, N> operator*(DualVector<T, N> v1, T v2)
 {
     return v1 *= v2;
 }
 
-template <class T, ArrayIndex N>
+template <class T, int N>
 inline DualVector<T, N> operator*(T v1, DualVector<T, N> v2)
 {
     return v2 *= v1;
 }
 
-template <class T, ArrayIndex N>
+template <class T, int N>
 inline DualVector<T, N> operator/(DualVector<T, N> v1, DualVector<T, N> const & v2)
 {
     return v1 /= v2;
 }
 
-template <class T, ArrayIndex N>
+template <class T, int N>
 inline DualVector<T, N> operator/(DualVector<T, N> v1, T v2)
 {
     return v1 /= v2;
 }
 
-template <class T, ArrayIndex N>
+template <class T, int N>
 inline DualVector<T, N> operator/(T v1, DualVector<T, N> const & v2)
 {
     return DualVector<T, N>(v1 / v2.v, -v1*v2.d / sq(v2.v));
@@ -310,7 +310,7 @@ inline DualVector<T, N> operator/(T v1, DualVector<T, N> const & v2)
 
 using vigra::abs;
 // abs(x + h) => x + h or -(x + h)
-template <typename T, ArrayIndex N>
+template <typename T, int N>
 inline DualVector<T, N> abs(DualVector<T, N> const & v)
 {
     return v.v < T(0.0) ? -v : v;
@@ -318,7 +318,7 @@ inline DualVector<T, N> abs(DualVector<T, N> const & v)
 
 using std::fabs;
 // abs(x + h) => x + h or -(x + h)
-template <typename T, ArrayIndex N>
+template <typename T, int N>
 inline DualVector<T, N> fabs(DualVector<T, N> const & v)
 {
     return v.v < T(0.0) ? -v : v;
@@ -326,7 +326,7 @@ inline DualVector<T, N> fabs(DualVector<T, N> const & v)
 
 using std::log;
 // log(a + h) => log(a) + h / a
-template <typename T, ArrayIndex N>
+template <typename T, int N>
 inline DualVector<T, N> log(DualVector<T, N> v) 
 {
     v.d /= v.v;
@@ -336,7 +336,7 @@ inline DualVector<T, N> log(DualVector<T, N> v)
 
 using std::exp;
 // exp(a + h) => exp(a) + exp(a) h
-template <class T, ArrayIndex N>
+template <class T, int N>
 inline DualVector<T, N> exp(DualVector<T, N> v)
 {
     v.v = exp(v.v);
@@ -346,7 +346,7 @@ inline DualVector<T, N> exp(DualVector<T, N> v)
 
 using vigra::sqrt;
 // sqrt(a + h) => sqrt(a) + h / (2 sqrt(a))
-template <typename T, ArrayIndex N>
+template <typename T, int N>
 inline DualVector<T, N> sqrt(DualVector<T, N> v)
 {
     v.v = sqrt(v.v);
@@ -357,7 +357,7 @@ inline DualVector<T, N> sqrt(DualVector<T, N> v)
 using std::sin;
 using std::cos;
 // sin(a + h) => sin(a) + cos(a) h
-template <typename T, ArrayIndex N>
+template <typename T, int N>
 inline DualVector<T, N> sin(DualVector<T, N> v)
 {
     v.d *= cos(v.v);
@@ -366,7 +366,7 @@ inline DualVector<T, N> sin(DualVector<T, N> v)
 }
 
 // cos(a + h) => cos(a) - sin(a) h
-template <typename T, ArrayIndex N>
+template <typename T, int N>
 inline DualVector<T, N> cos(DualVector<T, N> v)
 {
     v.d *= -sin(v.v);
@@ -377,7 +377,7 @@ inline DualVector<T, N> cos(DualVector<T, N> v)
 using vigra::sin_pi;
 using vigra::cos_pi;
 // sin_pi(a + h) => sin_pi(a) + pi cos_pi(a) h
-template <typename T, ArrayIndex N>
+template <typename T, int N>
 inline DualVector<T, N> sin_pi(DualVector<T, N> v)
 {
     v.d *= M_PI*cos_pi(v.v);
@@ -386,7 +386,7 @@ inline DualVector<T, N> sin_pi(DualVector<T, N> v)
 }
 
 // cos_pi(a + h) => cos_pi(a) - pi sin_pi(a) h
-template <typename T, ArrayIndex N>
+template <typename T, int N>
 inline DualVector<T, N> cos_pi(DualVector<T, N> v)
 {
     v.d *= -M_PI*sin_pi(v.v);
@@ -396,7 +396,7 @@ inline DualVector<T, N> cos_pi(DualVector<T, N> v)
 
 using std::asin;
 // asin(a + h) => asin(a) + 1 / sqrt(1 - a^2) h
-template <typename T, ArrayIndex N>
+template <typename T, int N>
 inline DualVector<T, N> asin(DualVector<T, N> v)
 {
     v.d /= sqrt(T(1.0) - sq(v.v));
@@ -406,7 +406,7 @@ inline DualVector<T, N> asin(DualVector<T, N> v)
 
 using std::acos;
 // acos(a + h) => acos(a) - 1 / sqrt(1 - a^2) h
-template <typename T, ArrayIndex N>
+template <typename T, int N>
 inline DualVector<T, N> acos(DualVector<T, N> v) 
 {
     v.d /= -sqrt(T(1.0) - sq(v.v));
@@ -416,7 +416,7 @@ inline DualVector<T, N> acos(DualVector<T, N> v)
 
 using std::tan;
 // tan(a + h) => tan(a) + (1 + tan(a)^2) h
-template <typename T, ArrayIndex N>
+template <typename T, int N>
 inline DualVector<T, N> tan(DualVector<T, N> v)
 {
     v.v = tan(v.v);
@@ -426,7 +426,7 @@ inline DualVector<T, N> tan(DualVector<T, N> v)
 
 using std::atan;
 // atan(a + h) => atan(a) + 1 / (1 + a^2) h
-template <typename T, ArrayIndex N>
+template <typename T, int N>
 inline DualVector<T, N> atan(DualVector<T, N> v)
 {
     v.d /= T(1.0) + sq(v.v);
@@ -437,7 +437,7 @@ inline DualVector<T, N> atan(DualVector<T, N> v)
 using std::sinh;
 using std::cosh;
 // sinh(a + h) => sinh(a) + cosh(a) h
-template <typename T, ArrayIndex N>
+template <typename T, int N>
 inline DualVector<T, N> sinh(DualVector<T, N> v)
 {
     v.d *= cosh(v.v);
@@ -446,7 +446,7 @@ inline DualVector<T, N> sinh(DualVector<T, N> v)
 }
 
 // cosh(a + h) => cosh(a) + sinh(a) h
-template <typename T, ArrayIndex N>
+template <typename T, int N>
 inline DualVector<T, N> cosh(DualVector<T, N> v) 
 {
     v.d *= sinh(v.v);
@@ -456,7 +456,7 @@ inline DualVector<T, N> cosh(DualVector<T, N> v)
 
 using std::tanh;
 // tanh(a + h) => tanh(a) + (1 - tanh(a)^2) h
-template <typename T, ArrayIndex N>
+template <typename T, int N>
 inline DualVector<T, N> tanh(DualVector<T, N> v)
 {
     v.v = tanh(v.v);
@@ -466,7 +466,7 @@ inline DualVector<T, N> tanh(DualVector<T, N> v)
 
 using vigra::sq;
 // (a + h)^2 => a^2 + 2 a h
-template <class T, ArrayIndex N>
+template <class T, int N>
 inline DualVector<T, N> sq(DualVector<T, N> v)
 {
     v.d *= T(2.0)*v.v;
@@ -476,7 +476,7 @@ inline DualVector<T, N> sq(DualVector<T, N> v)
 
 using std::atan2;
 // atan2(b + db, a + da) => atan2(b, a) + (- b da + a db) / (a^2 + b^2)
-template <typename T, ArrayIndex N> 
+template <typename T, int N> 
 inline DualVector<T, N> atan2(DualVector<T, N> v1, DualVector<T, N> const & v2) 
 {
     v1.d = (v2.v * v1.d - v1.v * v2.d) / (sq(v1.v) + sq(v2.v));
@@ -487,7 +487,7 @@ inline DualVector<T, N> atan2(DualVector<T, N> v1, DualVector<T, N> const & v2)
 
 using vigra::pow;
 // (a+da)^p => a^p + p*a^(p-1) da
-template <typename T, ArrayIndex N> 
+template <typename T, int N> 
 inline DualVector<T, N> pow(DualVector<T, N> v, T p)
 {
     T pow_p_1 = pow(v.v, p-T(1.0));
@@ -497,7 +497,7 @@ inline DualVector<T, N> pow(DualVector<T, N> v, T p)
 }
 
 // (a)^(p+dp) => a^p + a^p log(a) dp
-template <typename T, ArrayIndex N> 
+template <typename T, int N> 
 inline DualVector<T, N> pow(T v, DualVector<T, N> p)
 {
     p.v = pow(v, p.v);
@@ -507,7 +507,7 @@ inline DualVector<T, N> pow(T v, DualVector<T, N> p)
 
 
 // (a+da)^(b+db) => a^b + b * a^(b-1) da + a^b log(a) * db
-template <typename T, ArrayIndex N> 
+template <typename T, int N> 
 inline DualVector<T, N> pow(DualVector<T, N> v, DualVector<T, N> const & p)
 {
     T pow_p_1 = pow(v.v, p.v-T(1.0)),
@@ -518,7 +518,7 @@ inline DualVector<T, N> pow(DualVector<T, N> v, DualVector<T, N> const & p)
 }
 
 using vigra::min;
-template <class T, ArrayIndex N>
+template <class T, int N>
 inline DualVector<T, N> min(DualVector<T, N> const & v1, DualVector<T, N> const & v2)
 {
     return v1.v < v2.v
@@ -526,7 +526,7 @@ inline DualVector<T, N> min(DualVector<T, N> const & v1, DualVector<T, N> const 
                : v2;
 }
 
-template <class T, ArrayIndex N>
+template <class T, int N>
 inline DualVector<T, N> min(T v1, DualVector<T, N> const & v2)
 {
     return v1 < v2.v
@@ -534,7 +534,7 @@ inline DualVector<T, N> min(T v1, DualVector<T, N> const & v2)
                : v2;
 }
 
-template <class T, ArrayIndex N>
+template <class T, int N>
 inline DualVector<T, N> min(DualVector<T, N> const & v1, T v2)
 {
     return v1.v < v2
@@ -543,7 +543,7 @@ inline DualVector<T, N> min(DualVector<T, N> const & v1, T v2)
 }
 
 using vigra::max;
-template <class T, ArrayIndex N>
+template <class T, int N>
 inline DualVector<T, N> max(DualVector<T, N> const & v1, DualVector<T, N> const & v2)
 {
     return v1.v > v2.v
@@ -551,7 +551,7 @@ inline DualVector<T, N> max(DualVector<T, N> const & v1, DualVector<T, N> const 
                : v2;
 }
 
-template <class T, ArrayIndex N>
+template <class T, int N>
 inline DualVector<T, N> max(T v1, DualVector<T, N> const & v2)
 {
     return v1 > v2.v
@@ -559,7 +559,7 @@ inline DualVector<T, N> max(T v1, DualVector<T, N> const & v2)
                : v2;
 }
 
-template <class T, ArrayIndex N>
+template <class T, int N>
 inline DualVector<T, N> max(DualVector<T, N> const & v1, T v2)
 {
     return v1.v > v2
@@ -567,14 +567,14 @@ inline DualVector<T, N> max(DualVector<T, N> const & v1, T v2)
                : DualVector<T, N>(v2);
 }
 
-template <class T, ArrayIndex N>
+template <class T, int N>
 inline bool 
 operator==(DualVector<T, N> const & v1, DualVector<T, N> const & v2)
 {
     return v1.v == v2.v && v1.d == v2.d;
 }
 
-template <class T, ArrayIndex N>
+template <class T, int N>
 inline bool 
 operator!=(DualVector<T, N> const & v1, DualVector<T, N> const & v2)
 {
@@ -582,21 +582,21 @@ operator!=(DualVector<T, N> const & v1, DualVector<T, N> const & v2)
 }
 
 #define VIGRA_DUALVECTOR_RELATIONAL_OPERATORS(op) \
-template <class T, ArrayIndex N> \
+template <class T, int N> \
 inline bool  \
 operator op(DualVector<T, N> const & v1, DualVector<T, N> const & v2) \
 { \
     return v1.v op v2.v; \
 } \
  \
-template <class T, ArrayIndex N> \
+template <class T, int N> \
 inline bool  \
 operator op(T v1, DualVector<T, N> const & v2) \
 { \
     return v1 op v2.v; \
 } \
  \
-template <class T, ArrayIndex N> \
+template <class T, int N> \
 inline bool  \
 operator op(DualVector<T, N> const & v1, T v2) \
 { \
@@ -610,7 +610,7 @@ VIGRA_DUALVECTOR_RELATIONAL_OPERATORS(>=)
 
 #undef VIGRA_DUALVECTOR_RELATIONAL_OPERATORS
 
-template <class T, ArrayIndex N>
+template <class T, int N>
 inline bool 
 closeAtTolerance(DualVector<T, N> const & v1, DualVector<T, N> const & v2, 
                  T epsilon = NumericTraits<T>::epsilon())
@@ -621,7 +621,7 @@ closeAtTolerance(DualVector<T, N> const & v1, DualVector<T, N> const & v2,
 } // namespace autodiff
 
    /// stream output
-template <class T, ArrayIndex N>
+template <class T, int N>
 std::ostream &
 operator<<(std::ostream & out, autodiff::DualVector<T, N> const & l)
 {

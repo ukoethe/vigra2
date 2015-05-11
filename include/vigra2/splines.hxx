@@ -48,7 +48,7 @@ namespace vigra {
 
 namespace autodiff {
 
-template <class T, ArrayIndex N>
+template <class T, int N>
 class DualVector;
 
 } // namespace autodiff
@@ -313,7 +313,7 @@ class BSplineBase<0, T>
                    // : Value(0, FPNoShift);
     // }
 
-    template <class U, ArrayIndex N>
+    template <class U, int N>
     autodiff::DualVector<U, N> operator()(autodiff::DualVector<U, N> const & x) const
     {
         return x < 0.5 && -0.5 <= x 
@@ -406,7 +406,7 @@ class BSpline<1, T>
                 // : Value(0, FPNoShift);
     // }
 
-    template <class U, ArrayIndex N>
+    template <class U, int N>
     autodiff::DualVector<U, N> operator()(autodiff::DualVector<U, N> x) const
     {
         x = abs(x);
@@ -529,7 +529,7 @@ class BSpline<2, T>
                             // : Value(0, FPNoShift);
     // }
 
-    template <class U, ArrayIndex N>
+    template <class U, int N>
     autodiff::DualVector<U, N> operator()(autodiff::DualVector<U, N> x) const
     {
         x = abs(x);
@@ -677,7 +677,7 @@ class BSpline<3, T>
                             // : Value(0, FPNoShift);
     // }
 
-    template <class U, ArrayIndex N>
+    template <class U, int N>
     autodiff::DualVector<U, N> operator()(autodiff::DualVector<U, N> x) const
     {
         x = abs(x);
@@ -839,7 +839,7 @@ class BSpline<4, T>
          return exec(x, derivativeOrder_ + derivative_order);
     }
 
-    template <class U, ArrayIndex N>
+    template <class U, int N>
     autodiff::DualVector<U, N> operator()(autodiff::DualVector<U, N> x) const
     {
         x = abs(x);
@@ -1063,7 +1063,7 @@ class BSpline<5, T>
          return exec(x, derivativeOrder_ + derivative_order);
     }
 
-    template <class U, ArrayIndex N>
+    template <class U, int N>
     autodiff::DualVector<U, N> operator()(autodiff::DualVector<U, N> x) const
     {
         x = abs(x);

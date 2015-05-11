@@ -500,17 +500,18 @@ struct TinyArrayTest
         c.swap(b);
         shouldEqualSequence(c.cbegin(), c.cend(), adata);
         shouldEqualSequence(b.crbegin(), b.crend(), adata2);
-        
-        TinyArray<int, 2, 2> dot2ref = { 5, 14, 14, 50 };
-        shouldEqual(dot2ref, dot(a, transpose(a)));
-        TinyArray<int, 3> f {4, 3, 2};
-        TinyArray<int, 2> dotref { 7, 34 };
-        shouldEqual(dotref, dot(a, f));
-        shouldEqual(dotref, dot(f, transpose(a)));
-        
+               
         int eyedata[] = { 1, 0, 0, 0, 1, 0, 0, 0, 1};
         auto eye = Array::eye<3>();
         shouldEqualSequence(eye.begin(), eye.end(), eyedata);
+    }
+    
+    void testPromote()
+    {
+        should((std::is_same<int, SquaredNormType<TinyArray<int, 1> > >::value));
+        should((std::is_same<int, SquaredNormType<TinyArray<TinyArray<int, 1>, 1> > >::value));
+        should((std::is_same<double, NormType<TinyArray<int, 1> > >::value));
+        should((std::is_same<double, NormType<TinyArray<TinyArray<int, 1>, 1> > >::value));
     }
     
     void testException()
@@ -543,6 +544,7 @@ struct TinyArrayTestSuite
         add( testCase(&Tests::testArithmetic));
         add( testCase(&Tests::testCross));
         add( testCase(&Tests::testOStreamShifting));
+        add( testCase(&Tests::testPromote));
     }
 };
 

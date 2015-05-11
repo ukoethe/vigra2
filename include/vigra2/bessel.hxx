@@ -183,6 +183,7 @@ void bessjyn(int n, REAL x,int &nm, double *jn, double *yn)
         bs = 0.0;
         su = 0.0;
         sv = 0.0;
+        f  = 0.0;
         f2 = 0.0;
         f1 = 1.0e-100;
         for (k = m;k>=0;k--) 
