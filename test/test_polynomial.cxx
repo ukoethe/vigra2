@@ -126,34 +126,34 @@ struct PolynomialTest
     // }
 };
 
-// struct HighOrderPolynomialTest
-// {
-    // void testPolynomial()
-    // {
-        // unsigned int order = 80;
-        // double epsilon = 1e-12;
-        // std::vector<double> coeffs(order+1, 0.0);
-        // coeffs[0] = -1.0;
-        // coeffs[order] = 1.0;
-        // Polynomial<double> p(coeffs.begin(), order);
+struct HighOrderPolynomialTest
+{
+    void testPolynomial()
+    {
+        unsigned int order = 80;
+        double epsilon = 1e-12;
+        std::vector<double> coeffs(order+1, 0.0);
+        coeffs[0] = -1.0;
+        coeffs[order] = 1.0;
+        Polynomial<double> p(coeffs.begin(), order);
 
-        // std::vector<std::complex<double> > roots;
+        std::vector<std::complex<double> > roots;
 
-        // should(polynomialRoots(p, roots));
-        // shouldEqual(roots.size(), order);
-        // for(unsigned int i = 0; i<roots.size(); ++i)
-        // {
-            // shouldEqualTolerance(std::abs(roots[i]), 1.0, epsilon);
-            // C r = p(roots[i]);
-            // shouldEqualTolerance(r.real(), 0.0, epsilon);
-            // shouldEqualTolerance(r.imag(), 0.0, epsilon);
-        // }
-        // std::vector<double> rroots;
-        // should(polynomialRealRoots(p, rroots));
-        // shouldEqual(rroots.size(), 2u);
-        // shouldEqualTolerance(rroots[0], -1.0, epsilon);
-        // shouldEqualTolerance(rroots[1], 1.0, epsilon);
-    // }
+        should(polynomialRoots(p, roots));
+        shouldEqual(roots.size(), order);
+        for(unsigned int i = 0; i<roots.size(); ++i)
+        {
+            shouldEqualTolerance(std::abs(roots[i]), 1.0, epsilon);
+            C r = p(roots[i]);
+            shouldEqualTolerance(r.real(), 0.0, epsilon);
+            shouldEqualTolerance(r.imag(), 0.0, epsilon);
+        }
+        std::vector<double> rroots;
+        should(polynomialRealRoots(p, rroots));
+        shouldEqual(rroots.size(), 2u);
+        shouldEqualTolerance(rroots[0], -1.0, epsilon);
+        shouldEqualTolerance(rroots[1], 1.0, epsilon);
+    }
 
     // void testPolynomialEigenvalueMethod()
     // {
@@ -181,7 +181,7 @@ struct PolynomialTest
         // shouldEqualTolerance(rroots[0], -1.0, epsilon);
         // shouldEqualTolerance(rroots[1], 1.0, epsilon);
     // }
-// };
+};
 
 struct PolynomialTestSuite
 : public vigra::test_suite
@@ -207,11 +207,11 @@ struct PolynomialTestSuite
         // add( testCase((&PolynomialTest<6, P1>::testPolynomialEigenvalueMethod)));
         // add( testCase((&PolynomialTest<7, P1>::testPolynomialEigenvalueMethod)));
 
-        // add( testCase((&PolynomialTest<0, P2>::testPolynomial)));
-        // add( testCase((&PolynomialTest<1, P2>::testPolynomial)));
-        // add( testCase((&PolynomialTest<2, P2>::testPolynomial)));
+        add( testCase((&PolynomialTest<0, P2>::testPolynomial)));
+        add( testCase((&PolynomialTest<1, P2>::testPolynomial)));
+        add( testCase((&PolynomialTest<2, P2>::testPolynomial)));
 
-        // add( testCase(&HighOrderPolynomialTest::testPolynomial));
+        add( testCase(&HighOrderPolynomialTest::testPolynomial));
         // add( testCase(&HighOrderPolynomialTest::testPolynomialEigenvalueMethod));
     }
 };
