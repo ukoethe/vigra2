@@ -5663,8 +5663,8 @@ Error message and password prompt
 <div modified="20150510140817323" modifier="Ullrich Koethe" title="$:/state/showeditpreview">
 <pre>yes</pre>
 </div>
-<div modified="20150510224255025" modifier="Ullrich Koethe" title="$:/state/sidebar">
-<pre>yes</pre>
+<div modified="20150512164357644" modifier="Ullrich Koethe" title="$:/state/sidebar">
+<pre>no</pre>
 </div>
 <div modified="20150510130139817" modifier="Ullrich Koethe" title="$:/state/tab--1963855381">
 <pre>$:/core/ui/ControlPanel/Palette</pre>
@@ -5675,8 +5675,8 @@ Error message and password prompt
 <div modified="20150510224307103" modifier="Ullrich Koethe" title="$:/state/tab-1749438307">
 <pre>$:/core/ui/ControlPanel/Info</pre>
 </div>
-<div modified="20150510224300432" modifier="Ullrich Koethe" title="$:/state/tab/sidebar--1835078512">
-<pre>$:/core/ui/SideBar/Tools</pre>
+<div modified="20150511155206132" modifier="Ullrich Koethe" title="$:/state/tab/sidebar--1835078512">
+<pre>$:/core/ui/SideBar/Open</pre>
 </div>
 <div modified="20150510130122484" modifier="Ullrich Koethe" title="$:/state/tabs/controlpanel/toolbars-1345989671">
 <pre>$:/core/ui/ControlPanel/Toolbars/PageControls</pre>
@@ -5684,7 +5684,7 @@ Error message and password prompt
 <div created="20150510125957069" creator="U" modified="20150510125958974" modifier="Ullrich Koeth" title="$:/status/UserName">
 <pre>Ullrich Koethe</pre>
 </div>
-<div list="MainPage FilesToBeConverted" title="$:/StoryList">
+<div list="FilesToBeConverted" title="$:/StoryList">
 <pre></pre>
 </div>
 <div plugin-type="info" title="$:/temp/info-plugin" type="application/json">
@@ -5701,8 +5701,8 @@ Error message and password prompt
     }
 }</pre>
 </div>
-<div created="20150510125654892" modified="20150510125705236" title="$:/temp/search">
-<pre></pre>
+<div created="20150510125654892" creator="Ullrich Koethe" modified="20150511155210247" modifier="Ullrich Koethe" title="$:/temp/search">
+<pre>file</pre>
 </div>
 <div author="JeremyRuston" core-version="&gt;=5.0.0" dependents="$:/themes/tiddlywiki/vanilla" description="Emphasises individual tiddlers" name="Snow White" plugin-type="theme" title="$:/themes/tiddlywiki/snowwhite" type="application/json" version="5.1.8">
 <pre>{
@@ -5801,10 +5801,10 @@ Error message and password prompt
     }
 }</pre>
 </div>
-<div created="20150510123957703" creator="Ullrich Koethe" modified="20150510212432476" modifier="Ullrich Koethe" title="FilesToBeConverted">
+<div created="20150510123957703" creator="Ullrich Koethe" modified="20150512165338313" modifier="Ullrich Koethe" title="FilesToBeConverted">
 <pre>!!include/vigra:
 # [no] accessor.hxx
-# [done] algorithm.hxx (except Marus' Nullmeier's 'inspectSequence()')
+# [done] algorithm.hxx (except Marcus Nullmeier's 'inspectSequence()')
 # [done] autodiff.hxx
 # [done] bessel.hxx
 # [done] clebsch-gordan.hxx
@@ -5812,17 +5812,19 @@ Error message and password prompt
 # [done] error.hxx
 # [no] functorexpression.hxx
 # [done] gaussians.hxx
-# [done] mathutil.hxx
-# [done] numerictraits.hxx
-# [done] polynomial.hxx
+# [done] mathutil.hxx (renamed math.hxx)
+# [done] numerictraits.hxx (renamed numeric_traits.hxx)
 # [no] promote_traits.hxx (implemented in numeric_traits.hxx using decltype)
 # [no] promote_traits.hxx.py
+# [done] rational.hxx
 # [done] sized_int.hxx
 # [done] splines.hxx
 # [no] static_assert.hxx
-# [done] tinyvector.hxx
+# [done] tinyvector.hxx (extended and renamed tinyarray.hxx)
 # [wip] config.hxx
-# [wip] test_math.cxx
+# [wip] polynomial.hxx (eigenvalue method missing)
+# [wip] quaternion.hxx (matrix.hxx missing)
+# [wip] test_math.cxx (quaternion, random, linalg, optimization missing)
 # [wip] unittest.hxx
 # accumulator-grammar.hxx
 # accumulator.hxx
@@ -5954,7 +5956,6 @@ Error message and password prompt
 # python_graph.hxx
 # python_utility.hxx
 # quadprog.hxx
-# quaternion.hxx
 # random.hxx
 # random_access_set.hxx
 # random_forest/
