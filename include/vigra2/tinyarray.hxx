@@ -595,7 +595,7 @@ class TinyArrayBase
     {
         for(int k=0; k<static_size; ++k)
         {
-            Promote<value_type, OTHER> t = data_[k];
+            PromoteType<value_type, OTHER> t = data_[k];
             data_[k] = static_cast<value_type>(other[k]);
             other[k] = static_cast<OTHER>(t);
         }
@@ -1107,7 +1107,7 @@ std::ostream & operator<<(std::ostream & o, TinySymmetricView<T, N> const & v)
     \brief Implement basic arithmetic and equality for TinyArray.
 
     These functions fulfill the requirements of a Linear Space (vector space).
-    Return types are determined according to \ref Promote or \ref RealPromote.
+    Return types are determined according to \ref PromoteType or \ref RealPromoteType.
 
     <b>\#include</b> \<vigra/TinyArray.hxx\><br>
     Namespace: vigra
@@ -1213,7 +1213,7 @@ template <class V1, class D1, class V2, class D2, int ... N>
 inline bool
 closeAtTolerance(TinyArrayBase<V1, D1, N...> const & l,
                  TinyArrayBase<V2, D2, N...> const & r, 
-                 Promote<V1, V2> epsilon = 2.0*NumericTraits<Promote<V1, V2> >::epsilon())
+                 PromoteType<V1, V2> epsilon = 2.0*NumericTraits<PromoteType<V1, V2> >::epsilon())
 {
     for(int k=0; k < TinySize<N...>::value; ++k)
         if(!closeAtTolerance(l[k], r[k], epsilon))
@@ -1234,61 +1234,61 @@ closeAtTolerance(TinyArrayBase<V1, D1, N...> const & l,
     /// element-wise addition
 template <class V1, class D1, class V2, class D2, int ... N>
 inline
-TinyArray<Promote<V1, V2>, N...>
+TinyArray<PromoteType<V1, V2>, N...>
 operator+(TinyArrayBase<V1, D1, N...> const & l,
           TinyArrayBase<V2, D2, N...> const & r)
 {
-    return TinyArray<Promote<V1, V2>, N...>(l) += r;
+    return TinyArray<PromoteType<V1, V2>, N...>(l) += r;
 }
 
     /// element-wise scalar addition
 template <class V1, class D1, class V2, int ... N>
 inline
-TinyArray<PromoteIf<std::is_arithmetic<V2>::value, V1, V2>, N...>
+TinyArray<PromoteTypeIf<std::is_arithmetic<V2>::value, V1, V2>, N...>
 operator+(TinyArrayBase<V1, D1, N...> const & l,
           V2 r)
 {
-    return TinyArray<Promote<V1, V2>, N...>(l) += r;
+    return TinyArray<PromoteType<V1, V2>, N...>(l) += r;
 }
 
     /// element-wise left scalar addition
 template <class V1, class V2, class D2, int ... N>
 inline
-TinyArray<PromoteIf<std::is_arithmetic<V1>::value, V1, V2>, N...>
+TinyArray<PromoteTypeIf<std::is_arithmetic<V1>::value, V1, V2>, N...>
 operator+(V1 l,
           TinyArrayBase<V2, D2, N...> const & r)
 {
-    return TinyArray<Promote<V1, V2>, N...>(l) += r;
+    return TinyArray<PromoteType<V1, V2>, N...>(l) += r;
 }
 
     /// element-wise subtraction
 template <class V1, class D1, class V2, class D2, int ... N>
 inline
-TinyArray<Promote<V1, V2>, N...>
+TinyArray<PromoteType<V1, V2>, N...>
 operator-(TinyArrayBase<V1, D1, N...> const & l,
           TinyArrayBase<V2, D2, N...> const & r)
 {
-    return TinyArray<Promote<V1, V2>, N...>(l) -= r;
+    return TinyArray<PromoteType<V1, V2>, N...>(l) -= r;
 }
 
     /// element-wise scalar subtraction
 template <class V1, class D1, class V2, int ... N>
 inline
-TinyArray<PromoteIf<std::is_arithmetic<V2>::value, V1, V2>, N...>
+TinyArray<PromoteTypeIf<std::is_arithmetic<V2>::value, V1, V2>, N...>
 operator-(TinyArrayBase<V1, D1, N...> const & l,
           V2 r)
 {
-    return TinyArray<Promote<V1, V2>, N...>(l) -= r;
+    return TinyArray<PromoteType<V1, V2>, N...>(l) -= r;
 }
 
     /// element-wise left scalar subtraction
 template <class V1, class V2, class D2, int ... N>
 inline
-TinyArray<PromoteIf<std::is_arithmetic<V1>::value, V1, V2>, N...>
+TinyArray<PromoteTypeIf<std::is_arithmetic<V1>::value, V1, V2>, N...>
 operator-(V1 l,
           TinyArrayBase<V2, D2, N...> const & r)
 {
-    return TinyArray<Promote<V1, V2>, N...>(l) -= r;
+    return TinyArray<PromoteType<V1, V2>, N...>(l) -= r;
 }
 
     /// Unary negation
@@ -1306,61 +1306,61 @@ operator-(TinyArrayBase<V, D, N...> const & v)
     /// element-wise multiplication
 template <class V1, class D1, class V2, class D2, int ... N>
 inline
-TinyArray<Promote<V1, V2>, N...>
+TinyArray<PromoteType<V1, V2>, N...>
 operator*(TinyArrayBase<V1, D1, N...> const & l,
           TinyArrayBase<V2, D2, N...> const & r)
 {
-    return TinyArray<Promote<V1, V2>, N...>(l) *= r;
+    return TinyArray<PromoteType<V1, V2>, N...>(l) *= r;
 }
 
     /// element-wise scalar multiplication
 template <class V1, class D1, class V2, int ... N>
 inline
-TinyArray<PromoteIf<std::is_arithmetic<V2>::value, V1, V2>, N...>
+TinyArray<PromoteTypeIf<std::is_arithmetic<V2>::value, V1, V2>, N...>
 operator*(TinyArrayBase<V1, D1, N...> const & l,
           V2 r)
 {
-    return TinyArray<Promote<V1, V2>, N...>(l) *= r;
+    return TinyArray<PromoteType<V1, V2>, N...>(l) *= r;
 }
 
     /// element-wise left scalar multiplication
 template <class V1, class V2, class D2, int ... N>
 inline
-TinyArray<PromoteIf<std::is_arithmetic<V1>::value, V1, V2>, N...>
+TinyArray<PromoteTypeIf<std::is_arithmetic<V1>::value, V1, V2>, N...>
 operator*(V1 l,
           TinyArrayBase<V2, D2, N...> const & r)
 {
-    return TinyArray<Promote<V1, V2>, N...>(l) *= r;
+    return TinyArray<PromoteType<V1, V2>, N...>(l) *= r;
 }
 
     /// element-wise division
 template <class V1, class D1, class V2, class D2, int ... N>
 inline
-TinyArray<Promote<V1, V2>, N...>
+TinyArray<PromoteType<V1, V2>, N...>
 operator/(TinyArrayBase<V1, D1, N...> const & l,
           TinyArrayBase<V2, D2, N...> const & r)
 {
-    return TinyArray<Promote<V1, V2>, N...>(l) /= r;
+    return TinyArray<PromoteType<V1, V2>, N...>(l) /= r;
 }
 
     /// element-wise scalar division
 template <class V1, class D1, class V2, int ... N>
 inline
-TinyArray<PromoteIf<std::is_arithmetic<V2>::value, V1, V2>, N...>
+TinyArray<PromoteTypeIf<std::is_arithmetic<V2>::value, V1, V2>, N...>
 operator/(TinyArrayBase<V1, D1, N...> const & l,
           V2 r)
 {
-    return TinyArray<Promote<V1, V2>, N...>(l) /= r;
+    return TinyArray<PromoteType<V1, V2>, N...>(l) /= r;
 }
 
     /// element-wise left scalar division
 template <class V1, class V2, class D2, int ... N>
 inline
-TinyArray<PromoteIf<std::is_arithmetic<V1>::value, V1, V2>, N...>
+TinyArray<PromoteTypeIf<std::is_arithmetic<V1>::value, V1, V2>, N...>
 operator/(V1 l,
           TinyArrayBase<V2, D2, N...> const & r)
 {
-    return TinyArray<Promote<V1, V2>, N...>(l) /= r;
+    return TinyArray<PromoteType<V1, V2>, N...>(l) /= r;
 }
 
     /// element-wise scalar division without type promotion
@@ -1376,31 +1376,31 @@ div(TinyArrayBase<V1, D1, N...> const & l, V2 r)
     /// element-wise modulo
 template <class V1, class D1, class V2, class D2, int ... N>
 inline
-TinyArray<Promote<V1, V2>, N...>
+TinyArray<PromoteType<V1, V2>, N...>
 operator%(TinyArrayBase<V1, D1, N...> const & l,
           TinyArrayBase<V2, D2, N...> const & r)
 {
-    return TinyArray<Promote<V1, V2>, N...>(l) %= r;
+    return TinyArray<PromoteType<V1, V2>, N...>(l) %= r;
 }
 
     /// element-wise scalar modulo
 template <class V1, class D1, class V2, int ... N>
 inline
-TinyArray<PromoteIf<std::is_arithmetic<V2>::value, V1, V2>, N...>
+TinyArray<PromoteTypeIf<std::is_arithmetic<V2>::value, V1, V2>, N...>
 operator%(TinyArrayBase<V1, D1, N...> const & l,
           V2 r)
 {
-    return TinyArray<Promote<V1, V2>, N...>(l) %= r;
+    return TinyArray<PromoteType<V1, V2>, N...>(l) %= r;
 }
 
     /// element-wise left scalar modulo
 template <class V1, class V2, class D2, int ... N>
 inline
-TinyArray<PromoteIf<std::is_arithmetic<V1>::value, V1, V2>, N...>
+TinyArray<PromoteTypeIf<std::is_arithmetic<V1>::value, V1, V2>, N...>
 operator%(V1 l,
           TinyArrayBase<V2, D2, N...> const & r)
 {
-    return TinyArray<Promote<V1, V2>, N...>(l) %= r;
+    return TinyArray<PromoteType<V1, V2>, N...>(l) %= r;
 }
 
 using std::abs;
@@ -1481,10 +1481,10 @@ using std::sqrt;
     */
 template <class V, class D, int ... N>
 inline
-TinyArray<RealPromote<V>, N...>
+TinyArray<RealPromoteType<V>, N...>
 sqrt(TinyArrayBase<V, D, N...> const & v)
 {
-    TinyArray<RealPromote<V>, N...> res(DontInit);
+    TinyArray<RealPromoteType<V>, N...> res(DontInit);
     for(int k=0; k < TinySize<N...>::value; ++k)
         res[k] = sqrt(v[k]);
     return res;
@@ -1496,10 +1496,10 @@ using std::pow;
     */
 template <class V, class D, class E, int ... N>
 inline
-TinyArray<Promote<V, E>, N...>
+TinyArray<PromoteType<V, E>, N...>
 pow(TinyArrayBase<V, D, N...> const & v, E exponent)
 {
-    TinyArray<Promote<V, E>, N...> res(DontInit);
+    TinyArray<PromoteType<V, E>, N...> res(DontInit);
     for(int k=0; k < TinySize<N...>::value; ++k)
         res[k] = pow(v[k], exponent);
     return res;
@@ -1508,11 +1508,11 @@ pow(TinyArrayBase<V, D, N...> const & v, E exponent)
     /// cross product
 template <class V1, class D1, class V2, class D2>
 inline
-TinyArray<Promote<V1, V2>, 3>
+TinyArray<PromoteType<V1, V2>, 3>
 cross(TinyArrayBase<V1, D1, 3> const & r1,
       TinyArrayBase<V2, D2, 3> const & r2)
 {
-    typedef TinyArray<Promote<V1, V2>, 3> Res;
+    typedef TinyArray<PromoteType<V1, V2>, 3> Res;
     return  Res(r1[1]*r2[2] - r1[2]*r2[1],
                 r1[2]*r2[0] - r1[0]*r2[2],
                 r1[0]*r2[1] - r1[1]*r2[0]);
@@ -1521,11 +1521,11 @@ cross(TinyArrayBase<V1, D1, 3> const & r1,
     /// dot product of two vectors
 template <class V1, class D1, class V2, class D2, int N>
 inline
-Promote<V1, V2>
+PromoteType<V1, V2>
 dot(TinyArrayBase<V1, D1, N> const & l,
     TinyArrayBase<V2, D2, N> const & r)
 {
-    Promote<V1, V2> res = l[0] * r[0];
+    PromoteType<V1, V2> res = l[0] * r[0];
     for(int k=1; k < N; ++k)
         res += l[k] * r[k];
     return res;
@@ -1534,10 +1534,10 @@ dot(TinyArrayBase<V1, D1, N> const & l,
     /// sum of the vector's elements
 template <class V, class D, int ... N>
 inline
-Promote<V>
+PromoteType<V>
 sum(TinyArrayBase<V, D, N...> const & l)
 {
-    Promote<V> res = l[0];
+    PromoteType<V> res = l[0];
     for(int k=1; k < TinySize<N...>::value; ++k)
         res += l[k];
     return res;
@@ -1545,20 +1545,20 @@ sum(TinyArrayBase<V, D, N...> const & l)
 
     /// mean of the vector's elements
 template <class V, class D, int ... N>
-inline RealPromote<V>
+inline RealPromoteType<V>
 mean(TinyArrayBase<V, D, N...> const & t)
 {
     const V sumVal = sum(t);
-    return static_cast<RealPromote<V> >(sumVal) / TinySize<N...>::value;
+    return static_cast<RealPromoteType<V> >(sumVal) / TinySize<N...>::value;
 }
 
     /// cumulative sum of the vector's elements
 template <class V, class D, int ... N>
 inline
-TinyArray<Promote<V>, N...>
+TinyArray<PromoteType<V>, N...>
 cumsum(TinyArrayBase<V, D, N...> const & l)
 {
-    TinyArray<Promote<V>, N...> res(l);
+    TinyArray<PromoteType<V>, N...> res(l);
     for(int k=1; k < TinySize<N...>::value; ++k)
         res[k] += res[k-1];
     return res;
@@ -1567,10 +1567,10 @@ cumsum(TinyArrayBase<V, D, N...> const & l)
     /// product of the vector's elements
 template <class V, class D, int ... N>
 inline
-Promote<V>
+PromoteType<V>
 prod(TinyArrayBase<V, D, N...> const & l)
 {
-    Promote<V> res = l[0];
+    PromoteType<V> res = l[0];
     for(int k=1; k < TinySize<N...>::value; ++k)
         res *= l[k];
     return res;
@@ -1579,10 +1579,10 @@ prod(TinyArrayBase<V, D, N...> const & l)
     /// cumulative product of the vector's elements
 template <class V, class D, int ... N>
 inline
-TinyArray<Promote<V>, N...>
+TinyArray<PromoteType<V>, N...>
 cumprod(TinyArrayBase<V, D, N...> const & l)
 {
-    TinyArray<Promote<V>, N...> res(l);
+    TinyArray<PromoteType<V>, N...> res(l);
     for(int k=1; k < TinySize<N...>::value; ++k)
         res[k] *= res[k-1];
     return res;
@@ -1592,20 +1592,20 @@ using std::min;
 
 template <class V1, class D1, class V2, class D2, int ... N>
 inline
-TinyArray<Promote<V1, V2>, N...>
+TinyArray<PromoteType<V1, V2>, N...>
 minImpl(TinyArrayBase<V1, D1, N...> const & l,
         TinyArrayBase<V2, D2, N...> const & r)
 {
-    TinyArray<Promote<V1, V2>, N...> res(DontInit);
+    TinyArray<PromoteType<V1, V2>, N...> res(DontInit);
     for(int k=0; k < TinySize<N...>::value; ++k)
-        res[k] =  min<Promote<V1, V2> >(l[k], r[k]);
+        res[k] =  min<PromoteType<V1, V2> >(l[k], r[k]);
     return res;
 }
 
     /// element-wise minimum
 template <class V1, class D1, class V2, class D2, int ... N>
 inline
-TinyArray<Promote<V1, V2>, N...>
+TinyArray<PromoteType<V1, V2>, N...>
 min(TinyArrayBase<V1, D1, N...> const & l,
     TinyArrayBase<V2, D2, N...> const & r)
 {
@@ -1658,20 +1658,20 @@ using std::max;
 
 template <class V1, class D1, class V2, class D2, int ... N>
 inline
-TinyArray<Promote<V1, V2>, N...>
+TinyArray<PromoteType<V1, V2>, N...>
 maxImpl(TinyArrayBase<V1, D1, N...> const & l,
         TinyArrayBase<V2, D2, N...> const & r)
 {
-    TinyArray<Promote<V1, V2>, N...> res(DontInit);
+    TinyArray<PromoteType<V1, V2>, N...> res(DontInit);
     for(int k=0; k < TinySize<N...>::value; ++k)
-        res[k] =  max<Promote<V1, V2> >(l[k], r[k]);
+        res[k] =  max<PromoteType<V1, V2> >(l[k], r[k]);
     return res;
 }
 
     /// element-wise maximum
 template <class V1, class D1, class V2, class D2, int ... N>
 inline
-TinyArray<Promote<V1, V2>, N...>
+TinyArray<PromoteType<V1, V2>, N...>
 max(TinyArrayBase<V1, D1, N...> const & l,
     TinyArrayBase<V2, D2, N...> const & r)
 {
@@ -1902,55 +1902,67 @@ clip(TinyArrayBase<V, D1, N...> const & t,
 
 //@}
 
+////////////////////////////////////////////////////////////
+// PromoteTraits specializations
 
 template <class T, class D, int ...N>
-struct RealPromoteImpl<TinyArrayBase<T, D, N...> >
+struct PromoteTraits<TinyArrayBase<T, D, N...>, TinyArrayBase<T, D, N...> >
 {
-    typedef decltype(sqrt(TinyArrayBase<T, N...>())) type;
+    typedef TinyArrayBase<PromoteType<T>, D, N...>       Promote;
+    typedef decltype(sqrt(TinyArrayBase<T, D, N...>()))  RealPromote;
 };
 
 template <class T, int ...N>
-struct RealPromoteImpl<TinyArray<T, N...> >
+struct PromoteTraits<TinyArray<T, N...>, TinyArray<T, N...> >
 {
-    typedef decltype(sqrt(TinyArray<T, N...>())) type;
+    typedef TinyArray<PromoteType<T>, N...>       Promote;
+    typedef decltype(sqrt(TinyArray<T, N...>()))  RealPromote;
 };
 
 template <class T, int ...N>
-struct RealPromoteImpl<TinyArrayView<T, N...> >
+struct PromoteTraits<TinyArrayView<T, N...>, TinyArrayView<T, N...> >
 {
-    typedef decltype(sqrt(TinyArrayView<T, N...>())) type;
+    typedef TinyArrayView<PromoteType<T>, N...>       Promote;
+    typedef decltype(sqrt(TinyArrayView<T, N...>()))  RealPromote;
 };
 
 template <class T, int N>
-struct RealPromoteImpl<TinySymmetricView<T, N> >
+struct PromoteTraits<TinySymmetricView<T, N>, TinySymmetricView<T, N> >
 {
-    typedef decltype(sqrt(TinySymmetricView<T, N>())) type;
+    typedef TinySymmetricView<PromoteType<T>, N>       Promote;
+    typedef decltype(sqrt(TinySymmetricView<T, N>()))  RealPromote;
 };
+
+////////////////////////////////////////////////////////////
+// NormTraits specializations
 
 template <class T, class D, int ...N>
-struct SquaredNormTypeImpl<TinyArrayBase<T, D, N...> >
+struct NormTraits<TinyArrayBase<T, D, N...> >
 {
-    typedef SquaredNormType<T> type;
+    typedef vigra::SquaredNormType<T>         SquaredNormType;
+    typedef RealPromoteType<SquaredNormType>  NormType;
 };
 
 template <class T, int ...N>
-struct SquaredNormTypeImpl<TinyArray<T, N...> >
+struct NormTraits<TinyArray<T, N...> >
 {
-    typedef SquaredNormType<T> type;
+    typedef vigra::SquaredNormType<T>         SquaredNormType;
+    typedef RealPromoteType<SquaredNormType>  NormType;
 };
 
 template <class T, int ...N>
-struct SquaredNormTypeImpl<TinyArrayView<T, N...> >
+struct NormTraits<TinyArrayView<T, N...> >
 {
-    typedef SquaredNormType<T> type;
+    typedef vigra::SquaredNormType<T>         SquaredNormType;
+    typedef RealPromoteType<SquaredNormType>  NormType;
 };
 
 template <class T, int N>
-struct SquaredNormTypeImpl<TinySymmetricView<T, N> >
+struct NormTraits<TinySymmetricView<T, N> >
 {
-    typedef SquaredNormType<T> type;
+    typedef vigra::SquaredNormType<T>         SquaredNormType;
+    typedef RealPromoteType<SquaredNormType>  NormType;
 };
-
 
 // mask cl.exe shortcomings [end]
 #if defined(_MSC_VER)

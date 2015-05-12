@@ -49,14 +49,14 @@ struct NumericTraitsTest
     
     void testPromote()
     {
-        should((std::is_same<unsigned int, Promote<unsigned int, short> >::value));
-        should((std::is_same<int, Promote<unsigned char> >::value));
-        should((std::is_same<float, Promote<float> >::value));
+        should((std::is_same<unsigned int, PromoteType<unsigned int, short> >::value));
+        should((std::is_same<int, PromoteType<unsigned char> >::value));
+        should((std::is_same<float, PromoteType<float> >::value));
         
-        should((std::is_same<double, RealPromote<unsigned char> >::value));
-        should((std::is_same<long double, RealPromote<long double> >::value));
-        should((std::is_same<float, RealPromote<float> >::value));
-        should((std::is_same<float, RealPromote<float, int> >::value));
+        should((std::is_same<double, RealPromoteType<unsigned char> >::value));
+        should((std::is_same<long double, RealPromoteType<long double> >::value));
+        should((std::is_same<float, RealPromoteType<float> >::value));
+        should((std::is_same<float, RealPromoteType<float, int> >::value));
         
         should((std::is_same<int, SquaredNormType<int> >::value));
         should((std::is_same<unsigned int, SquaredNormType<unsigned int> >::value));
@@ -64,9 +64,9 @@ struct NumericTraitsTest
         should((std::is_same<float, SquaredNormType<float> >::value));
         should((std::is_same<long double, SquaredNormType<long double> >::value));
         
-        should((std::is_same<double, NormType<int> >::value));
-        should((std::is_same<double, NormType<unsigned int> >::value));
-        should((std::is_same<double, NormType<unsigned char> >::value));
+        should((std::is_same<int, NormType<int> >::value));
+        should((std::is_same<unsigned int, NormType<unsigned int> >::value));
+        should((std::is_same<unsigned char, NormType<unsigned char> >::value));
         should((std::is_same<float, NormType<float> >::value));
         should((std::is_same<long double, NormType<long double> >::value));
     }

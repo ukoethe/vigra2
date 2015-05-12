@@ -131,7 +131,7 @@ namespace vigra {
         Namespace: vigra
     */
 template <class T>
-inline Promote<T> sq(T t)
+inline PromoteType<T> sq(T t)
 {
     return t*t;
 }
@@ -255,7 +255,7 @@ inline bool isnan(REAL v)
 // scalars and vectors alike
 
 #define VIGRA_DEFINE_SCALAR_DOT(T) \
-    inline Promote<T> dot(T l, T r) { return l*r; }
+    inline PromoteType<T> dot(T l, T r) { return l*r; }
 
 VIGRA_DEFINE_SCALAR_DOT(unsigned char)
 VIGRA_DEFINE_SCALAR_DOT(unsigned short)
@@ -1611,16 +1611,16 @@ inline double loggamma(double x)
     inline TYPE sum(const TYPE t){ \
         return t; \
     }\
-    inline RealPromote<TYPE> mean(const TYPE t){ \
+    inline RealPromoteType<TYPE> mean(const TYPE t){ \
         return t; \
     }\
     inline TYPE isZero(const TYPE t){ \
         return t==static_cast<TYPE>(0.0); \
     } \
-    inline RealPromote<TYPE> sizeDividedSquaredNorm(const TYPE t){ \
+    inline RealPromoteType<TYPE> sizeDividedSquaredNorm(const TYPE t){ \
         return  squaredNorm(t); \
     } \
-    inline RealPromote<TYPE> sizeDividedNorm(const TYPE t){ \
+    inline RealPromoteType<TYPE> sizeDividedNorm(const TYPE t){ \
         return  norm(t); \
     } 
 

@@ -47,7 +47,7 @@ struct TinyLinalgTest
     {
     }
     
-    void test()
+    void testOperations()
     {
         TinyArray<int, 2, 3> a = { 0, 1, 2, 3, 4, 5 };
         TinyArray<int, 3> b {4, 3, 2};
@@ -80,10 +80,30 @@ struct TinyLinalgTest
             TinyArray<int, 2, 3> dotref { 5, 11, 14, 14, 35, 47 };
             shouldEqual(dotref, dot(a, s));
             shouldEqual(transpose(dotref), dot(s, transpose(a)));
-            TinyArray<int, 6> dotref2 { 5, 11, 14, 26, 34, 45 };
-            shouldEqual(dotref2, dot(s, s));
+        }
+        
+        // symmetric matrix - symmetric matrix
+        {
+            TinySymmetricView<int, 3> s(a.data());
+            TinyArray<int, 6> dotref { 5, 11, 14, 26, 34, 45 };
+            shouldEqual(dotref, dot(s, s));
         }
      }
+    
+    void testEigenvalues()
+    {
+        double data2[] = { 2.0, 1.0, 2.0 };
+        TinySymmetricView<double, 2> s2 = data2;
+        
+        TinyArray<double, 2> ev2{3.0, 1.0};
+        should(max(abs(ev2 - symmetricEigenvalues(s2))) < 1e-15);
+        
+        double data3[] = { 2.0, 0.0, 1.0, 2.0, 0.0, 2.0 };
+        TinySymmetricView<double, 3> s3 = data3;
+        
+        TinyArray<double, 3> ev3{3.0, 2.0, 1.0};
+        should(max(abs(ev3 - symmetricEigenvalues(s3))) < 1e-15);
+    }
     
     void testException()
     {
@@ -106,7 +126,8 @@ struct TinyLinalgTestSuite
     TinyLinalgTestSuite()
     : vigra::test_suite("TinyLinalgTest")
     {
-        add( testCase(&TinyLinalgTest::test));
+        add( testCase(&TinyLinalgTest::testOperations));
+        add( testCase(&TinyLinalgTest::testEigenvalues));
     }
 };
 

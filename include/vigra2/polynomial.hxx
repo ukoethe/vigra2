@@ -82,7 +82,7 @@ class PolynomialView
         /** Promote type of <tt>value_type</tt>
             used for polynomial calculations
         */
-    typedef typename vigra::RealPromote<T> RealPromote;
+    typedef typename vigra::RealPromoteType<T> RealPromote;
 
         /** Scalar type associated with <tt>RealPromote</tt>
         */
@@ -140,7 +140,7 @@ class PolynomialView
             be a scalar, otherwise it will be complex.
         */
     template <class V>
-    Promote<T, V>
+    PromoteType<T, V>
     operator()(V v) const;
     
         /** Differentiate the polynomial <tt>n</tt> times.
@@ -263,10 +263,10 @@ class PolynomialView
 
 template <class T>
 template <class U>
-Promote<T, U>
+PromoteType<T, U>
 PolynomialView<T>::operator()(U v) const
 {
-    Promote<T, U> p(coeffs_[order_]);
+    PromoteType<T, U> p(coeffs_[order_]);
     for(int i = order_ - 1; i >= 0; --i)
     {
        p = v * p + coeffs_[i];

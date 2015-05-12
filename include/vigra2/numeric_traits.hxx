@@ -46,66 +46,84 @@
 
 namespace vigra {
 
-// Promote types
+/////////////////////////////////////////////////////////
+// PromoteTraits
 
-template <class T1, class T2 = T1>
-using Promote = decltype(*(T1*)0 + *(T2*)0);
+template <class T1, class T2=T1>
+struct PromoteTraits
+{
+    typedef decltype(*(T1*)0 + *(T2*)0)                   Promote;
+    typedef typename PromoteTraits<Promote>::RealPromote  RealPromote;
+};
+
+template <class T>
+struct PromoteTraits<T, T>
+{
+    typedef decltype(*(T*)0 + *(T*)0)  Promote;
+    typedef decltype(sqrt(*(T*)0))     RealPromote;
+};
+
+template <class T1, class T2=T1>
+using PromoteType = typename PromoteTraits<T1, T2>::Promote;
 
 template <bool Cond, class T1, class T2 = T1>
-using PromoteIf = typename std::enable_if<Cond, Promote<T1, T2> >::type;
+using PromoteTypeIf = typename std::enable_if<Cond, PromoteType<T1, T2> >::type;
 
-// RealPromote types
+template <class T1, class T2=T1>
+using RealPromoteType = typename PromoteTraits<T1, T2>::RealPromote;
 
-template <class T>
-struct RealPromoteImpl
-{
-    typedef decltype(sqrt(*(T*)0)) type;
-};
-
-template <>
-struct RealPromoteImpl<float>
-{
-    typedef float type; // explicit specialization because sqrt(float) may be double
-};
-
-template <>
-struct RealPromoteImpl<long double>
-{
-    typedef long double type; // likewise
-};
-
-template <class T1, class T2 = T1>
-using RealPromote = typename RealPromoteImpl<Promote<T1, T2> >::type;
-
-// norm and squared norm types
-
-template <class T>
-struct SquaredNormTypeImpl
-{
-    typedef Promote<T> type;
-};
-
-template <class T>
-using SquaredNormType = typename SquaredNormTypeImpl<T>::type;
-
-template <class T>
-using NormType = RealPromote<SquaredNormType<T> >;
-
+///////////////////////////////////////////////////////////////
 // NumericTraits
 
-struct Error_NumericTraits_not_specialized_for_this_case { };
-struct Error_NumericTraits_char_is_not_a_numeric_type__use_signed_char_or_unsigned_char { };
-
-template<class A>
+template<class T>
 struct NumericTraits
 {
-    typedef Error_NumericTraits_not_specialized_for_this_case Type;
-    typedef Error_NumericTraits_not_specialized_for_this_case Promote;
-    typedef Error_NumericTraits_not_specialized_for_this_case UnsignedPromote;
-    typedef Error_NumericTraits_not_specialized_for_this_case RealPromote;
-    typedef Error_NumericTraits_not_specialized_for_this_case ComplexPromote;
-    typedef Error_NumericTraits_not_specialized_for_this_case ValueType;
+    typedef T                                          Type;
+    typedef typename PromoteTraits<T>::Promote         Promote;
+    typedef typename std::make_unsigned<Promote>::type UnsignedPromote;
+    typedef typename PromoteTraits<T>::RealPromote     RealPromote;
+    typedef std::complex<RealPromote>                  ComplexPromote;
+    typedef T                                          ValueType;
 };
+
+///////////////////////////////////////////////////////////////
+// NormTraits
+
+template<class T>
+struct NormTraits
+{
+    typedef PromoteType<T>                    SquaredNormType;
+    typedef RealPromoteType<SquaredNormType>  NormType;
+};
+
+template <class T>
+using SquaredNormType = typename NormTraits<T>::SquaredNormType;
+
+template <class T>
+using NormType = typename NormTraits<T>::NormType;
+
+////////////////////////////////////////////////////////////////
+// PromoteTraits specializations
+
+template <>
+struct PromoteTraits<float, float>
+{
+    typedef float Promote;
+    typedef float RealPromote;
+};
+
+template <>
+struct PromoteTraits<long double, long double>
+{
+    typedef long double Promote;
+    typedef long double RealPromote;
+};
+
+
+//////////////////////////////////////////////////////
+// NumericTraits specializations
+
+struct Error_NumericTraits_char_is_not_a_numeric_type__use_signed_char_or_unsigned_char { };
 
 template<>
 struct NumericTraits<char>
@@ -154,9 +172,9 @@ struct SignedNumericTraits
 {
     typedef T             Type;
     typedef Type          ValueType;
-    typedef vigra::Promote<Type> Promote;
+    typedef PromoteType<Type> Promote;
     typedef typename std::make_unsigned<Promote>::type UnsignedPromote;
-    typedef vigra::RealPromote<Type> RealPromote;
+    typedef RealPromoteType<Type> RealPromote;
     typedef std::complex<RealPromote> ComplexPromote;
     
     static constexpr Type zero() noexcept    { return 0; }
@@ -171,7 +189,7 @@ struct SignedNumericTraits
     static const Type maxConst = max();
     
     static Promote      toPromote(Type v)     { return v; }
-    static RealPromote toRealPromote(Type v) { return v; }
+    static RealPromote  toRealPromote(Type v) { return v; }
     
     static Type fromPromote(Promote v) 
     {
@@ -207,9 +225,9 @@ struct UnsignedNumericTraits
 {
     typedef T             Type;
     typedef Type          ValueType;
-    typedef vigra::Promote<Type> Promote;
+    typedef PromoteType<Type> Promote;
     typedef typename std::make_unsigned<Promote>::type UnsignedPromote;
-    typedef vigra::RealPromote<Type> RealPromote;
+    typedef RealPromoteType<Type> RealPromote;
     typedef std::complex<RealPromote> ComplexPromote;
     
     static constexpr Type zero() noexcept    { return 0; }
@@ -224,7 +242,7 @@ struct UnsignedNumericTraits
     static const Type maxConst = max();
     
     static Promote      toPromote(Type v)     { return v; }
-    static RealPromote toRealPromote(Type v) { return v; }
+    static RealPromote  toRealPromote(Type v) { return v; }
     
     static Type fromPromote(Promote v) 
     {
@@ -273,10 +291,10 @@ struct FloatNumericTraits
     static constexpr Type min() noexcept { return std::numeric_limits<Type>::lowest(); }
     static constexpr Type max() noexcept { return std::numeric_limits<Type>::max(); }
     
-    static Promote toPromote(Type v) { return v; }
-    static RealPromote toRealPromote(Type v) { return v; }
-    static Type fromPromote(Promote v) { return v; }
-    static Type fromRealPromote(RealPromote v) 
+    static Promote      toPromote(Type v) { return v; }
+    static RealPromote  toRealPromote(Type v) { return v; }
+    static Type         fromPromote(Promote v) { return v; }
+    static Type         fromRealPromote(RealPromote v) 
     {
         return v <= static_cast<RealPromote>(min())
                    ? min()
@@ -292,7 +310,6 @@ template<>
 struct NumericTraits<double> : public FloatNumericTraits<double> {};
 template<>
 struct NumericTraits<long double> : public FloatNumericTraits<long double> {};
-
 
 template<class T>
 struct NumericTraits<std::complex<T> >
@@ -311,10 +328,48 @@ struct NumericTraits<std::complex<T> >
     static Type smallestPositive() { return Type(NumericTraits<T>::smallestPositive()); }
 
     static Promote toPromote(Type const & v) { return v; }
-    static Type fromPromote(Promote const & v) { return v; }
-    static Type fromRealPromote(RealPromote v) { return Type(v); }
+    static Type    fromPromote(Promote const & v) { return v; }
+    static Type    fromRealPromote(RealPromote v) { return Type(v); }
 };
 
+////////////////////////////////////////////////
+// NormTraits specializations
+
+template <class T>
+struct FundamentalNormTraits
+{
+    typedef PromoteType<T>  SquaredNormType;
+    typedef T               NormType;
+};
+
+template<>
+struct NormTraits<signed char> : public FundamentalNormTraits<signed char> {};
+template<>
+struct NormTraits<signed short> : public FundamentalNormTraits<signed short> {};
+template<>
+struct NormTraits<signed int> : public FundamentalNormTraits<signed int> {};
+template<>
+struct NormTraits<signed long> : public FundamentalNormTraits<signed long> {};
+template<>
+struct NormTraits<signed long long> : public FundamentalNormTraits<signed long long> {};
+template<>
+struct NormTraits<unsigned char> : public FundamentalNormTraits<unsigned char> {};
+template<>
+struct NormTraits<unsigned short> : public FundamentalNormTraits<unsigned short> {};
+template<>
+struct NormTraits<unsigned int> : public FundamentalNormTraits<unsigned int> {};
+template<>
+struct NormTraits<unsigned long> : public FundamentalNormTraits<unsigned long> {};
+template<>
+struct NormTraits<unsigned long long> : public FundamentalNormTraits<unsigned long long> {};
+template<>
+struct NormTraits<float> : public FundamentalNormTraits<float> {};
+template<>
+struct NormTraits<double> : public FundamentalNormTraits<double> {};
+template<>
+struct NormTraits<long double> : public FundamentalNormTraits<long double> {};
+
+///////////////////////////////////////////////////////////////
 // RequiresExplicitCast
 
 namespace detail {
@@ -465,12 +520,12 @@ FPT safeFloatDivision( FPT f1, FPT f2 )
         Namespace: vigra
     */
 template <class T1, class T2>
-typename std::enable_if<std::is_floating_point<Promote<T1, T2> >::value,
+typename std::enable_if<std::is_floating_point<PromoteType<T1, T2> >::value,
                         bool>::type
-closeAtTolerance(T1 l, T2 r, Promote<T1, T2> epsilon)
+closeAtTolerance(T1 l, T2 r, PromoteType<T1, T2> epsilon)
 {
     using std::abs;
-    typedef Promote<T1, T2> T;
+    typedef PromoteType<T1, T2> T;
     if(l == 0.0)
         return abs(r) <= epsilon;
     if(r == 0.0)
@@ -484,11 +539,11 @@ closeAtTolerance(T1 l, T2 r, Promote<T1, T2> epsilon)
 
 template <class T1, class T2>
 inline
-typename std::enable_if<std::is_floating_point<Promote<T1, T2> >::value,
+typename std::enable_if<std::is_floating_point<PromoteType<T1, T2> >::value,
                         bool>::type 
 closeAtTolerance(T1 l, T2 r)
 {
-    typedef Promote<T1, T2> T;
+    typedef PromoteType<T1, T2> T;
     return closeAtTolerance(l, r, T(2.0) * NumericTraits<T>::epsilon());
 }
     
@@ -505,20 +560,20 @@ closeAtTolerance(T1 l, T2 r)
     */
 template <class T1, class T2>
 inline
-typename std::enable_if<std::is_floating_point<Promote<T1, T2> >::value,
+typename std::enable_if<std::is_floating_point<PromoteType<T1, T2> >::value,
                         bool>::type 
-lessEqualAtTolerance(T1 l, T2 r, Promote<T1, T2> epsilon)
+lessEqualAtTolerance(T1 l, T2 r, PromoteType<T1, T2> epsilon)
 {
     return l < r || closeAtTolerance(l, r, epsilon);
 }
 
 template <class T1, class T2>
 inline
-typename std::enable_if<std::is_floating_point<Promote<T1, T2> >::value,
+typename std::enable_if<std::is_floating_point<PromoteType<T1, T2> >::value,
                         bool>::type 
 lessEqualAtTolerance(T1 l, T2 r)
 {
-    typedef Promote<T1, T2> T;
+    typedef PromoteType<T1, T2> T;
     return lessEqualAtTolerance(l, r, T(2.0) * NumericTraits<T>::epsilon());
 }
     
@@ -535,9 +590,9 @@ lessEqualAtTolerance(T1 l, T2 r)
     */
 template <class T1, class T2>
 inline
-typename std::enable_if<std::is_floating_point<Promote<T1, T2> >::value,
+typename std::enable_if<std::is_floating_point<PromoteType<T1, T2> >::value,
                         bool>::type 
-greaterEqualAtTolerance(T1 l, T2 r, Promote<T1, T2> epsilon)
+greaterEqualAtTolerance(T1 l, T2 r, PromoteType<T1, T2> epsilon)
 {
     return r < l || closeAtTolerance(l, r, epsilon);
 }
@@ -545,7 +600,7 @@ greaterEqualAtTolerance(T1 l, T2 r, Promote<T1, T2> epsilon)
 template <class T1, class T2>
 inline bool greaterEqualAtTolerance(T1 l, T2 r)
 {
-    typedef Promote<T1, T2> T;
+    typedef PromoteType<T1, T2> T;
     return greaterEqualAtTolerance(l, r, T(2.0) * NumericTraits<T>::epsilon());
 }
 
