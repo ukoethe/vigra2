@@ -36,31 +36,51 @@
 #ifndef VIGRA_TINYARRAY_HXX
 #define VIGRA_TINYARRAY_HXX
 
-namespace lemon {
-
-struct Invalid;
-
-} // namespace lemon
-
 #include "config.hxx"
+#include "numeric_traits.hxx"
+#include "error.hxx"
+#include "math.hxx"
 #include <cmath>    // abs(double)
 #include <cstdlib>  // abs(int)
 #include <iosfwd>   // ostream
 #include <algorithm>
 #include <iterator>
-#include "numeric_traits.hxx"
-#include "error.hxx"
-#include "math.hxx"
+
+#if defined(VIGRA_WITH_LEMON)
+    #include <lemon/core.h>
+#endif
 
 #ifdef VIGRA_CHECK_BOUNDS
-#define VIGRA_ASSERT_INSIDE(diff) \
-  vigra_precondition(diff >= 0, "Index out of bounds");\
-  vigra_precondition(diff < TinySize<N...>::value, "Index out of bounds");
+    #define VIGRA_ASSERT_INSIDE(diff) \
+      vigra_precondition(diff >= 0, "Index out of bounds");\
+      vigra_precondition(diff < TinySize<N...>::value, "Index out of bounds");
 #else
-#define VIGRA_ASSERT_INSIDE(diff)
+    #define VIGRA_ASSERT_INSIDE(diff)
 #endif
 
 namespace vigra {
+
+namespace lemon {
+
+#if defined(VIGRA_WITH_LEMON)
+
+using Invalid = ::lemon::Invalid;
+
+#else
+
+struct Invalid 
+{
+  public:
+    bool operator==(Invalid) { return true;  }
+    bool operator!=(Invalid) { return false; }
+    bool operator< (Invalid) { return false; }
+};
+
+#endif
+
+const Invalid INVALID = Invalid();
+
+} // namespace lemon
 
 // mask cl.exe shortcomings [begin]
 #if defined(_MSC_VER)
@@ -73,6 +93,7 @@ using std::sqrt;
 enum SkipInitialization { DontInit };
 enum ReverseCopyTag { ReverseCopy };
 
+// FIXME: document this
 template <ArrayIndex LEVEL, int ... N>
 struct TinyShapeImpl;
 
@@ -127,6 +148,9 @@ class TinyArray;
 
 template <class VALUETYPE, int ... N>
 class TinyArrayView;
+
+template <int N>
+using Shape = TinyArray<ArrayIndex, N>;
 
 /********************************************************/
 /*                                                      */
