@@ -669,9 +669,9 @@ template <class T, class DERIVED, int ... N>
 std::ostream & operator<<(std::ostream & o, TinyArrayBase<T, DERIVED, N...> const & v)
 {
     o << "{";
-    if(TinyArrayBase<T, DERIVED, N...>::static_size > 0)
+    if(v.size() > 0)
         o << v[0];
-    for(int i=1; i < TinyArrayBase<T, DERIVED, N...>::static_size; ++i)
+    for(int i=1; i < v.size(); ++i)
         o << ", " << v[i];
     o << "}";
     return o;
@@ -736,6 +736,11 @@ class TinyArray
     {}
     
     TinyArray(SkipInitialization)
+    : BaseType(DontInit)
+    {}
+    
+    // for compatibility with TinyArray<VALUETYPE, 0>
+    TinyArray(ArrayIndex /* size */, SkipInitialization)
     : BaseType(DontInit)
     {}
     
@@ -1117,6 +1122,24 @@ std::ostream & operator<<(std::ostream & o, TinySymmetricView<T, N> const & v)
     return o;
 }
 
+namespace detail {
+
+template <int N0, int ... N>
+struct TinyArraySize
+{
+    static const int first = N0;
+    static const int ndim = sizeof...(N)+1;
+    static const bool value = ndim > 1 || N0 > 0;
+};
+
+} // namespace detail
+
+#define vigra_tinyarray_check_size(PREDICATE, MESSAGE) \
+  if(detail::TinyArraySize<N...>::value > 0) {} else \
+    if((PREDICATE)) {} else \
+      vigra::throw_contract_error("Precondition violation!", MESSAGE, __FILE__, __LINE__)
+
+
 /********************************************************/
 /*                                                      */
 /*                TinyArray Comparison                  */
@@ -1140,7 +1163,9 @@ inline bool
 operator==(TinyArrayBase<V1, D1, N...> const & l,
            TinyArrayBase<V2, D2, N...> const & r)
 {
-    for(int k=0; k < TinySize<N...>::value; ++k)
+    vigra_tinyarray_check_size(l.size() == r.size(),
+        "TinyArrayBase::operator==(): size mismatch.");
+    for(int k=0; k < l.size(); ++k)
         if(l[k] != r[k])
             return false;
     return true;
@@ -1152,7 +1177,9 @@ inline bool
 operator!=(TinyArrayBase<V1, D1, N...> const & l,
            TinyArrayBase<V2, D2, N...> const & r)
 {
-    for(int k=0; k < TinySize<N...>::value; ++k)
+    vigra_tinyarray_check_size(l.size() == r.size(),
+        "TinyArrayBase::operator!=(): size mismatch.");
+    for(int k=0; k < l.size(); ++k)
         if(l[k] != r[k])
             return true;
     return false;
@@ -1164,7 +1191,9 @@ inline bool
 operator<(TinyArrayBase<V1, D1, N...> const & l,
           TinyArrayBase<V2, D2, N...> const & r)
 {
-    for(int k=0; k < TinySize<N...>::value; ++k)
+    vigra_tinyarray_check_size(l.size() == r.size(),
+        "TinyArrayBase::operator<(): size mismatch.");
+    for(int k=0; k < l.size(); ++k)
     {
         if(l[k] < r[k])
             return true;
@@ -1188,7 +1217,9 @@ inline bool
 allLess(TinyArrayBase<V1, D1, N...> const & l,
         TinyArrayBase<V2, D2, N...> const & r)
 {
-    for(int k=0; k < TinySize<N...>::value; ++k)
+    vigra_tinyarray_check_size(l.size() == r.size(),
+        "TinyArrayBase::allLess(): size mismatch.");
+    for(int k=0; k < l.size(); ++k)
         if (l[k] >= r[k])
             return false;
     return true;
@@ -1200,7 +1231,9 @@ inline bool
 allGreater(TinyArrayBase<V1, D1, N...> const & l,
            TinyArrayBase<V2, D2, N...> const & r)
 {
-    for(int k=0; k < TinySize<N...>::value; ++k)
+    vigra_tinyarray_check_size(l.size() == r.size(),
+        "TinyArrayBase::allGreater(): size mismatch.");
+    for(int k=0; k < l.size(); ++k)
         if(l[k] <= r[k])
             return false;
     return true;
@@ -1212,7 +1245,9 @@ inline bool
 allLessEqual(TinyArrayBase<V1, D1, N...> const & l,
              TinyArrayBase<V2, D2, N...> const & r)
 {
-    for(int k=0; k < TinySize<N...>::value; ++k)
+    vigra_tinyarray_check_size(l.size() == r.size(),
+        "TinyArrayBase::allLessEqual(): size mismatch.");
+    for(int k=0; k < l.size(); ++k)
         if (l[k] > r[k])
             return false;
     return true;
@@ -1224,7 +1259,9 @@ inline bool
 allGreaterEqual(TinyArrayBase<V1, D1, N...> const & l,
                 TinyArrayBase<V2, D2, N...> const & r)
 {
-    for(int k=0; k < TinySize<N...>::value; ++k)
+    vigra_tinyarray_check_size(l.size() == r.size(),
+        "TinyArrayBase::allGreaterEqual(): size mismatch.");
+    for(int k=0; k < l.size(); ++k)
         if (l[k] < r[k])
             return false;
     return true;
@@ -1236,7 +1273,9 @@ closeAtTolerance(TinyArrayBase<V1, D1, N...> const & l,
                  TinyArrayBase<V2, D2, N...> const & r, 
                  PromoteType<V1, V2> epsilon = 2.0*NumericTraits<PromoteType<V1, V2> >::epsilon())
 {
-    for(int k=0; k < TinySize<N...>::value; ++k)
+    vigra_tinyarray_check_size(l.size() == r.size(),
+        "TinyArrayBase::closeAtTolerance(): size mismatch.");
+    for(int k=0; k < l.size(); ++k)
         if(!closeAtTolerance(l[k], r[k], epsilon))
             return false;
     return true;
@@ -1318,8 +1357,8 @@ inline
 TinyArray<V, N...>
 operator-(TinyArrayBase<V, D, N...> const & v)
 {
-    TinyArray<V, N...> res(DontInit);
-    for(int k=0; k < TinySize<N...>::value; ++k)
+    TinyArray<V, N...> res(v.size(), DontInit);
+    for(int k=0; k < v.size(); ++k)
         res[k] = -v[k];
     return res;
 }
@@ -1432,8 +1471,8 @@ inline
 TinyArray<V, N...>
 abs(TinyArrayBase<V, D, N...> const & v)
 {
-    TinyArray<V, N...> res(DontInit);
-    for(int k=0; k < TinySize<N...>::value; ++k)
+    TinyArray<V, N...> res(v.size(), DontInit);
+    for(int k=0; k < v.size(); ++k)
         res[k] = abs(v[k]);
     return res;
 }
@@ -1447,8 +1486,8 @@ inline
 TinyArray<V, N...>
 ceil(TinyArrayBase<V, D, N...> const & v)
 {
-    TinyArray<V, N...> res(DontInit);
-    for(int k=0; k < TinySize<N...>::value; ++k)
+    TinyArray<V, N...> res(v.size(), DontInit);
+    for(int k=0; k < v.size(); ++k)
         res[k] = ceil(v[k]);
     return res;
 }
@@ -1462,8 +1501,8 @@ inline
 TinyArray<V, N...>
 floor(TinyArrayBase<V, D, N...> const & v)
 {
-    TinyArray<V, N...> res(DontInit);
-    for(int k=0; k < TinySize<N...>::value; ++k)
+    TinyArray<V, N...> res(v.size(), DontInit);
+    for(int k=0; k < v.size(); ++k)
         res[k] = floor(v[k]);
     return res;
 }
@@ -1477,8 +1516,8 @@ inline
 TinyArray<V, N...>
 round(TinyArrayBase<V, D, N...> const & v)
 {
-    TinyArray<V, N...> res(DontInit);
-    for(int k=0; k < TinySize<N...>::value; ++k)
+    TinyArray<V, N...> res(v.size(), DontInit);
+    for(int k=0; k < v.size(); ++k)
         res[k] = round(v[k]);
     return res;
 }
@@ -1490,8 +1529,8 @@ inline
 TinyArray<ArrayIndex, N...>
 roundi(TinyArrayBase<V, D, N...> const & v)
 {
-    TinyArray<ArrayIndex, N...> res(DontInit);
-    for(int k=0; k < TinySize<N...>::value; ++k)
+    TinyArray<ArrayIndex, N...> res(v.size(), DontInit);
+    for(int k=0; k < v.size(); ++k)
         res[k] = roundi(v[k]);
     return res;
 }
@@ -1505,8 +1544,8 @@ inline
 TinyArray<RealPromoteType<V>, N...>
 sqrt(TinyArrayBase<V, D, N...> const & v)
 {
-    TinyArray<RealPromoteType<V>, N...> res(DontInit);
-    for(int k=0; k < TinySize<N...>::value; ++k)
+    TinyArray<RealPromoteType<V>, N...> res(v.size(), DontInit);
+    for(int k=0; k < v.size(); ++k)
         res[k] = sqrt(v[k]);
     return res;
 }
@@ -1520,8 +1559,8 @@ inline
 TinyArray<PromoteType<V, E>, N...>
 pow(TinyArrayBase<V, D, N...> const & v, E exponent)
 {
-    TinyArray<PromoteType<V, E>, N...> res(DontInit);
-    for(int k=0; k < TinySize<N...>::value; ++k)
+    TinyArray<PromoteType<V, E>, N...> res(v.size(), DontInit);
+    for(int k=0; k < v.size(); ++k)
         res[k] = pow(v[k], exponent);
     return res;
 }
@@ -1539,6 +1578,18 @@ cross(TinyArrayBase<V1, D1, 3> const & r1,
                 r1[0]*r2[1] - r1[1]*r2[0]);
 }
 
+template <class V1, class D1, class V2, class D2>
+inline
+TinyArray<PromoteType<V1, V2>, 0>
+cross(TinyArrayBase<V1, D1, 0> const & r1,
+      TinyArrayBase<V2, D2, 0> const & r2)
+{
+    typedef TinyArray<PromoteType<V1, V2>, 0> Res;
+    return  Res({r1[1]*r2[2] - r1[2]*r2[1],
+                 r1[2]*r2[0] - r1[0]*r2[2],
+                 r1[0]*r2[1] - r1[1]*r2[0]});
+}
+
     /// dot product of two vectors
 template <class V1, class D1, class V2, class D2, int N>
 inline
@@ -1546,8 +1597,11 @@ PromoteType<V1, V2>
 dot(TinyArrayBase<V1, D1, N> const & l,
     TinyArrayBase<V2, D2, N> const & r)
 {
+    if(N == 0)
+        vigra_precondition(l.size() == r.size(),
+            "TinyArrayBase::dot(): size mismatch.");
     PromoteType<V1, V2> res = l[0] * r[0];
-    for(int k=1; k < N; ++k)
+    for(int k=1; k < l.size(); ++k)
         res += l[k] * r[k];
     return res;
 }
@@ -1559,7 +1613,7 @@ PromoteType<V>
 sum(TinyArrayBase<V, D, N...> const & l)
 {
     PromoteType<V> res = l[0];
-    for(int k=1; k < TinySize<N...>::value; ++k)
+    for(int k=1; k < l.size(); ++k)
         res += l[k];
     return res;
 }
@@ -1570,7 +1624,7 @@ inline RealPromoteType<V>
 mean(TinyArrayBase<V, D, N...> const & t)
 {
     const V sumVal = sum(t);
-    return static_cast<RealPromoteType<V> >(sumVal) / TinySize<N...>::value;
+    return static_cast<RealPromoteType<V> >(sumVal) / t.size();
 }
 
     /// cumulative sum of the vector's elements
@@ -1580,7 +1634,7 @@ TinyArray<PromoteType<V>, N...>
 cumsum(TinyArrayBase<V, D, N...> const & l)
 {
     TinyArray<PromoteType<V>, N...> res(l);
-    for(int k=1; k < TinySize<N...>::value; ++k)
+    for(int k=1; k < l.size(); ++k)
         res[k] += res[k-1];
     return res;
 }
@@ -1592,7 +1646,7 @@ PromoteType<V>
 prod(TinyArrayBase<V, D, N...> const & l)
 {
     PromoteType<V> res = l[0];
-    for(int k=1; k < TinySize<N...>::value; ++k)
+    for(int k=1; k < l.size(); ++k)
         res *= l[k];
     return res;
 }
@@ -1604,7 +1658,7 @@ TinyArray<PromoteType<V>, N...>
 cumprod(TinyArrayBase<V, D, N...> const & l)
 {
     TinyArray<PromoteType<V>, N...> res(l);
-    for(int k=1; k < TinySize<N...>::value; ++k)
+    for(int k=1; k < l.size(); ++k)
         res[k] *= res[k-1];
     return res;
 }
@@ -1616,9 +1670,9 @@ inline
 TinyArray<PromoteType<V>, N>
 shapeToStride(TinyArrayBase<V, D, N> const & shape)
 {
-    TinyArray<PromoteType<V>, N> res(DontInit);
-    res[N-1] = 1;
-    for(int k=N-2; k >= 0; --k)
+    TinyArray<PromoteType<V>, N> res(shape.size(), DontInit);
+    res[shape.size()-1] = 1;
+    for(int k=shape.size()-2; k >= 0; --k)
         res[k] = res[k+1] * shape[k+1];
     return res;
 }
@@ -1631,8 +1685,10 @@ TinyArray<PromoteType<V1, V2>, N...>
 minImpl(TinyArrayBase<V1, D1, N...> const & l,
         TinyArrayBase<V2, D2, N...> const & r)
 {
-    TinyArray<PromoteType<V1, V2>, N...> res(DontInit);
-    for(int k=0; k < TinySize<N...>::value; ++k)
+    vigra_tinyarray_check_size(l.size() == r.size(),
+        "TinyArrayBase::min(): size mismatch.");
+    TinyArray<PromoteType<V1, V2>, N...> res(l.size(), DontInit);
+    for(int k=0; k < l.size(); ++k)
         res[k] =  min<PromoteType<V1, V2> >(l[k], r[k]);
     return res;
 }
@@ -1697,8 +1753,10 @@ TinyArray<PromoteType<V1, V2>, N...>
 maxImpl(TinyArrayBase<V1, D1, N...> const & l,
         TinyArrayBase<V2, D2, N...> const & r)
 {
-    TinyArray<PromoteType<V1, V2>, N...> res(DontInit);
-    for(int k=0; k < TinySize<N...>::value; ++k)
+    vigra_tinyarray_check_size(l.size() == r.size(),
+        "TinyArrayBase::max(): size mismatch.");
+    TinyArray<PromoteType<V1, V2>, N...> res(l.size(), DontInit);
+    for(int k=0; k < l.size(); ++k)
         res[k] =  max<PromoteType<V1, V2> >(l[k], r[k]);
     return res;
 }
@@ -1769,7 +1827,7 @@ inline
 NormType<V>
 sizeDividedSquaredNorm(TinyArrayBase<V, D, N...> const & t)
 {
-    return NormType<V>(squaredNorm(t)) / TinySize<N...>::value;
+    return NormType<V>(squaredNorm(t)) / t.size();
 }
 
 template <class V, class D, int ... N>
@@ -1777,7 +1835,7 @@ inline
 NormType<V>
 sizeDividedNorm(TinyArrayBase<V, D, N...> const & t)
 {
-    return NormType<V>(norm(t)) / TinySize<N...>::value;
+    return NormType<V>(norm(t)) / t.size();
 }
 
 using std::reverse;
@@ -1863,8 +1921,8 @@ inline
 TinyArray<V, N...> 
 clipLower(TinyArrayBase<V, D, N...> const & t, const V val)
 {
-    TinyArray<V, N...> res(DontInit);
-    for(int k=0; k < TinySize<N...>::value; ++k)
+    TinyArray<V, N...> res(t.size(), DontInit);
+    for(int k=0; k < t.size(); ++k)
     {
         res[k] = t[k] < val ? val :  t[k];
     }
@@ -1880,8 +1938,8 @@ inline
 TinyArray<V, N...> 
 clipUpper(TinyArrayBase<V, D, N...> const & t, const V val)
 {
-    TinyArray<V, N...> res(DontInit);
-    for(int k=0; k < TinySize<N...>::value; ++k)
+    TinyArray<V, N...> res(t.size(), DontInit);
+    for(int k=0; k < t.size(); ++k)
     {
         res[k] = t[k] > val ? val :  t[k];
     }
@@ -1899,8 +1957,8 @@ TinyArray<V, N...>
 clip(TinyArrayBase<V, D, N...> const & t,
      const V valLower, const V valUpper)
 {
-    TinyArray<V, N...> res(DontInit);
-    for(int k=0; k < TinySize<N...>::value; ++k)
+    TinyArray<V, N...> res(t.size(), DontInit);
+    for(int k=0; k < t.size(); ++k)
     {
         res[k] =  (t[k] < valLower)
                        ? valLower 
@@ -1923,8 +1981,10 @@ clip(TinyArrayBase<V, D1, N...> const & t,
      TinyArrayBase<V, D2, N...> const & valLower, 
      TinyArrayBase<V, D3, N...> const & valUpper)
 {
-    TinyArray<V, N...> res(DontInit);
-    for(int k=0; k < TinySize<N...>::value; ++k)
+    vigra_tinyarray_check_size(t.size() == valLower.size() && t.size() == valUpper.size(),
+        "TinyArrayBase::clip(): size mismatch.");
+    TinyArray<V, N...> res(t.size(), DontInit);
+    for(int k=0; k < t.size(); ++k)
     {
         res[k] =  (t[k] < valLower[k])
                        ? valLower[k] 
