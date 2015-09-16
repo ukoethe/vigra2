@@ -400,6 +400,9 @@ struct TinyArrayTest
         shouldEqualSequenceTolerance(cumsumRef, cumsumRef+3, cumsum(fv3).begin(), 1e-6);
         float cumprodRef[] = {1.2f, 2.88f, 10.368f, 49.7664f, 403.108f, 3910.15f };
         shouldEqualSequenceTolerance(cumprodRef, cumprodRef+3, cumprod(fv3).begin(), 1e-6);
+        
+        TinyArray<int, 3> shape{200, 100, 50}, refstride(5000, 50, 1);
+        shouldEqual(shapeToStride(shape), refstride);
     }
 
     void testCross()

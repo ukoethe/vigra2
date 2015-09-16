@@ -149,9 +149,6 @@ class TinyArray;
 template <class VALUETYPE, int ... N>
 class TinyArrayView;
 
-template <int N>
-using Shape = TinyArray<ArrayIndex, N>;
-
 /********************************************************/
 /*                                                      */
 /*                    TinyArrayBase                     */
@@ -1609,6 +1606,20 @@ cumprod(TinyArrayBase<V, D, N...> const & l)
     TinyArray<PromoteType<V>, N...> res(l);
     for(int k=1; k < TinySize<N...>::value; ++k)
         res[k] *= res[k-1];
+    return res;
+}
+
+    /// \brief compute the C-order default stride of a given shape.
+    /// Example: {200, 100, 50}  =>  {5000, 50, 1}
+template <class V, class D, int N>
+inline
+TinyArray<PromoteType<V>, N>
+shapeToStride(TinyArrayBase<V, D, N> const & shape)
+{
+    TinyArray<PromoteType<V>, N> res(DontInit);
+    res[N-1] = 1;
+    for(int k=N-2; k >= 0; --k)
+        res[k] = res[k+1] * shape[k+1];
     return res;
 }
 
