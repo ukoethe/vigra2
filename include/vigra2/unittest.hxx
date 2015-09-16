@@ -49,6 +49,7 @@
 #include <cfloat>
 #include <cmath>
 #include "config.hxx"
+#include "error.hxx"
 
 #ifdef VIGRA_NO_WORKING_STRINGSTREAM 
 #include <strstream>
@@ -366,8 +367,8 @@ int catch_exceptions( Generator function_object, detail::errstream & err, int ti
     //  arguments (ISO 15.3 paragraphs 18 & 19). Apparently const isn't
     //  required, but it doesn't hurt and some programmers ask for it.
 
-    // catch ( vigra::ContractViolation & ex )
-      // { detail::report_exception( err, "Contract exception: ", ex.what() ); }
+    catch ( ContractViolation & ex )
+      { detail::report_exception( err, "contract exception: ", ex.what() ); }
     catch ( const char * ex )
       { detail::report_exception( err, "string exception: ", ex ); }
     catch ( const std::string & ex )
