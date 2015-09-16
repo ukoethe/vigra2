@@ -156,21 +156,17 @@ class ContractViolation
 #if 1
 
 inline
-void throw_contract_error(bool predicate, 
-                          char const * prefix, char const * message, 
+void throw_contract_error(char const * prefix, char const * message, 
                           char const * file, int line)
 {
-    if(!predicate)
-       throw vigra::ContractViolation(prefix, message, file, line); 
+    throw vigra::ContractViolation(prefix, message, file, line); 
 }
 
 inline
-void throw_contract_error(bool predicate,  
-                          char const * prefix, std::string message, 
+void throw_contract_error(char const * prefix, std::string message, 
                           char const * file, int line)
 {
-    if(!predicate)
-       throw vigra::ContractViolation(prefix, message.c_str(), file, line); 
+    throw vigra::ContractViolation(prefix, message.c_str(), file, line); 
 }
 
 inline
@@ -189,17 +185,23 @@ void throw_runtime_error(std::string message, char const * file, int line)
     throw std::runtime_error(what.str()); 
 }
 
+// place throw_contract_error() into the else branch of an if
+// in order to avoid a potentially expensive message construction
+// when there is no error
 #define vigra_precondition(PREDICATE, MESSAGE) \
-    vigra::throw_contract_error((PREDICATE), "Precondition violation!", MESSAGE, __FILE__, __LINE__)
+    if((PREDICATE)) {} else \
+        vigra::throw_contract_error("Precondition violation!", MESSAGE, __FILE__, __LINE__)
 
 #define vigra_assert(PREDICATE, MESSAGE) \
     vigra_precondition(PREDICATE, MESSAGE)
 
 #define vigra_postcondition(PREDICATE, MESSAGE) \
-    vigra::throw_contract_error((PREDICATE), "Postcondition violation!", MESSAGE, __FILE__, __LINE__)
+    if((PREDICATE)) {} else \
+        vigra::throw_contract_error("Postcondition violation!", MESSAGE, __FILE__, __LINE__)
 
 #define vigra_invariant(PREDICATE, MESSAGE) \
-    vigra::throw_contract_error((PREDICATE), "Invariant violation!", MESSAGE, __FILE__, __LINE__)
+    if((PREDICATE)) {} else \
+        vigra::throw_contract_error("Invariant violation!", MESSAGE, __FILE__, __LINE__)
             
 #define vigra_fail(MESSAGE) \
     vigra::throw_runtime_error(MESSAGE, __FILE__, __LINE__)
@@ -207,22 +209,24 @@ void throw_runtime_error(std::string message, char const * file, int line)
 #else // NDEBUG
 
 inline
-void throw_contract_error(bool predicate, char const * message)
+void throw_contract_error(char const * message)
 {
-    if(!predicate)
-       throw vigra::ContractViolation(message); 
+    throw vigra::ContractViolation(message); 
 }
 
 #define vigra_precondition(PREDICATE, MESSAGE) \
-    vigra::throw_contract_error((PREDICATE), "Precondition violation!", MESSAGE)
+    if((PREDICATE)) {} else \
+        vigra::throw_contract_error("Precondition violation!", MESSAGE)
 
 #define vigra_assert(PREDICATE, MESSAGE)
 
 #define vigra_postcondition(PREDICATE, MESSAGE) \
-    vigra::throw_contract_error((PREDICATE), "Postcondition violation!", MESSAGE)
+    if((PREDICATE)) {} else \
+        vigra::throw_contract_error("Postcondition violation!", MESSAGE)
 
 #define vigra_invariant(PREDICATE, MESSAGE) \
-    vigra::throw_contract_error((PREDICATE), "Invariant violation!", MESSAGE)
+    if((PREDICATE)) {} else \
+        vigra::throw_contract_error("Invariant violation!", MESSAGE)
             
 #define vigra_fail(MESSAGE) \
     throw std::runtime_error(MESSAGE)
