@@ -50,10 +50,8 @@
 <b>\#include</b> \<vigra/timing.hxx\>
 
 These macros allow to perform execution speed measurements. Results are reported
-in <i>milliseconds</i>.
-However, note that timings below 1 msec are generally subject to round-off errors. 
-Under LINUX, you can \#define VIGRA_HIRES_TIMING to get better
-accuracy, but this requires linking against librt.
+in <i>milliseconds</i>. This uses <tt>std::chrono::high_resolution_clock</tt>, 
+but the actual accuracy is platform dependent.
 
 Basic usage:
 \code
