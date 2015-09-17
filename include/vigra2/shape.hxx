@@ -40,53 +40,88 @@
 
 #include "config.hxx"
 #include "tinyarray.hxx"
-#include "tinyarray_dynamic.hxx"
 #include <vector>
 #include <type_traits>
 
 namespace vigra {
 
-template <class T=int>
-class Range
+template <class T>
+class RangeIter
 {
   public:
-    typedef T value_type;
-    
-    Range(value_type begin, value_type end)
-    :begin_(begin)
+    RangeIter(T begin, T end, T step)
+    : begin_(begin)
     , end_(end)
+    , step_(step)
+    {
+        vigra_precondition(step != 0,
+            "RangeIter(): step must be non-zero.");
+        vigra_precondition((step > 0 && begin <= end) || (step < 0 && begin >= end),
+            "RangeIter(): sign mismatch between step and (end-begin).");
+    }
+    
+    RangeIter(RangeIter const & other, ReverseCopyTag)
+    : RangeIter(other.end_, other.begin_, -other.step_)
     {}
     
-    Range(value_type end=0)
-    : Range(0, end)
-    {}
+  public:
+    RangeIter begin() const
+    {
+        return *this;
+    }
     
-    value_type begin() const
+    RangeIter end() const
+    {
+        return RangeIter(*this, ReverseCopy);
+    }
+    
+    T const & operator*() const
     {
         return begin_;
     }
     
-    value_type end() const
+    RangeIter & operator++()
     {
-        return end_;
+        begin_ += step_;
+        return *this;
     }
-
-    value_type  begin_, end_;
+    
+    bool operator!=(RangeIter const & other) const
+    {
+        return begin_ != other.begin_;
+    }
+    
+    bool operator<(RangeIter const & other) const
+    {
+        return (other.begin_ - begin_)*step_ > 0;
+    }
+    
+  private:
+    T begin_, end_, step_;
 };
 
 template <class T>
-Range<T> range(T begin, T end)
+RangeIter<T> 
+range(T begin, T end, T step)
 {
-    return Range<T>(begin, end);
+    return RangeIter<T>(begin, end, step);
 }
 
 template <class T>
-Range<T> range(T end)
+RangeIter<T> 
+range(T begin, T end)
 {
-    return Range<T>(end);
+    return RangeIter<T>(begin, end, 1);
 }
 
-template <int N=0>
+template <class T>
+RangeIter<T>
+range(T end)
+{
+    return RangeIter<T>(0, end, 1);
+}
+
+template <int N=runtime_size>
 using Shape = TinyArray<ArrayIndex, N>;
 
 } // namespace vigra
