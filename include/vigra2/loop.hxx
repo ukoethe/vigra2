@@ -200,27 +200,27 @@ LoopIndex::slice(IndexType begin, IndexType end, IndexType step)
 }
     
 
-// FIXME: Restricted to 2D for now
 template <class T>
 class MArrayView
 {
-    typedef std::vector<T>  Data;
-    typedef std::vector<LoopSlice>  SliceVector;
-    typedef Shape<2> MultiIndex;
-    typedef Shape<> TestMultiIndex;
-    
   public:
+    using SliceVector = std::vector<LoopSlice>;
+    using MultiIndex = Shape<>;
     
     MArrayView(MultiIndex const & shape)
     : shape_(shape)
-    , stride_(shapeToStride(shape_))
-    , data_(prod(shape_), 0)
-    {
-        std::iota(data_.begin(), data_.end(), 1);
-    }
+    , strides_(shapeToStrides(shape_))
+    , data_(0)
+    {}
+    
+    MArrayView(MultiIndex const & shape, MultiIndex const & strides, T * data)
+    : shape_(shape)
+    , strides_(strides)
+    , data_(data)
+    {}
     
     MArrayView(std::initializer_list<ArrayIndex> shape)
-    : MArrayView(MultiIndex(shape.begin()))
+    : MArrayView(MultiIndex(shape.begin(), shape.end()))
     {}
     
     std::tuple<MArrayView, SliceVector> 
@@ -245,13 +245,58 @@ class MArrayView
         return operator()(std::move(indices));
     }
     
-    int ndim() const
+    ArrayIndex ndim() const
     {
         return shape_.size();
     }
     
-    MultiIndex shape_, stride_;
-    Data data_;
+    ArrayIndex size() const
+    {
+        return prod(shape_);
+    }
+    
+    void swap(MArrayView & v)
+    {
+        std::swap(data_, v.data_);
+        shape_.swap(v.shape_);
+        strides_.swap(v.strides_);
+    }
+    
+    MArrayView bind(ArrayIndex dim, ArrayIndex where) const
+    {
+        T * data = const_cast<T *>(data_);
+        return MArrayView(shape_.dropIndex(dim), strides_.dropIndex(dim),
+                          data + where*strides_[dim]);
+    }
+    
+    MultiIndex shape_, strides_;
+    T * data_;
+};
+
+template <class T>
+class MArray
+: public MArrayView<T>
+{
+    using BaseType = MArrayView<T>;
+    
+  public:
+  
+    using typename BaseType::MultiIndex;
+    using Data = std::vector<T>;
+    
+    MArray(MultiIndex const & shape)
+    : BaseType(shape)
+    , alloc_data_(prod(shape), 0)
+    {
+        this->data_ = alloc_data_.data();
+        std::iota(alloc_data_.begin(), alloc_data_.end(), 1);
+    }
+    
+    MArray(std::initializer_list<ArrayIndex> shape)
+    : MArray(MultiIndex(shape.begin(), shape.end()))
+    {}
+    
+    Data alloc_data_;
 };
 
 // template <class T>
@@ -262,7 +307,7 @@ class Loop
 {
     typedef std::vector<LoopIndex>  IndexVector;
     typedef std::vector<LoopSlice>  SliceVector;
-    typedef std::vector<ArrayIndex> MultiIndex;
+    typedef Shape<>                 MultiIndex;
     
     template <int N>
     using Level = std::integral_constant<int, N>;
@@ -286,36 +331,55 @@ class Loop
     , nesting_(indices_.size()-1)
     {}
     
+    int ndim() const
+    {
+        return indices_.size();
+    }
+    
     Loop & add(std::tuple<MArrayView<int>, SliceVector> const & data)
     {
         MArrayView<int> const & array = std::get<0>(data);
         SliceVector const & slices = std::get<1>(data);
+        MArrayView<int> newarray(array);
+        MultiIndex strides(ndim());
         
-        for(int i; i< array.ndim(); ++i)
+        for(int i=0; i<ndim(); ++i)
         {
-            // FIXME: find corresponding index
-            
-            // check range
-            if(indices_[i].has_range_)
+            int j=0;
+            for(; j<array.ndim(); ++j)
             {
-                std::cerr << 1 << std::endl;
-                // FIXME: also consider step size
-                vigra_precondition(
-                   !slices[i].has_range_  ||
-                   (slices[i].distance() == indices_[i].distance()),
-                   "Loop::add(): range mismatch in dimension " + std::to_string(i) + ".");
+                if(slices[j].id_ == indices_[i].id_)
+                    break;
             }
-            else if(slices[i].has_range_)
+            if(j < array.ndim()) // index found
             {
-                std::cerr << 2 << std::endl;
-                indices_[i].setRange(slices[i]);
+                // check range
+                if(indices_[i].has_range_)
+                {
+                    // FIXME: also consider step size
+                    vigra_precondition(
+                       !slices[j].has_range_  ||
+                       (slices[j].distance() == indices_[i].distance()),
+                       "Loop::add(): range mismatch in dimension " + std::to_string(i) + ".");
+                }
+                else if(slices[j].has_range_)
+                {
+                    indices_[i].setRange(slices[j]);
+                }
+                else
+                {
+                    indices_[i].setRange(array.shape_[j]);
+                }
+                strides[i] = array.strides_[j];
+                newarray.bind(j, indices_[i].begin_).swap(newarray);
             }
             else
             {
-                std::cerr << 3 << std::endl;
-                indices_[i].setRange(array.shape_[i]);
+                strides[i] = 0;
             }
         }
+        data_.push_back(newarray);
+        strides_.push_back(strides);
         return *this;
     }
     
@@ -335,75 +399,110 @@ class Loop
         }
         switch(nesting_)
         {
-          case 0:
-          {
-            Shape<1> index;
-            runImpl(f, index, Level<0>());
-            break;
-          }
-          case 1:
-          {
-            Shape<2> index;
-            runImpl(f, index, Level<0>());
-            break;
-          }
-          case 2:
-          {
-            Shape<3> index;
-            runImpl(f, index, Level<0>());
-            break;
-          }
+          // case 0:
+          // {
+            // Shape<1> index;
+            // runImpl(f, index, Level<0>());
+            // break;
+          // }
+          // case 1:
+          // {
+            // Shape<2> index;
+            // runImpl(f, index, Level<0>());
+            // break;
+          // }
+          // case 2:
+          // {
+            // Shape<3> index;
+            // runImpl(f, index, Level<0>());
+            // break;
+          // }
           default:
           {
-            MultiIndex index(indices_.size(), 0);
+            MultiIndex index(ndim());
             runImpl(f, index, 0);
           }
         }
     }
     
+    template<class A1, class A2>
+    static void savePointers(A1 & data, A2 & p)
+    {
+        for(int i=0; i<data.size(); ++i)
+            p[i] = data[i].data_;
+    }
+    
+    template<class A1, class A2>
+    static void restorePointers(A1 & data, A2 & p)
+    {
+        for(int i=0; i<data.size(); ++i)
+            data[i].data_ = p[i];
+    }
+    
+    template<class A1, class A2>
+    static void incrementPointers(A1 & data, A2 const & strides, ArrayIndex step, int level)
+    {
+        for(int i=0; i<data.size(); ++i)
+            data[i].data_ += strides[i][level]*step;
+    }
+    
     template <class FUNC>
     void runImpl(FUNC f, MultiIndex & index, int level) const
     {
+        LoopIndex const & li = indices_[level];
+        TinyArray<int *> savedPtrs(data_.size());
         if (level==nesting_)
         {
-            if(indices_[level].step_ > 0)
+            if(li.step_ > 0)
             {
-                for(index[level] = indices_[level].begin_;
-                    index[level] < indices_[level].end_;
-                    index[level] += indices_[level].step_)
+                savePointers(data_, savedPtrs);
+                for(index[level] =  li.begin_;
+                    index[level] <  li.end_;
+                    index[level] += li.step_,
+                    incrementPointers(data_, strides_, li.step_, level))
                 {
-                    f(index);
+                    f(index, data_);
                 }
+                restorePointers(data_, savedPtrs);
             }
             else
             {
-                for(index[level] = indices_[level].begin_;
-                    index[level] > indices_[level].end_;
-                    index[level] += indices_[level].step_)
+                savePointers(data_, savedPtrs);
+                for(index[level] =  li.begin_;
+                    index[level] >  li.end_;
+                    index[level] += li.step_,
+                    incrementPointers(data_, strides_, li.step_, level))
                 {
-                    f(index);
+                    f(index, data_);
                 }
+                restorePointers(data_, savedPtrs);
             }
         }
         else
         {
-            if(indices_[level].step_ > 0)
+            if(li.step_ > 0)
             {
-                for(index[level] = indices_[level].begin_;
-                    index[level] < indices_[level].end_;
-                    index[level] += indices_[level].step_)
+                savePointers(data_, savedPtrs);
+                for(index[level] =  li.begin_;
+                    index[level] <  li.end_;
+                    index[level] += li.step_,
+                    incrementPointers(data_, strides_, li.step_, level))
                 {
                     runImpl(f, index, level+1);
                 }
+                restorePointers(data_, savedPtrs);
             }
             else
             {
-                for(index[level] = indices_[level].begin_;
-                    index[level] > indices_[level].end_;
-                    index[level] += indices_[level].step_)
+                savePointers(data_, savedPtrs);
+                for(index[level] =  li.begin_;
+                    index[level] >  li.end_;
+                    index[level] += li.step_,
+                    incrementPointers(data_, strides_, li.step_, level))
                 {
                     runImpl(f, index, level+1);
                 }
+                restorePointers(data_, savedPtrs);
             }
         }
     }
@@ -412,51 +511,67 @@ class Loop
     typename std::enable_if<LEVEL != N-1, void>::type
     runImpl(FUNC f, Shape<N> & index, Level<LEVEL>) const
     {
-        if(indices_[LEVEL].step_ > 0)
+        LoopIndex const & li = indices_[LEVEL];
+        if(li.step_ > 0)
         {
-            for(index[LEVEL] =  indices_[LEVEL].begin_;
-                index[LEVEL] <  indices_[LEVEL].end_;
-                index[LEVEL] += indices_[LEVEL].step_)
+            auto data_ptr = data_[0].data_;
+            for(index[LEVEL] =  li.begin_;
+                index[LEVEL] <  li.end_;
+                index[LEVEL] += li.step_,
+                data_[0].data_ += li.step_*strides_[0][LEVEL])
             {
                 runImpl(f, index, Level<LEVEL+1>());
             }
+            data_[0].data_ = data_ptr;
         }
         else
         {
-            for(index[LEVEL] =  indices_[LEVEL].begin_;
-                index[LEVEL] >  indices_[LEVEL].end_;
-                index[LEVEL] += indices_[LEVEL].step_)
+            auto data_ptr = data_[0].data_;
+            for(index[LEVEL] =  li.begin_;
+                index[LEVEL] >  li.end_;
+                index[LEVEL] += li.step_,
+                data_[0].data_ += li.step_*strides_[0][LEVEL])
             {
                 runImpl(f, index, Level<LEVEL+1>());
             }
+            data_[0].data_ = data_ptr;
         }
     }
 
     template <class FUNC, int N>
     void runImpl(FUNC f, Shape<N> & index, Level<N-1>) const
     {
-        if(indices_[N-1].step_ > 0)
+        LoopIndex const & li = indices_[N-1];
+        if(li.step_ > 0)
         {
-            for(index[N-1] =  indices_[N-1].begin_;
-                index[N-1] <  indices_[N-1].end_;
-                index[N-1] += indices_[N-1].step_)
+            auto data_ptr = data_[0].data_;
+            for(index[N-1] =  li.begin_;
+                index[N-1] <  li.end_;
+                index[N-1] += li.step_,
+                data_[0].data_ += li.step_*strides_[0][N-1])
             {
-                f(index);
+                f(index, data_);
             }
+            data_[0].data_ = data_ptr;
         }
         else
         {
-            for(index[N-1] =  indices_[N-1].begin_;
-                index[N-1] >  indices_[N-1].end_;
-                index[N-1] += indices_[N-1].step_)
+            auto data_ptr = data_[0].data_;
+            for(index[N-1] =  li.begin_;
+                index[N-1] >  li.end_;
+                index[N-1] += li.step_,
+                data_[0].data_ += li.step_*strides_[0][N-1])
             {
-                f(index);
+                f(index, data_);
             }
+            data_[0].data_ = data_ptr;
         }
     }
     
     IndexVector indices_;
-    std::vector<MArrayView<int> >  data_;
+    mutable std::vector<MArrayView<int> >  data_;
+    mutable std::vector<int *>             save_ptrs_;
+    mutable std::vector<MultiIndex >       strides_;
     int nesting_;
 };
 

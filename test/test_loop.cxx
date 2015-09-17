@@ -41,26 +41,15 @@
 
 using namespace vigra;
 
-namespace std {
-
-inline ostream & 
-operator<<(ostream & s, vector<vigra::ArrayIndex> const & a)
-{
-    for(std::size_t k=0; k<a.size()-1; ++k)
-        s << a[k] << ", ";
-    if(a.size())
-            s << a.back();
-    return s;
-}
-
-} // namespace std
-
 struct PrintArgument
 {
-    template <class T>
-    void operator()(T const & t) const
+    template <class T, class U>
+    void operator()(T const & t, U const & u) const
     {
-        std::cerr << t << "\n";
+        std::cerr << t << " = ";
+        for(int i=0; i<u.size(); ++i)
+            std::cerr << *(u[i].data_) << ", ";
+        std::cerr << "\n";
     }
 };
 
@@ -76,6 +65,10 @@ struct LoopTest
         shouldEqual(a, c);
         c.init(2,4,6);
         shouldEqual(d, c);
+        should(all(d));
+        
+        for(auto i: range(4))
+            std::cerr << i << "\n";
     }
     
     void test()
@@ -97,27 +90,30 @@ struct LoopTest
             l.run(PrintArgument());
         }
         {
-            MArrayView<int> a{2,3};
-            LoopIndex i, j;
+            MArray<int> a{2,3}, b{3,2};
+            LoopIndex i(2), j, _;
             Loop{i, j}
               .add(a(i, j))
-              .run(PrintArgument());
+              .add(b(j, i))
+              // .add(a(_, j))
+              .run(PrintArgument())
+            ;
         }
     }
     
-    // void testException()
-    // {
-        // try
-        // {
-            // failTest("no exception thrown");
-        // }
-        // catch(std::runtime_error & e)
-        // {
-            // std::string expected("expected message");
-            // std::string message(e.what());
-            // should(0 == expected.compare(message.substr(0,expected.size())));
-        // }
-    // }
+    void testException()
+    {
+        try
+        {
+            failTest("no exception thrown");
+        }
+        catch(std::runtime_error & e)
+        {
+            std::string expected("expected message");
+            std::string message(e.what());
+            should(0 == expected.compare(message.substr(0,expected.size())));
+        }
+    }
 };
 
 struct LoopTestSuite
