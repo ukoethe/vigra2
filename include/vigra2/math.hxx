@@ -140,7 +140,19 @@ using std::sqrt;
 using std::pow;  
 using std::floor;  
 using std::ceil;  
-using std::exp;  
+using std::exp;
+
+#define VIGRA_DEFINE_INTEGER_FLOOR_CEIL(T) \
+    inline T floor(T t) { return t; } \
+    inline T floor(unsigned T t) { return t; } \
+    inline T ceil(T t) { return t; } \
+    inline T ceil(unsigned T t) { return t; }
+
+VIGRA_DEFINE_INTEGER_FLOOR_CEIL(char)
+VIGRA_DEFINE_INTEGER_FLOOR_CEIL(short)
+VIGRA_DEFINE_INTEGER_FLOOR_CEIL(int)
+VIGRA_DEFINE_INTEGER_FLOOR_CEIL(long)
+VIGRA_DEFINE_INTEGER_FLOOR_CEIL(long long)
 
 // import abs(float), abs(double), abs(long double) from <cmath>
 //        abs(int), abs(long), abs(long long) from <cstdlib>
