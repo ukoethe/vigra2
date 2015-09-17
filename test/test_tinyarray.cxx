@@ -523,27 +523,46 @@ struct TinyArrayTest
     void testRuntimeSize()
     {
         using A = TinyArray<int, runtime_size>;
-        A a{1,2,3}, b{1,2,3}, c = a, d = a + b;
+        A a{1,2,3}, b{1,2,3}, c = a, d = a + b, e(3);
+        shouldEqual(a.size(), 3);
+        shouldEqual(b.size(), 3);
+        shouldEqual(c.size(), 3);
+        shouldEqual(d.size(), 3);
+        shouldEqual(e.size(), 3);
         shouldEqual(a, b);
         shouldEqual(a, c);
+        should(a != d);
+        should(a != e);
+        should(a < d);
+        should(e < a);
+        shouldEqual(e, (A{0,0,0}));
         c.init(2,4,6);
         shouldEqual(d, c);
         c.init({1,2,3});
         shouldEqual(a, c);
         c = 2*a;
         shouldEqual(d, c);
+        c.reverse();
+        shouldEqual(c, (A{6,4,2}));
+        shouldEqual(c, reversed(d));
+        c = c-2;
         should(all(d));
-    }
-    
-    void testException()
-    {
+        should(!all(c));
+        should(any(c));
+        should(!allZero(c));
+        should(!all(e));
+        should(!any(e));
+        should(allZero(e));
+        
         try
         {
+            A(3) / A(2);
             failTest("no exception thrown");
         }
         catch(std::runtime_error & e)
         {
-            std::string expected("expected message");
+            std::string expected("\nPrecondition violation!\n"
+                                 "TinyArrayBase::operator/=(): size mismatch.");
             std::string message(e.what());
             should(0 == expected.compare(message.substr(0,expected.size())));
         }
