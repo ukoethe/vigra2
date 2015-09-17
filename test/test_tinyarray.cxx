@@ -173,7 +173,7 @@ struct TinyArrayTest
             IV iv = IV::template unitVector<SIZE>(k);
             shouldEqual(iv[k], 1);
             iv[k] = 0;
-            should(!iv.any());
+            should(!any(iv));
         }
 
         IV seq = IV::linearSequence(), seq_ref;
@@ -188,12 +188,15 @@ struct TinyArrayTest
         linearSequence(seq_ref.begin(), seq_ref.end(), 20, -1);
         shouldEqual(seq, seq_ref);
 
-        IV r = reverse(iv3);
+        IV r = reversed(iv3);
         for(int k=0; k<SIZE; ++k)
             shouldEqual(iv3[k], r[SIZE-1-k]);
 
         shouldEqual(transpose(r, IV::linearSequence(SIZE-1, -1)), iv3);
 
+        r.reverse();
+        shouldEqual(r, iv3);
+        
         typedef TinyArray<typename FV::value_type, SIZE-1> FV1;
         FV1 fv10(fv3.begin());
         shouldEqual(fv10, fv3.dropIndex(SIZE-1));
@@ -232,22 +235,22 @@ struct TinyArrayTest
 
         should(closeAtTolerance(fv3, fv3));
         
-        should(!bv0.any() && !bv0.all() && bv1.any() && bv1.all());
-        should(!iv0.any() && !iv0.all() && iv1.any() && iv1.all());
-        should(!fv0.any() && !fv0.all() && fv1.any() && fv1.all());
+        should(!any(bv0) && !all(bv0) && any(bv1) && all(bv1));
+        should(!any(iv0) && !all(iv0) && any(iv1) && all(iv1));
+        should(!any(fv0) && !all(fv0) && any(fv1) && all(fv1));
         IV iv;
         iv = IV(); iv[0] = 1;
-        should(iv.any() && !iv.all());
+        should(any(iv) && !all(iv));
         iv = IV(); iv[1] = 1;
-        should(iv.any() && !iv.all());
+        should(any(iv) && !all(iv));
         iv = IV(); iv[SIZE-1] = 1;
-        should(iv.any() && !iv.all());
+        should(any(iv) && !all(iv));
         iv = IV(1); iv[0] = 0;
-        should(iv.any() && !iv.all());
+        should(any(iv) && !all(iv));
         iv = IV(1); iv[1] = 0;
-        should(iv.any() && !iv.all());
+        should(any(iv) && !all(iv));
         iv = IV(1); iv[SIZE-1] = 0;
-        should(iv.any() && !iv.all());
+        should(any(iv) && !all(iv));
     }
 
     void testArithmetic()
@@ -366,7 +369,7 @@ struct TinyArrayTest
         shouldEqual(iv3 / iv3, iv1);
         shouldEqual(iv3 % iv3, iv0);
         shouldEqual(iv3 % (iv3+iv1), iv3);
-
+        
         float minRef[] = { 1.0f, 2.0f, 3.6f, 4.8f, 8.0f, 9.7f };
         auto minRes = min(iv3, fv3);
         shouldEqualSequence(minRef, minRef+SIZE, minRes.cbegin());
@@ -477,17 +480,17 @@ struct TinyArrayTest
         int adata2[] = {0,1,2,3,4,5};
         a = {0,1,2,3,4,5};
         shouldEqualSequence(a.begin(), a.end(), adata2);
-        Array c = reverse(a);
+        Array c = reversed(a);
         shouldEqualSequence(c.rbegin(), c.rend(), adata2);
         
         should(a==a);
         should(a!=b);
         should(a < b);
-        should(a.any());
-        should(!a.all());
-        should(b.any());
-        should(b.all());
-        should(!isZero(a));
+        should(any(a));
+        should(!all(a));
+        should(any(b));
+        should(all(b));
+        should(!allZero(a));
         should(allLess(a, b));
         should(allLessEqual(a, b));
         should(!allGreater(a, b));
@@ -515,6 +518,21 @@ struct TinyArrayTest
         should((std::is_same<int, SquaredNormType<TinyArray<TinyArray<int, 1>, 1> > >::value));
         should((std::is_same<double, NormType<TinyArray<int, 1> > >::value));
         should((std::is_same<double, NormType<TinyArray<TinyArray<int, 1>, 1> > >::value));
+    }
+    
+    void testRuntimeSize()
+    {
+        using A = TinyArray<int, runtime_size>;
+        A a{1,2,3}, b{1,2,3}, c = a, d = a + b;
+        shouldEqual(a, b);
+        shouldEqual(a, c);
+        c.init(2,4,6);
+        shouldEqual(d, c);
+        c.init({1,2,3});
+        shouldEqual(a, c);
+        c = 2*a;
+        shouldEqual(d, c);
+        should(all(d));
     }
     
     void testException()
@@ -548,6 +566,7 @@ struct TinyArrayTestSuite
         add( testCase(&Tests::testCross));
         add( testCase(&Tests::testOStreamShifting));
         add( testCase(&Tests::testPromote));
+        add( testCase(&Tests::testRuntimeSize));
     }
 };
 
