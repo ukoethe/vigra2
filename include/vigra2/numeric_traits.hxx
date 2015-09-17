@@ -63,6 +63,13 @@ struct PromoteTraits<T, T>
     typedef decltype(sqrt(*(T*)0))     RealPromote;
 };
 
+template <class T>
+struct PromoteTraits<T *, T *>
+{
+    typedef T *  Promote;
+    typedef T *  RealPromote;
+};
+
 template <class T1, class T2=T1>
 using PromoteType = typename PromoteTraits<T1, T2>::Promote;
 
