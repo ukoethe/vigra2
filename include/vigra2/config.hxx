@@ -275,7 +275,12 @@
 
 namespace vigra {
 
+    /// use biggest signed type for array indexing
 using ArrayIndex = std::ptrdiff_t;
+
+    /// constants to specialize templates whose size/ndim is only known at runtime
+static const int runtime_size = -1;
+static const int runtime_ndim = -1;
 
 } // namespace vigra
 
