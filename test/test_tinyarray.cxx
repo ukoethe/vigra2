@@ -522,7 +522,10 @@ struct TinyArrayTest
     
     void testRuntimeSize()
     {
-        using A = TinyArray<int, runtime_size>;
+        using A = TinyArray<int>;
+        
+        should(typeid(A) == typeid(TinyArray<int, runtime_size>));
+        
         A a{1,2,3}, b{1,2,3}, c = a, d = a + b, e(3);
         shouldEqual(a.size(), 3);
         shouldEqual(b.size(), 3);
@@ -553,6 +556,18 @@ struct TinyArrayTest
         should(!all(e));
         should(!any(e));
         should(allZero(e));
+        
+        A r = A::range(2,6);
+        shouldEqual(r, (A{2,3,4,5}));
+        shouldEqual(r.subarray(1,3), (A{3,4}));
+        
+        shouldEqual(A::range(0,6,3), (A{0,3}));
+        shouldEqual(A::range(0,7,3), (A{0,3,6}));
+        shouldEqual(A::range(0,8,3), (A{0,3,6}));
+        shouldEqual(A::range(0,9,3), (A{0,3,6}));
+        shouldEqual(A::range(10, 2, -2), (A{10, 8, 6, 4}));
+        shouldEqual(A::range(10, 1, -2), (A{10, 8, 6, 4, 2}));
+        shouldEqual(A::range(10, 0, -2), (A{10, 8, 6, 4, 2}));
         
         try
         {

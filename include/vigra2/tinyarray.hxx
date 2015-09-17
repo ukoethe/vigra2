@@ -832,30 +832,37 @@ class TinyArrayBase<VALUETYPE, DERIVED, runtime_size>
         return res;
     }
 
-        /// factory function for a linear sequence from <tt>start</tt> to <tt>stop</tt> 
+        /// factory function for a linear sequence from <tt>begin</tt> to <tt>end</tt> 
         /// (exclusive) with stepsize <tt>step</tt>
     static inline 
     TinyArray<value_type, runtime_size>
-    range(value_type start, 
-          value_type stop, 
+    range(value_type begin, 
+          value_type end, 
           value_type step = value_type(1))
     {
-        TinyArray<value_type, runtime_size> res(stop - start, DontInit);
-        for(int k=0; k < res.size(); ++k, start += step)
-            res[k] = start;
+        vigra_precondition(step != 0,
+            "TinyArray::range(): step must be non-zero.");
+        vigra_precondition((step > 0 && begin <= end) || (step < 0 && begin >= end),
+            "TinyArray::range(): sign mismatch between step and (end-begin).");
+        ArrayIndex size = floor((abs(end-begin+step)-1)/abs(step));
+        TinyArray<value_type, runtime_size> res(size, DontInit);
+        for(int k=0; k < size; ++k, begin += step)
+            res[k] = begin;
         return res;
     }
 
-        /// factory function for a linear sequence from 0 to <tt>stop</tt> 
+        /// factory function for a linear sequence from 0 to <tt>end</tt> 
         /// (exclusive) with stepsize 1
     static inline 
     TinyArray<value_type, runtime_size>
-    range(value_type stop)
+    range(value_type end)
     {
-        TinyArray<value_type, runtime_size> res(stop, DontInit);
-        value_type start = value_type();
-        for(int k=0; k < res.size(); ++k, ++start)
-            res[k] = start;
+        vigra_precondition(end >= 0,
+            "TinyArray::range(): end must be non-negative.");
+        TinyArray<value_type, runtime_size> res(end, DontInit);
+        value_type begin = 0;
+        for(int k=0; k < res.size(); ++k, ++begin)
+            res[k] = begin;
         return res;
     }
     
