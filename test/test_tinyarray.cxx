@@ -405,7 +405,7 @@ struct TinyArrayTest
         shouldEqualSequenceTolerance(cumprodRef, cumprodRef+3, cumprod(fv3).begin(), 1e-6);
         
         TinyArray<int, 3> shape{200, 100, 50}, refstride(5000, 50, 1);
-        shouldEqual(shapeToStride(shape), refstride);
+        shouldEqual(shapeToStrides(shape), refstride);
     }
 
     void testCross()

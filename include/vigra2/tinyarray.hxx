@@ -143,10 +143,10 @@ struct TinySize
     static const ArrayIndex ndim  = sizeof...(N);
 };
 
-template <class VALUETYPE, int ... N>
+template <class VALUETYPE, int M=runtime_size, int ... N>
 class TinyArray;
 
-template <class VALUETYPE, int ... N>
+template <class VALUETYPE, int M=runtime_size, int ... N>
 class TinyArrayView;
 
 /********************************************************/
@@ -870,7 +870,6 @@ class TinyArrayBase<VALUETYPE, DERIVED, runtime_size>
 /*                                                      */
 /********************************************************/
 
-
 /** \brief Class for fixed size arrays.
     \ingroup RangesAndPoints
 
@@ -893,11 +892,11 @@ class TinyArrayBase<VALUETYPE, DERIVED, runtime_size>
     <b>\#include</b> \<vigra/TinyArray.hxx\><br>
     Namespace: vigra
 **/
-template <class VALUETYPE, int ... N>
+template <class VALUETYPE, int M, int ... N>
 class TinyArray
-: public TinyArrayBase<VALUETYPE, TinyArray<VALUETYPE, N...>, N...>
+: public TinyArrayBase<VALUETYPE, TinyArray<VALUETYPE, M, N...>, M, N...>
 {
-    using BaseType = TinyArrayBase<VALUETYPE, TinyArray<VALUETYPE, N...>, N...>;
+    using BaseType = TinyArrayBase<VALUETYPE, TinyArray<VALUETYPE, M, N...>, M, N...>;
     
   public:
   
@@ -907,7 +906,7 @@ class TinyArray
     constexpr TinyArray(TinyArray const &) = default;
     
     template <class OTHER, class DERIVED>
-    TinyArray(TinyArrayBase<OTHER, DERIVED, N...> const & other)
+    TinyArray(TinyArrayBase<OTHER, DERIVED, M, N...> const & other)
     : BaseType(other)
     {}
     
@@ -945,6 +944,13 @@ class TinyArray
     explicit TinyArray(U const * u)
     : BaseType(u)
     {}
+
+        // for compatibility with TinyArray<..., runtime_size>
+    template <class U>
+    TinyArray(U const * u, U const * /* end */)
+    : BaseType(u)
+    {}
+
     
     template <class U>
     explicit TinyArray(U const * u, ReverseCopyTag)
@@ -972,7 +978,7 @@ class TinyArray
     }
     
     template <class OTHER, class OTHER_DERIVED>
-    TinyArray & operator=(TinyArrayBase<OTHER, OTHER_DERIVED, N...> const & other)
+    TinyArray & operator=(TinyArrayBase<OTHER, OTHER_DERIVED, M, N...> const & other)
     {
         BaseType::operator=(other);
         return *this;
@@ -1149,11 +1155,11 @@ class TinyArray<VALUETYPE, runtime_size>
     <b>\#include</b> \<vigra/tinyarray.hxx\><br>
     Namespace: vigra
 **/
-template <class VALUETYPE, int ... N>
+template <class VALUETYPE, int M, int ... N>
 class TinyArrayView
-: public TinyArrayBase<VALUETYPE, TinyArrayView<VALUETYPE, N...>, N...>
+: public TinyArrayBase<VALUETYPE, TinyArrayView<VALUETYPE, M, N...>, M, N...>
 {
-    using BaseType = TinyArrayBase<VALUETYPE, TinyArrayView<VALUETYPE, N...>, N...>;
+    using BaseType = TinyArrayBase<VALUETYPE, TinyArrayView<VALUETYPE, M, N...>, M, N...>;
     
   public:
   
@@ -1188,7 +1194,7 @@ class TinyArrayView
         /** Construct view from other TinyArray.
         */
     template <class OTHER_DERIVED>
-    TinyArrayView(TinyArrayBase<value_type, OTHER_DERIVED, N...> const & other)
+    TinyArrayView(TinyArrayBase<value_type, OTHER_DERIVED, M, N...> const & other)
     : BaseType(DontInit)
     {
         BaseType::data_ = const_cast<pointer>(other.data());
@@ -1197,7 +1203,7 @@ class TinyArrayView
         /** Reset to the other array's pointer.
         */
     template <class OTHER_DERIVED>
-    void reset(TinyArrayBase<value_type, OTHER_DERIVED, N...> const & other)
+    void reset(TinyArrayBase<value_type, OTHER_DERIVED, M, N...> const & other)
     {
         BaseType::data_ = const_cast<pointer>(other.data());
     }
@@ -1214,7 +1220,7 @@ class TinyArrayView
         /** Copy the data of the rhs with cast.
         */
     template <class U, class OTHER_DERIVED>
-    TinyArrayView & operator=(TinyArrayBase<U, OTHER_DERIVED, N...> const & r)
+    TinyArrayView & operator=(TinyArrayBase<U, OTHER_DERIVED, M, N...> const & r)
     {
         for(int k=0; k<static_size; ++k)
             BaseType::data_[k] = detail::RequiresExplicitCast<value_type>::cast(r[k]);
@@ -2098,7 +2104,7 @@ cumprod(TinyArrayBase<V, D, N...> const & l)
 template <class V, class D, int N>
 inline
 TinyArray<PromoteType<V>, N>
-shapeToStride(TinyArrayBase<V, D, N> const & shape)
+shapeToStrides(TinyArrayBase<V, D, N> const & shape)
 {
     TinyArray<PromoteType<V>, N> res(shape.size(), DontInit);
     res[shape.size()-1] = 1;
