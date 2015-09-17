@@ -96,6 +96,12 @@ class RangeIter
         return (other.begin_ - begin_)*step_ > 0;
     }
     
+    ArrayIndex size() const
+    {
+        // FIXME: test RangeIter::size() for non-integer ranges
+        return floor((abs(end_-begin_+step_)-1)/abs(step_));
+    }
+    
   private:
     T begin_, end_, step_;
 };
