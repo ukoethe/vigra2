@@ -245,6 +245,16 @@ class MArrayView
         return operator()(std::move(indices));
     }
     
+    T & operator[](MultiIndex i)
+    {
+        return data_[dot(i, strides_)];
+    }
+    
+    T const & operator[](MultiIndex i) const
+    {
+        return data_[dot(i, strides_)];
+    }
+    
     ArrayIndex ndim() const
     {
         return shape_.size();
@@ -265,7 +275,7 @@ class MArrayView
     MArrayView bind(ArrayIndex dim, ArrayIndex where) const
     {
         T * data = const_cast<T *>(data_);
-        return MArrayView(shape_.dropIndex(dim), strides_.dropIndex(dim),
+        return MArrayView(shape_.erase(dim), strides_.erase(dim),
                           data + where*strides_[dim]);
     }
     
@@ -343,6 +353,8 @@ class Loop
         MArrayView<int> newarray(array);
         MultiIndex strides(ndim());
         
+        Shape<> axes_to_bind(array.ndim());
+        Shape<> bind_where(array.ndim());
         for(int i=0; i<ndim(); ++i)
         {
             int j=0;
@@ -371,13 +383,17 @@ class Loop
                     indices_[i].setRange(array.shape_[j]);
                 }
                 strides[i] = array.strides_[j];
-                newarray.bind(j, indices_[i].begin_).swap(newarray);
+                axes_to_bind[j] = 1;
+                bind_where[j] = indices_[i].begin_;
             }
             else
             {
                 strides[i] = 0;
             }
         }
+        for(int j: range(array.ndim()-1, -1l, -1l))
+            if(axes_to_bind[j])
+                newarray.bind(j, bind_where[j]).swap(newarray);
         data_.push_back(newarray);
         strides_.push_back(strides);
         return *this;

@@ -106,18 +106,18 @@ class RangeIter
     T begin_, end_, step_;
 };
 
-template <class T>
-RangeIter<T> 
-range(T begin, T end, T step)
+template <class T1, class T2, class T3>
+RangeIter<T1> 
+range(T1 begin, T2 end, T3 step)
 {
-    return RangeIter<T>(begin, end, step);
+    return RangeIter<T1>(begin, end, step);
 }
 
-template <class T>
-RangeIter<T> 
-range(T begin, T end)
+template <class T1, class T2>
+RangeIter<T1> 
+range(T1 begin, T2 end)
 {
-    return RangeIter<T>(begin, end, 1);
+    return RangeIter<T1>(begin, end, 1);
 }
 
 template <class T>

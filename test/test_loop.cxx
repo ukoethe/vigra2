@@ -37,6 +37,7 @@
 #include <iostream>
 #include <string>
 #include <vigra2/unittest.hxx>
+#include <vigra2/tiny_linalg.hxx>
 #include <vigra2/loop.hxx>
 
 using namespace vigra;
@@ -48,8 +49,15 @@ struct PrintArgument
     {
         std::cerr << t << " = ";
         for(int i=0; i<u.size(); ++i)
-            std::cerr << *(u[i].data_) << ", ";
+            // std::cerr << *(u[i].data_) << ", ";
+            std::cerr << u[i].shape_ << ", ";
         std::cerr << "\n";
+    }
+    
+    template <class T, class U>
+    static void test(T t, U u)
+    {
+        std::cerr << std::is_reference<T>::value << " " << std::is_reference<T>::value << "\n";
     }
 };
 
@@ -90,14 +98,26 @@ struct LoopTest
             l.run(PrintArgument());
         }
         {
-            MArray<int> a{2,3}, b{3,2};
+            MArray<int> a{2,3}, b{3,2}, c{2,2};
             LoopIndex i(2), j, _;
             Loop{i, j}
-              .add(a(i, j))
-              .add(b(j, i))
-              // .add(a(_, j))
-              .run(PrintArgument())
+              .add(a(i, _))
+              .add(b(_, j))
+              .add(c(i, j))
+              .run([](auto & t, auto & u)
+              {
+                Shape<> i(1);
+                int sum = 0;
+                for(i[0]=0; i[0]<u[0].shape_[0]; ++i[0])
+                    sum += u[0][i]*u[1][i];
+                *(u[2].data_) = sum;
+              })
             ;
+            
+            TinyArray<int, 2, 3> aa{1,2,3,4,5,6};
+            TinyArray<int, 3, 2> bb{1,2,3,4,5,6};
+            TinyArray<int, 2, 2> cc = dot(aa, bb);
+            std::cerr << cc << "\n";
         }
     }
     
