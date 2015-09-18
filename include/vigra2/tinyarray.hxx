@@ -40,6 +40,7 @@
 #include "numeric_traits.hxx"
 #include "error.hxx"
 #include "math.hxx"
+#include "concepts.hxx"
 #include <cmath>    // abs(double)
 #include <cstdlib>  // abs(int)
 #include <iosfwd>   // ostream
@@ -436,8 +437,8 @@ class TinyArrayBase
             Only available if <tt>static_ndim == 1</tt>.
         */
     template <int FROM, int TO>
-    typename std::enable_if<static_ndim == 1,
-                            TinyArrayView<value_type, TO-FROM> >::type
+    EnableIf<static_ndim == 1,
+             TinyArrayView<value_type, TO-FROM> >
     subarray() const
     {
         static_assert(FROM >= 0 && FROM < TO && TO <= static_size, 
@@ -448,8 +449,8 @@ class TinyArrayBase
     TinyArray<value_type, static_size-1>
     erase(ArrayIndex m) const
     {
-        vigra_precondition(m >= 0 && m < static_size,
-            "TinyArray::erase(): Index out of bounds.");
+        vigra_precondition(m >= 0 && m < static_size, "TinyArray::erase(): "
+            "Index "+std::to_string(m)+" out of bounds [0, "+std::to_string(size())+").");
         TinyArray<value_type, static_size-1> res(static_size-1, DontInit);
         for(int k=0; k<m; ++k)
             res[k] = data_[k];
@@ -461,8 +462,8 @@ class TinyArrayBase
     TinyArray<value_type, static_size+1>
     insert(ArrayIndex m, value_type v) const
     {
-        vigra_precondition(m >= 0 && m <= static_size,
-            "TinyArray::insert(): Index out of bounds.");
+        vigra_precondition(m >= 0 && m <= static_size, "TinyArray::erase(): "
+            "Index "+std::to_string(m)+" out of bounds [0, "+std::to_string(size())+"].");
         TinyArray<value_type, static_size+1> res(DontInit);
         for(int k=0; k<m; ++k)
             res[k] = data_[k];
@@ -586,7 +587,7 @@ template <class T, class DERIVED, int N1, int N2>
 std::ostream & operator<<(std::ostream & o, TinyArrayBase<T, DERIVED, N1, N2> const & v)
 {
     o << "{";
-    for(int i=0; i<N1; ++i)
+    for(int i=0; N2>0 && i<N1; ++i)
     {
         if(i > 0)
             o << ",\n ";
@@ -786,8 +787,8 @@ class TinyArrayBase<VALUETYPE, DERIVED, runtime_size>
     TinyArray<value_type, runtime_size>
     erase(ArrayIndex m) const
     {
-        vigra_precondition(m >= 0 && m < size(),
-            "TinyArray::erase(): Index out of bounds.");
+        vigra_precondition(m >= 0 && m < size(), "TinyArray::erase(): "
+            "Index "+std::to_string(m)+" out of bounds [0, "+std::to_string(size())+").");
         TinyArray<value_type, runtime_size> res(size()-1, DontInit);
         for(int k=0; k<m; ++k)
             res[k] = data_[k];
@@ -799,8 +800,8 @@ class TinyArrayBase<VALUETYPE, DERIVED, runtime_size>
     TinyArray<value_type, runtime_size>
     insert(ArrayIndex m, value_type v) const
     {
-        vigra_precondition(m >= 0 && m <= size(),
-            "TinyArray::insert(): Index out of bounds.");
+        vigra_precondition(m >= 0 && m <= size(), "TinyArray::insert(): "
+            "Index "+std::to_string(m)+" out of bounds [0, "+std::to_string(size())+"].");
         TinyArray<value_type, runtime_size> res(size()+1, DontInit);
         for(int k=0; k<m; ++k)
             res[k] = data_[k];
@@ -1064,6 +1065,7 @@ class TinyArray<VALUETYPE, runtime_size>
     : BaseType()
     {}
 
+    // FIXME: implement move semantic
     TinyArray(ArrayIndex size, SkipInitialization)
     : BaseType(size)
     {
@@ -1160,6 +1162,7 @@ class TinyArray<VALUETYPE, runtime_size>
 
   private:
     // FIXME: implement an optimized allocator
+    // FIXME: (look at Alexandrescu's Loki library or Kolmogorov's code)
     std::allocator<value_type> alloc_;
 };
 
@@ -2038,8 +2041,8 @@ pow(TinyArrayBase<V, D, N...> const & v, E exponent)
     /// cross product
 template <class V1, class D1, class V2, class D2, int N>
 inline
-typename std::enable_if<N == 3 || N == runtime_size,
-                        TinyArray<PromoteType<V1, V2>, N>>::type
+EnableIf<N == 3 || N == runtime_size,
+         TinyArray<PromoteType<V1, V2>, N> >
 cross(TinyArrayBase<V1, D1, N> const & r1,
       TinyArrayBase<V2, D2, N> const & r2)
 {
@@ -2058,10 +2061,12 @@ PromoteType<V1, V2>
 dot(TinyArrayBase<V1, D1, N> const & l,
     TinyArrayBase<V2, D2, N> const & r)
 {
+#ifdef VIGRA_CHECK_BOUNDS
     VIGRA_ASSERT_RUNTIME_SIZE(N, l.size() == r.size(),
             "dot(): size mismatch.");
-    PromoteType<V1, V2> res = l[0] * r[0];
-    for(int k=1; k < l.size(); ++k)
+#endif
+    PromoteType<V1, V2> res = PromoteType<V1, V2>();
+    for(int k=0; k < l.size(); ++k)
         res += l[k] * r[k];
     return res;
 }
@@ -2072,8 +2077,8 @@ inline
 PromoteType<V>
 sum(TinyArrayBase<V, D, N...> const & l)
 {
-    PromoteType<V> res = l[0];
-    for(int k=1; k < l.size(); ++k)
+    PromoteType<V> res = PromoteType<V>();
+    for(int k=0; k < l.size(); ++k)
         res += l[k];
     return res;
 }
@@ -2083,8 +2088,12 @@ template <class V, class D, int ... N>
 inline RealPromoteType<V>
 mean(TinyArrayBase<V, D, N...> const & t)
 {
-    const V sumVal = sum(t);
-    return static_cast<RealPromoteType<V> >(sumVal) / t.size();
+    using Promote = RealPromoteType<V>;
+    const Promote sumVal = static_cast<Promote>(sum(t));
+    if(t.size() > 0)
+        return sumVal / t.size();
+    else
+        return sumVal;
 }
 
     /// cumulative sum of the vector's elements
@@ -2105,8 +2114,9 @@ inline
 PromoteType<V>
 prod(TinyArrayBase<V, D, N...> const & l)
 {
-    PromoteType<V> res = l[0];
-    for(int k=1; k < l.size(); ++k)
+    using Promote = PromoteType<V>;
+    Promote res = NumericTraits<Promote>::one();
+    for(int k=0; k < l.size(); ++k)
         res *= l[k];
     return res;
 }
@@ -2202,6 +2212,8 @@ inline
 V const &
 min(TinyArrayBase<V, D, N...> const & l)
 {
+    vigra_precondition(l.size() > 0,
+        "min() on empty TinyArray.");
     int m = 0;
     for(int i=1; i<l.size(); ++i)
         if(l[i] < l[m])
@@ -2274,6 +2286,8 @@ inline
 V const &
 max(TinyArrayBase<V, D, N...> const & l)
 {
+    vigra_precondition(l.size() > 0,
+        "max() on empty TinyArray.");
     int m = 0;
     for(int i=1; i<l.size(); ++i)
         if(l[m] < l[i])

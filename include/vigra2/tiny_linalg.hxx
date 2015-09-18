@@ -238,6 +238,8 @@ symmetricEigenvalues(TinySymmetricView<T, 3> const & a)
     return res;
 }
 
+// FIXME: compute TinySymmetricView eigenvectors
+
 } // namespace vigra
 
 #endif // VIGRA_TINY_LINALG_HXX
