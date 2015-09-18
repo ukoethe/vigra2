@@ -51,11 +51,10 @@
 #endif
 
 #ifdef VIGRA_CHECK_BOUNDS
-    #define VIGRA_ASSERT_INSIDE(diff) \
-      vigra_precondition(diff >= 0, "Index out of bounds");\
-      vigra_precondition(diff < TinySize<N...>::value, "Index out of bounds");
+    #define VIGRA_ASSERT_INSIDE(array, diff) \
+      vigra_precondition(diff >= 0 && diff < array.size(), "Index out of bounds")
 #else
-    #define VIGRA_ASSERT_INSIDE(diff)
+    #define VIGRA_ASSERT_INSIDE(array, diff)
 #endif
 
 namespace vigra {
@@ -446,15 +445,30 @@ class TinyArrayBase
         return TinyArrayView<value_type, TO-FROM>(data_+FROM);
     }
     
-    typename std::enable_if<sizeof...(N),
-                            TinyArray<value_type, static_size-1> >::type
-    dropIndex(ArrayIndex m) const
+    TinyArray<value_type, static_size-1>
+    erase(ArrayIndex m) const
     {
-        TinyArray<value_type, static_size-1> res(DontInit);
+        vigra_precondition(m >= 0 && m < static_size,
+            "TinyArray::erase(): Index out of bounds.");
+        TinyArray<value_type, static_size-1> res(static_size-1, DontInit);
         for(int k=0; k<m; ++k)
             res[k] = data_[k];
         for(int k=m; k<static_size-1; ++k)
             res[k] = data_[k+1];
+        return res;
+    }
+    
+    TinyArray<value_type, static_size+1>
+    insert(ArrayIndex m, value_type v) const
+    {
+        vigra_precondition(m >= 0 && m <= static_size,
+            "TinyArray::insert(): Index out of bounds.");
+        TinyArray<value_type, static_size+1> res(DontInit);
+        for(int k=0; k<m; ++k)
+            res[k] = data_[k];
+        res[m] = v;
+        for(int k=m; k<static_size; ++k)
+            res[k+1] = data_[k];
         return res;
     }
 
@@ -768,14 +782,31 @@ class TinyArrayBase<VALUETYPE, DERIVED, runtime_size>
         return TinyArrayBase(TO-FROM, data_+FROM);
     }
     
+    
     TinyArray<value_type, runtime_size>
-    dropIndex(ArrayIndex m) const
+    erase(ArrayIndex m) const
     {
-        TinyArray<value_type, runtime_size> res(size_-1, DontInit);
+        vigra_precondition(m >= 0 && m < size(),
+            "TinyArray::erase(): Index out of bounds.");
+        TinyArray<value_type, runtime_size> res(size()-1, DontInit);
         for(int k=0; k<m; ++k)
             res[k] = data_[k];
-        for(int k=m; k<size_-1; ++k)
-            res[k] = data_[k+1];
+        for(int k=m+1; k<size(); ++k)
+            res[k-1] = data_[k];
+        return res;
+    }
+    
+    TinyArray<value_type, runtime_size>
+    insert(ArrayIndex m, value_type v) const
+    {
+        vigra_precondition(m >= 0 && m <= size(),
+            "TinyArray::insert(): Index out of bounds.");
+        TinyArray<value_type, runtime_size> res(size()+1, DontInit);
+        for(int k=0; k<m; ++k)
+            res[k] = data_[k];
+        res[m] = v;
+        for(int k=m; k<size(); ++k)
+            res[k+1] = data_[k];
         return res;
     }
 
@@ -1479,17 +1510,15 @@ namespace detail {
 template <int N0, int ... N>
 struct TinyArrayIsStatic
 {
-    static const int first = N0;
     static const int ndim = sizeof...(N)+1;
     static const bool value = ndim > 1 || N0 != runtime_size;
 };
 
 } // namespace detail
 
-#define vigra_tinyarray_check_size(PREDICATE, MESSAGE) \
-  if(detail::TinyArrayIsStatic<N...>::value) {} else \
-    if((PREDICATE)) {} else \
-      vigra::throw_contract_error("Precondition violation!", MESSAGE, __FILE__, __LINE__)
+#define VIGRA_ASSERT_RUNTIME_SIZE(SHAPE, PREDICATE, MESSAGE) \
+    if(detail::TinyArrayIsStatic<SHAPE>::value) {} else \
+        vigra_precondition(PREDICATE, MESSAGE)
 
 
 /********************************************************/
@@ -1515,7 +1544,7 @@ inline bool
 operator==(TinyArrayBase<V1, D1, N...> const & l,
            TinyArrayBase<V2, D2, N...> const & r)
 {
-    vigra_tinyarray_check_size(l.size() == r.size(),
+    VIGRA_ASSERT_RUNTIME_SIZE(N..., l.size() == r.size(),
         "TinyArrayBase::operator==(): size mismatch.");
     for(int k=0; k < l.size(); ++k)
         if(l[k] != r[k])
@@ -1529,7 +1558,7 @@ inline bool
 operator!=(TinyArrayBase<V1, D1, N...> const & l,
            TinyArrayBase<V2, D2, N...> const & r)
 {
-    vigra_tinyarray_check_size(l.size() == r.size(),
+    VIGRA_ASSERT_RUNTIME_SIZE(N..., l.size() == r.size(),
         "TinyArrayBase::operator!=(): size mismatch.");
     for(int k=0; k < l.size(); ++k)
         if(l[k] != r[k])
@@ -1543,7 +1572,7 @@ inline bool
 operator<(TinyArrayBase<V1, D1, N...> const & l,
           TinyArrayBase<V2, D2, N...> const & r)
 {
-    vigra_tinyarray_check_size(l.size() == r.size(),
+    VIGRA_ASSERT_RUNTIME_SIZE(N..., l.size() == r.size(),
         "TinyArrayBase::operator<(): size mismatch.");
     for(int k=0; k < l.size(); ++k)
     {
@@ -1594,7 +1623,7 @@ inline bool
 allLess(TinyArrayBase<V1, D1, N...> const & l,
         TinyArrayBase<V2, D2, N...> const & r)
 {
-    vigra_tinyarray_check_size(l.size() == r.size(),
+    VIGRA_ASSERT_RUNTIME_SIZE(N..., l.size() == r.size(),
         "TinyArrayBase::allLess(): size mismatch.");
     for(int k=0; k < l.size(); ++k)
         if (l[k] >= r[k])
@@ -1608,7 +1637,7 @@ inline bool
 allGreater(TinyArrayBase<V1, D1, N...> const & l,
            TinyArrayBase<V2, D2, N...> const & r)
 {
-    vigra_tinyarray_check_size(l.size() == r.size(),
+    VIGRA_ASSERT_RUNTIME_SIZE(N..., l.size() == r.size(),
         "TinyArrayBase::allGreater(): size mismatch.");
     for(int k=0; k < l.size(); ++k)
         if(l[k] <= r[k])
@@ -1622,7 +1651,7 @@ inline bool
 allLessEqual(TinyArrayBase<V1, D1, N...> const & l,
              TinyArrayBase<V2, D2, N...> const & r)
 {
-    vigra_tinyarray_check_size(l.size() == r.size(),
+    VIGRA_ASSERT_RUNTIME_SIZE(N..., l.size() == r.size(),
         "TinyArrayBase::allLessEqual(): size mismatch.");
     for(int k=0; k < l.size(); ++k)
         if (l[k] > r[k])
@@ -1636,7 +1665,7 @@ inline bool
 allGreaterEqual(TinyArrayBase<V1, D1, N...> const & l,
                 TinyArrayBase<V2, D2, N...> const & r)
 {
-    vigra_tinyarray_check_size(l.size() == r.size(),
+    VIGRA_ASSERT_RUNTIME_SIZE(N..., l.size() == r.size(),
         "TinyArrayBase::allGreaterEqual(): size mismatch.");
     for(int k=0; k < l.size(); ++k)
         if (l[k] < r[k])
@@ -1650,7 +1679,7 @@ closeAtTolerance(TinyArrayBase<V1, D1, N...> const & l,
                  TinyArrayBase<V2, D2, N...> const & r, 
                  PromoteType<V1, V2> epsilon = 2.0*NumericTraits<PromoteType<V1, V2> >::epsilon())
 {
-    vigra_tinyarray_check_size(l.size() == r.size(),
+    VIGRA_ASSERT_RUNTIME_SIZE(N..., l.size() == r.size(),
         "TinyArrayBase::closeAtTolerance(): size mismatch.");
     for(int k=0; k < l.size(); ++k)
         if(!closeAtTolerance(l[k], r[k], epsilon))
@@ -1838,7 +1867,7 @@ inline DERIVED &  \
 operator op##=(TinyArrayBase<VALUE, DERIVED, N...> & l, \
                TinyArrayBase<OTHER, OTHER_DERIVED, N...> const & r) \
 { \
-    vigra_tinyarray_check_size(l.size() == r.size(), \
+    VIGRA_ASSERT_RUNTIME_SIZE(N..., l.size() == r.size(), \
         "TinyArrayBase::operator" #op "=(): size mismatch."); \
     for(int i=0; i<l.size(); ++i) \
         l[i] op##= r[i]; \
@@ -2007,30 +2036,19 @@ pow(TinyArrayBase<V, D, N...> const & v, E exponent)
 }
 
     /// cross product
-template <class V1, class D1, class V2, class D2>
+template <class V1, class D1, class V2, class D2, int N>
 inline
-TinyArray<PromoteType<V1, V2>, 3>
-cross(TinyArrayBase<V1, D1, 3> const & r1,
-      TinyArrayBase<V2, D2, 3> const & r2)
+typename std::enable_if<N == 3 || N == runtime_size,
+                        TinyArray<PromoteType<V1, V2>, N>>::type
+cross(TinyArrayBase<V1, D1, N> const & r1,
+      TinyArrayBase<V2, D2, N> const & r2)
 {
-    typedef TinyArray<PromoteType<V1, V2>, 3> Res;
-    return  Res(r1[1]*r2[2] - r1[2]*r2[1],
+    VIGRA_ASSERT_RUNTIME_SIZE(N, r1.size() == 3 && r2.size() == 3,
+        "cross(): cross product requires size() == 3.");
+    typedef TinyArray<PromoteType<V1, V2>, N> Res;
+    return  Res{r1[1]*r2[2] - r1[2]*r2[1],
                 r1[2]*r2[0] - r1[0]*r2[2],
-                r1[0]*r2[1] - r1[1]*r2[0]);
-}
-
-template <class V1, class D1, class V2, class D2>
-inline
-TinyArray<PromoteType<V1, V2>, runtime_size>
-cross(TinyArrayBase<V1, D1, runtime_size> const & r1,
-      TinyArrayBase<V2, D2, runtime_size> const & r2)
-{
-    vigra_precondition(r1.size() == 3 && r2.size() == 3,
-        "TinyArrayBase::cross(): cross product requires size() == 3.");
-    typedef TinyArray<PromoteType<V1, V2>, runtime_size> Res;
-    return  Res({r1[1]*r2[2] - r1[2]*r2[1],
-                 r1[2]*r2[0] - r1[0]*r2[2],
-                 r1[0]*r2[1] - r1[1]*r2[0]});
+                r1[0]*r2[1] - r1[1]*r2[0]};
 }
 
     /// dot product of two vectors
@@ -2040,9 +2058,8 @@ PromoteType<V1, V2>
 dot(TinyArrayBase<V1, D1, N> const & l,
     TinyArrayBase<V2, D2, N> const & r)
 {
-    if(N == runtime_size)
-        vigra_precondition(l.size() == r.size(),
-            "TinyArrayBase::dot(): size mismatch.");
+    VIGRA_ASSERT_RUNTIME_SIZE(N, l.size() == r.size(),
+            "dot(): size mismatch.");
     PromoteType<V1, V2> res = l[0] * r[0];
     for(int k=1; k < l.size(); ++k)
         res += l[k] * r[k];
@@ -2128,8 +2145,8 @@ TinyArray<PromoteType<V1, V2>, N...>
 minImpl(TinyArrayBase<V1, D1, N...> const & l,
         TinyArrayBase<V2, D2, N...> const & r)
 {
-    vigra_tinyarray_check_size(l.size() == r.size(),
-        "TinyArrayBase::min(): size mismatch.");
+    VIGRA_ASSERT_RUNTIME_SIZE(N..., l.size() == r.size(),
+        "min(): size mismatch.");
     TinyArray<PromoteType<V1, V2>, N...> res(l.size(), DontInit);
     for(int k=0; k < l.size(); ++k)
         res[k] =  min<PromoteType<V1, V2> >(l[k], r[k]);
@@ -2200,8 +2217,8 @@ TinyArray<PromoteType<V1, V2>, N...>
 maxImpl(TinyArrayBase<V1, D1, N...> const & l,
         TinyArrayBase<V2, D2, N...> const & r)
 {
-    vigra_tinyarray_check_size(l.size() == r.size(),
-        "TinyArrayBase::max(): size mismatch.");
+    VIGRA_ASSERT_RUNTIME_SIZE(N..., l.size() == r.size(),
+        "max(): size mismatch.");
     TinyArray<PromoteType<V1, V2>, N...> res(l.size(), DontInit);
     for(int k=0; k < l.size(); ++k)
         res[k] =  max<PromoteType<V1, V2> >(l[k], r[k]);
@@ -2308,10 +2325,13 @@ TinyArray<V1, N>
 transpose(TinyArrayBase<V1, D1, N> const & v, 
           TinyArrayBase<V2, D2, N> const & permutation)
 {
+    VIGRA_ASSERT_RUNTIME_SIZE(N, v.size() == permutation.size(),
+        "transpose(): size mismatch.");
     TinyArray<V1, N> res(DontInit);
     for(int k=0; k < N; ++k)
     {
-        VIGRA_ASSERT_INSIDE(permutation[k]);
+        vigra_precondition(permutation[k] >= 0 && permutation[k] < v.size(), 
+            "transpose():  Permutation index out of bounds");
         res[k] = v[permutation[k]];
     }
     return res;
@@ -2430,8 +2450,8 @@ clip(TinyArrayBase<V, D1, N...> const & t,
      TinyArrayBase<V, D2, N...> const & valLower, 
      TinyArrayBase<V, D3, N...> const & valUpper)
 {
-    vigra_tinyarray_check_size(t.size() == valLower.size() && t.size() == valUpper.size(),
-        "TinyArrayBase::clip(): size mismatch.");
+    VIGRA_ASSERT_RUNTIME_SIZE(N..., t.size() == valLower.size() && t.size() == valUpper.size(),
+        "clip(): size mismatch.");
     TinyArray<V, N...> res(t.size(), DontInit);
     for(int k=0; k < t.size(); ++k)
     {
@@ -2526,6 +2546,7 @@ using TinyVectorView = vigra::TinyArray<T, SIZE>;
 } // namespace vigra1
 
 #undef VIGRA_ASSERT_INSIDE
+#undef VIGRA_ASSERT_RUNTIME_SIZE
 
 
 #endif // VIGRA_TINYARRAY_HXX

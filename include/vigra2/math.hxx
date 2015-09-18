@@ -154,6 +154,8 @@ VIGRA_DEFINE_INTEGER_FLOOR_CEIL(int)
 VIGRA_DEFINE_INTEGER_FLOOR_CEIL(long)
 VIGRA_DEFINE_INTEGER_FLOOR_CEIL(long long)
 
+#undef VIGRA_DEFINE_INTEGER_FLOOR_CEIL
+
 // import abs(float), abs(double), abs(long double) from <cmath>
 //        abs(int), abs(long), abs(long long) from <cstdlib>
 //        abs(std::complex<T>) from <complex>

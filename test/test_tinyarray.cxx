@@ -199,9 +199,10 @@ struct TinyArrayTest
         
         typedef TinyArray<typename FV::value_type, SIZE-1> FV1;
         FV1 fv10(fv3.begin());
-        shouldEqual(fv10, fv3.dropIndex(SIZE-1));
+        shouldEqual(fv10, fv3.erase(SIZE-1));
+        shouldEqual(fv3, fv10.insert(SIZE-1, fv3[SIZE-1]));
         FV1 fv11(fv3.begin()+1);
-        shouldEqual(fv11, fv3.dropIndex(0));
+        shouldEqual(fv11, fv3.erase(0));
     }
 
     void testComparison()
@@ -557,6 +558,13 @@ struct TinyArrayTest
         should(!any(e));
         should(allZero(e));
         
+        shouldEqual(cross(a, a), e);
+        shouldEqual(dot(a, a), 14);
+        shouldEqual(squaredNorm(a), 14);
+        
+        shouldEqual(a.erase(1), (A{1,3}));
+        shouldEqual(a.insert(3, 4), (A{1,2,3,4}));
+        
         A r = A::range(2,6);
         shouldEqual(r, (A{2,3,4,5}));
         shouldEqual(r.subarray(1,3), (A{3,4}));
@@ -574,7 +582,7 @@ struct TinyArrayTest
             A(3) / A(2);
             failTest("no exception thrown");
         }
-        catch(std::runtime_error & e)
+        catch(ContractViolation & e)
         {
             std::string expected("\nPrecondition violation!\n"
                                  "TinyArrayBase::operator/=(): size mismatch.");
