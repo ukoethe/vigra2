@@ -227,8 +227,8 @@ class TinyArrayBase
     template <class OTHER, class OTHER_DERIVED>
     TinyArrayBase(TinyArrayBase<OTHER, OTHER_DERIVED, N...> const & other)
     {
-        static_assert(static_size > 0, 
-                      "TinyArrayBase(): array must have non-zero size.");
+        vigra_precondition(size() == other.size(), 
+                      "TinyArrayBase(): shape mismatch.");
         for(int i=0; i<static_size; ++i)
             data_[i] = detail::RequiresExplicitCast<value_type>::cast(other[i]);
     }
@@ -243,13 +243,11 @@ class TinyArrayBase
             data_[i] = v;
     }
     
-    // constructor for two or arguments
+    // constructor for two or more arguments
     template <class ... V>
     constexpr TinyArrayBase(value_type v0, value_type v1, V ... v)
     : data_{v0, v1, v...}
     {
-        static_assert(static_size > 0, 
-                      "TinyArrayBase(): array must have non-zero size.");
         static_assert(sizeof...(V)+2 == static_size, 
                       "TinyArrayBase(): wrong number of arguments.");
     }
@@ -309,6 +307,16 @@ class TinyArrayBase
     TinyArrayBase & operator=(TinyArrayBase<OTHER, OTHER_DERIVED, N...> const & other)
     {
         for(int i=0; i<static_size; ++i)
+            data_[i] = detail::RequiresExplicitCast<value_type>::cast(other[i]);
+        return *this;
+    }
+    
+    template <class OTHER, class OTHER_DERIVED>
+    TinyArrayBase & operator=(TinyArrayBase<OTHER, OTHER_DERIVED, runtime_size> const & other)
+    {
+        vigra_precondition(size() == other.size(),
+            "TinyArrayBase::operator=(): size mismatch.");
+        for(int i=0; i<size(); ++i)
             data_[i] = detail::RequiresExplicitCast<value_type>::cast(other[i]);
         return *this;
     }
@@ -948,6 +956,15 @@ class TinyArray
     TinyArray(TinyArrayBase<OTHER, DERIVED, M, N...> const & other)
     : BaseType(other)
     {}
+    
+    template <class OTHER, class DERIVED>
+    TinyArray(TinyArrayBase<OTHER, DERIVED, runtime_size> const & other)
+    : BaseType(DontInit)
+    {
+        vigra_precondition(this->size() == other.size(),
+            "TinyArray(): shape mismatch.");
+        this->init(other.begin(), other.end());
+    }
     
     TinyArray(SkipInitialization)
     : BaseType(DontInit)

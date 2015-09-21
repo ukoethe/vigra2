@@ -589,6 +589,25 @@ struct TinyArrayTest
             std::string message(e.what());
             should(0 == expected.compare(message.substr(0,expected.size())));
         }
+        
+        using TA = TinyArray<int, 3>;
+        TA s(A{1,2,3});
+        shouldEqual(s, (TA{1,2,3}));
+        s = A{3,4,5};
+        shouldEqual(s, (TA{3,4,5}));
+        
+        try
+        {
+            TA(A{1,2,3,4});
+            failTest("no exception thrown");
+        }
+        catch(ContractViolation & e)
+        {
+            std::string expected("\nPrecondition violation!\n"
+                                 "TinyArray(): shape mismatch.");
+            std::string message(e.what());
+            should(0 == expected.compare(message.substr(0,expected.size())));
+        }
     }
 };
 
