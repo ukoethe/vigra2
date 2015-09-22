@@ -58,18 +58,18 @@ enum AxisType { Channels = 1,
                 AllAxes = 2*UnknownAxisType-1 };
 
     // tags are arranged in sorting order
-enum AxisTag  { c,  // channel axis
-                n,  // node map for a graph
-                x,  // spatial x-axis
-                y,  // spatial y-axis
-                z,  // spatial z-axis
-                t,  // time axis
-                fx, // Fourier transform of x-axis
-                fy, // Fourier transform of y-axis
-                fz, // Fourier transform of z-axis
-                ft, // Fourier transform of t-axis
-                e,  // edge map for a graph
-                unknown_axistag
+enum AxisTag  { axis_c,  // channel axis
+                axis_n,  // node map for a graph
+                axis_x,  // spatial x-axis
+                axis_y,  // spatial y-axis
+                axis_z,  // spatial z-axis
+                axis_t,  // time axis
+                axis_fx, // Fourier transform of x-axis
+                axis_fy, // Fourier transform of y-axis
+                axis_fz, // Fourier transform of z-axis
+                axis_ft, // Fourier transform of t-axis
+                axis_e,  // edge map for a graph
+                axis_unknown
               };
 
 const char * AxisTagKeys[] = { "c",
@@ -97,7 +97,7 @@ AxisType AxisTagTypes[] = { Channels,                    // c
                             AxisType(Space | Frequency), // fz
                             AxisType(Time | Frequency),  // ft
                             Edge,                        // e
-                            UnknownAxisType              // unknown_axistag
+                            UnknownAxisType              // unknown
                           };
 } // namespace tags
 
@@ -108,7 +108,7 @@ class AxisInfo
 {
   public:
   
-    AxisInfo(AxisTag tag=tags::unknown_axistag, 
+    AxisInfo(AxisTag tag=tags::axis_unknown, 
              double resolution = 0.0, std::string description = "")
     : key_(tags::AxisTagKeys[tag]),
       description_(description),

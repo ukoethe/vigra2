@@ -50,20 +50,21 @@ struct AxisTagsTest
     void test()
     {
         using namespace tags;
-        shouldEqual(to_string(AxisInfo(x)),  std::string("AxisInfo: 'x' (type: Space)"));
-        shouldEqual(to_string(AxisInfo(y)),  std::string("AxisInfo: 'y' (type: Space)"));
-        shouldEqual(to_string(AxisInfo(z)),  std::string("AxisInfo: 'z' (type: Space)"));
-        shouldEqual(to_string(AxisInfo(t)),  std::string("AxisInfo: 't' (type: Time)"));
-        shouldEqual(to_string(AxisInfo(c)),  std::string("AxisInfo: 'c' (type: Channels)"));
-        shouldEqual(to_string(AxisInfo(n)),  std::string("AxisInfo: 'n' (type: Space)"));
-        shouldEqual(to_string(AxisInfo(e)),  std::string("AxisInfo: 'e' (type: Edge)"));
-        shouldEqual(to_string(AxisInfo(fx)), std::string("AxisInfo: 'x' (type: Space Frequency)"));
-        shouldEqual(to_string(AxisInfo(fy)), std::string("AxisInfo: 'y' (type: Space Frequency)"));
-        shouldEqual(to_string(AxisInfo(fz)), std::string("AxisInfo: 'z' (type: Space Frequency)"));
-        shouldEqual(to_string(AxisInfo(ft)), std::string("AxisInfo: 't' (type: Time Frequency)"));
+        shouldEqual(to_string(AxisInfo(axis_x)),  std::string("AxisInfo: 'x' (type: Space)"));
+        shouldEqual(to_string(AxisInfo(axis_y)),  std::string("AxisInfo: 'y' (type: Space)"));
+        shouldEqual(to_string(AxisInfo(axis_z)),  std::string("AxisInfo: 'z' (type: Space)"));
+        shouldEqual(to_string(AxisInfo(axis_t)),  std::string("AxisInfo: 't' (type: Time)"));
+        shouldEqual(to_string(AxisInfo(axis_c)),  std::string("AxisInfo: 'c' (type: Channels)"));
+        shouldEqual(to_string(AxisInfo(axis_n)),  std::string("AxisInfo: 'n' (type: Space)"));
+        shouldEqual(to_string(AxisInfo(axis_e)),  std::string("AxisInfo: 'e' (type: Edge)"));
+        shouldEqual(to_string(AxisInfo(axis_fx)), std::string("AxisInfo: 'x' (type: Space Frequency)"));
+        shouldEqual(to_string(AxisInfo(axis_fy)), std::string("AxisInfo: 'y' (type: Space Frequency)"));
+        shouldEqual(to_string(AxisInfo(axis_fz)), std::string("AxisInfo: 'z' (type: Space Frequency)"));
+        shouldEqual(to_string(AxisInfo(axis_ft)), std::string("AxisInfo: 't' (type: Time Frequency)"));
         shouldEqual(to_string(AxisInfo()), std::string("AxisInfo: '?' (type: none)"));
         
-        AxisTag sorted[] = { c, n, x, y, z, t, fx, fy, fz, ft, e, unknown_axistag};
+        AxisTag sorted[] = { axis_c, axis_n, axis_x, axis_y, axis_z, axis_t, 
+                             axis_fx, axis_fy, axis_fz, axis_ft, axis_e, axis_unknown};
         
         for(int i=0; i<11; ++i)
             should(AxisInfo(sorted[i]) < AxisInfo(sorted[i+1]));
