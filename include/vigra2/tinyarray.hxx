@@ -208,7 +208,7 @@ class TinyArrayBase
     
     static const ArrayIndex static_ndim  = sizeof...(N);
     static const ArrayIndex static_size  = ShapeHelper::total_size;
-    static constexpr index_type static_shape = index_type(N...);
+    static constexpr index_type static_shape = index_type{N...};
     
     // constructors
         
@@ -251,6 +251,14 @@ class TinyArrayBase
         static_assert(sizeof...(V)+2 == static_size, 
                       "TinyArrayBase(): wrong number of arguments.");
     }
+    
+    // // constructor for two or more arguments
+    // constexpr TinyArrayBase(std::initializer_list<value_type> const & init)
+    // : data_(init)
+    // {
+        // static_assert(init.size() == static_size, 
+                      // "TinyArrayBase(): wrong number of arguments.");
+    // }
     
     constexpr TinyArrayBase(value_type const (&v)[static_ndim])
     : data_{v}
@@ -966,6 +974,17 @@ class TinyArray
         this->init(other.begin(), other.end());
     }
     
+    // take size from 'other', but initialize contents with 'initial'
+    // (for compatibility with TinyArray<VALUETYPE, runtime_size>)
+    template <class OTHER, class DERIVED, int K>
+    TinyArray(TinyArrayBase<OTHER, DERIVED, K> const & other, value_type const & initial)
+    : BaseType(DontInit)
+    {
+        vigra_precondition(this->size() == other.size(),
+            "TinyArray(): shape mismatch.");
+        this->init(initial);
+    }
+    
     TinyArray(SkipInitialization)
     : BaseType(DontInit)
     {}
@@ -979,11 +998,11 @@ class TinyArray
         
             Initializes all vector elements with -1.
         */
-    TinyArray(lemon::Invalid const &)
+    constexpr TinyArray(lemon::Invalid const &)
     : BaseType(-1)
     {}
     
-    TinyArray(value_type v = value_type())
+    constexpr TinyArray(value_type v = value_type())
     : BaseType(v)
     {}
     
@@ -1089,17 +1108,15 @@ class TinyArray<VALUETYPE, runtime_size>
         this->data_ = alloc_.allocate(this->size_);
     }
 
-    explicit TinyArray(ArrayIndex size)
-    : TinyArray(size, DontInit)
-    {
-        std::uninitialized_fill(this->begin(), this->end(), value_type());
-    }
-
     TinyArray( ArrayIndex size, value_type const & initial)
-    : TinyArray(size)
+    : TinyArray(size, DontInit)
     {
         std::uninitialized_fill(this->begin(), this->end(), initial);
     }
+
+    explicit TinyArray(ArrayIndex size)
+    : TinyArray(size, value_type())
+    {}
 
     TinyArray(ArrayIndex size, lemon::Invalid const &)
     : TinyArray(size, value_type(-1))
@@ -1111,34 +1128,38 @@ class TinyArray<VALUETYPE, runtime_size>
         std::uninitialized_copy(rhs.begin(), rhs.end(), this->begin());
     }
 
-    template <class U, class D, int N>
-    explicit TinyArray(TinyArrayBase<U, D, N> const & rhs)
-    : TinyArray(rhs.size(), DontInit)
-    {
-        std::uninitialized_copy(rhs.begin(), rhs.end(), this->begin());
-    }
+    template <class U, class D, int ... N>
+    explicit TinyArray(TinyArrayBase<U, D, N...> const & other)
+    : TinyArray(other.begin(), other.end())
+    {}
 
-    template <class U>
-    TinyArray(std::initializer_list<U> rhs)
-    : TinyArray(rhs.size(), DontInit)
+    // take size from 'other', but initialize contents with 'initial'
+    // (for compatibility with TinyArray<VALUETYPE, N>)
+    template <class U, class D, int ... N>
+    explicit TinyArray(TinyArrayBase<U, D, N...> const & other, value_type const & initial)
+    : TinyArray(other.size(), initial)
+    {}
+
+    template <class InputIterator>
+    TinyArray(InputIterator begin, InputIterator end)
+    : TinyArray(std::distance(begin, end), DontInit)
     {
-        std::uninitialized_copy(rhs.begin(), rhs.end(), this->begin());
+         for(int i=0; i<this->size_; ++i, ++begin)
+            new(this->data_+i) value_type(detail::RequiresExplicitCast<value_type>::cast(*begin));
     }
     
     template <class InputIterator>
-    TinyArray(InputIterator i, InputIterator end)
-    : TinyArray(std::distance(i, end), DontInit)
-    {
-        std::uninitialized_copy(i, end, this->begin());
-    }
-    
-    template <class U>
-    TinyArray(U const * i, U const * end, ReverseCopyTag)
-    : TinyArray(std::distance(i, end), DontInit)
+    TinyArray(InputIterator begin, InputIterator end, ReverseCopyTag)
+    : TinyArray(std::distance(begin, end), DontInit)
     {
          for(int i=0; i<this->size_; ++i, --end)
             new(this->data_+i) value_type(detail::RequiresExplicitCast<value_type>::cast(*(end-1)));
     }
+    
+    template <class U>
+    TinyArray(std::initializer_list<U> rhs)
+    : TinyArray(rhs.begin(), rhs.end())
+    {}
 
     TinyArray & operator=(value_type v)
     {
@@ -1157,8 +1178,8 @@ class TinyArray<VALUETYPE, runtime_size>
         return *this;
     }
 
-    template <class U, class D, int N>
-    TinyArray & operator=(TinyArrayBase<U, D, N> const & rhs)
+    template <class U, class D, int ... N>
+    TinyArray & operator=(TinyArrayBase<U, D, N...> const & rhs)
     {
         if(this->size_ == 0)
             TinyArray(rhs).swap(*this);
