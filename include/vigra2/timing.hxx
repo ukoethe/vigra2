@@ -35,8 +35,8 @@
 
 #pragma once
 
-#ifndef VIGRA_TIMING_HXX
-#define VIGRA_TIMING_HXX
+#ifndef VIGRA2_TIMING_HXX
+#define VIGRA2_TIMING_HXX
 
 #ifndef VIGRA_NO_TIMING
 
@@ -50,7 +50,7 @@
 <b>\#include</b> \<vigra/timing.hxx\>
 
 These macros allow to perform execution speed measurements. Results are reported
-in <i>milliseconds</i>. This uses <tt>std::chrono::high_resolution_clock</tt>, 
+in <i>milliseconds</i>. This uses <tt>std::chrono::high_resolution_clock</tt>,
 but the actual accuracy is platform dependent.
 
 Basic usage:
@@ -58,7 +58,7 @@ Basic usage:
    void time_it()
    {
        USETICTOC
-  
+
        TIC
         ...    code to be timed
        TOC
@@ -69,16 +69,16 @@ Basic usage:
    }
 \endcode
 
-Instead of TOC, which outputs the time difference to std::cerr, 
+Instead of TOC, which outputs the time difference to std::cerr,
 you may use TOCN (the time difference in <i>msec</i> as a double)
-or TOCS (the time difference as a std::string). 
+or TOCS (the time difference as a std::string).
 
 Alternatively, you can perform nested timing like so:
 \code
    void time_it()
    {
        USE_NESTED_TICTOC
-  
+
        TICPUSH
         ...         code to be timed
            TICPUSH
@@ -88,7 +88,7 @@ Alternatively, you can perform nested timing like so:
        TOC          print total time
    }
 \endcode
-  
+
 */
 
 /** \file timing.hxx  Timing macros for runtime measurements
@@ -108,7 +108,7 @@ Alternatively, you can perform nested timing like so:
   \hideinitializer
 
   \def TOC
-  Stop timing and output result (the time difference w.r.t. the last TIC or TICPUSH 
+  Stop timing and output result (the time difference w.r.t. the last TIC or TICPUSH
   instance) to std::cerr.
   \hideinitializer
 
@@ -118,19 +118,19 @@ Alternatively, you can perform nested timing like so:
   \hideinitializer
 
   \def TOCN
-  Stop timing. This macro evaluates to the time difference (w.r.t. the last TIC 
+  Stop timing. This macro evaluates to the time difference (w.r.t. the last TIC
   or TICPUSH) in msec as a double.
   \hideinitializer
-  
+
   \def TOCS
-  Stop timing. This macro evaluates to the time difference (w.r.t. the last TIC 
-  or TICPUSH) as a std::string (including units). 
+  Stop timing. This macro evaluates to the time difference (w.r.t. the last TIC
+  or TICPUSH) as a std::string (including units).
   \hideinitializer
 
   \def TICTOCLOOP_BEGIN(inner_repetitions,outer_repetitions)
   Executes the code block up to TICTOCLOOP_END outer_repetitions x
   inner_repetitions times. The measurement is averaged over the
-  inner_repetitions, and the best result of the outer_repetitions is 
+  inner_repetitions, and the best result of the outer_repetitions is
   reported to std::cerr.
   \hideinitializer
 
@@ -154,7 +154,7 @@ inline double tic_toc_diff_num(time_point const & tic)
 
 inline std::string tic_toc_diff_string(time_point const & tic)
 {
-    double diff = tic_toc_diff_num(tic); 
+    double diff = tic_toc_diff_num(tic);
     std::stringstream s;
     s << diff << " msec";
     return s.str();
@@ -198,7 +198,7 @@ inline void tic_toc_diff(std::vector<time_point> & tic)
 
 // TICTOCLOOP runs the body inner_repetitions times, and minimizes the result over a number of outer_repetitions runs,
 //  outputting the final minimal average to std::cerr
-// We enclose the loop in a dummy do { ... } while(false) in order to make this a true single statement 
+// We enclose the loop in a dummy do { ... } while(false) in order to make this a true single statement
 //  (instead of just a scope).
 #define TICTOCLOOP_BEGIN(inner_repetitions,outer_repetitions) \
     do { \
@@ -208,7 +208,7 @@ inline void tic_toc_diff(std::vector<time_point> & tic)
         TIC \
         for (size_t tictocinnercounter_=0; tictocinnercounter_<inner_repetitions; ++tictocinnercounter_) { \
 
-        
+
 #define TICTOCLOOP_END \
                 } \
         const double tictoc_cur_ = TOCN; \
@@ -221,7 +221,7 @@ inline void tic_toc_diff(std::vector<time_point> & tic)
 
 #else // VIGRA_NO_TIMING
 
-#define USETICTOC 
+#define USETICTOC
 #define TIC
 #define TOC
 #define TOCN 0.0
@@ -233,4 +233,4 @@ inline void tic_toc_diff(std::vector<time_point> & tic)
 
 #endif // VIGRA_NO_TIMING
 
-#endif // VIGRA_TIMING_HXX
+#endif // VIGRA2_TIMING_HXX

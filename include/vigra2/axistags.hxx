@@ -35,8 +35,8 @@
 
 #pragma once
 
-#ifndef VIGRA_AXISTAGS_HXX
-#define VIGRA_AXISTAGS_HXX
+#ifndef VIGRA2_AXISTAGS_HXX_HXX
+#define VIGRA2_AXISTAGS_HXX_HXX
 
 #include "config.hxx"
 #include "tinyarray.hxx"
@@ -47,13 +47,13 @@ namespace vigra {
 
 namespace tags {
 
-enum AxisType { Channels = 1, 
-                Space = 2, 
-                Angle = 4, 
-                Time = 8, 
-                Frequency = 16, 
+enum AxisType { Channels = 1,
+                Space = 2,
+                Angle = 4,
+                Time = 8,
+                Frequency = 16,
                 Edge = 32,
-                UnknownAxisType = 64, 
+                UnknownAxisType = 64,
                 NonChannel = Space | Angle | Time | Frequency | UnknownAxisType,
                 AllAxes = 2*UnknownAxisType-1 };
 
@@ -107,75 +107,75 @@ using tags::AxisTag;
 class AxisInfo
 {
   public:
-  
-    AxisInfo(AxisTag tag=tags::axis_unknown, 
+
+    AxisInfo(AxisTag tag=tags::axis_unknown,
              double resolution = 0.0, std::string description = "")
     : key_(tags::AxisTagKeys[tag]),
       description_(description),
       resolution_(resolution),
       flags_(tags::AxisTagTypes[tag])
     {}
-    
-    AxisInfo(std::string key, AxisType typeFlags = tags::UnknownAxisType, 
+
+    AxisInfo(std::string key, AxisType typeFlags = tags::UnknownAxisType,
              double resolution = 0.0, std::string description = "")
     : key_(key),
       description_(description),
       resolution_(resolution),
       flags_(typeFlags)
     {}
-    
+
     std::string key() const
     {
         return key_;
     }
-    
+
     std::string description() const
     {
         return description_;
     }
-    
+
     void setDescription(std::string const & description)
     {
         description_ = description;
     }
-    
+
     double resolution() const
     {
         return resolution_;
     }
-    
+
     void setResolution(double resolution)
     {
         resolution_ = resolution;
     }
-    
+
     AxisType typeFlags() const
     {
         return flags_ == 0
                   ? tags::UnknownAxisType
                   : flags_;
     }
-    
+
     bool isUnknown() const
     {
         return isType(tags::UnknownAxisType);
     }
-    
+
     bool isSpatial() const
     {
         return isType(tags::Space);
     }
-    
+
     bool isTemporal() const
     {
         return isType(tags::Time);
     }
-    
+
     bool isChannel() const
     {
         return isType(tags::Channels);
     }
-    
+
     bool isFrequency() const
     {
         return isType(tags::Frequency);
@@ -185,17 +185,17 @@ class AxisInfo
     {
         return isType(tags::Edge);
     }
-    
+
     bool isAngular() const
     {
         return isType(tags::Angle);
     }
-    
+
     bool isType(AxisType type) const
     {
         return (typeFlags() & type) != 0;
     }
-    
+
     std::string repr() const
     {
         std::string res("AxisInfo: '");
@@ -232,7 +232,7 @@ class AxisInfo
         }
         return res;
     }
-    
+
     AxisInfo toFrequencyDomain(unsigned int size = 0, int sign = 1) const
     {
         AxisType type;
@@ -253,7 +253,7 @@ class AxisInfo
             res.resolution_ = 1.0 / (resolution_ * size);
         return res;
     }
-    
+
     AxisInfo fromFrequencyDomain(unsigned int size = 0) const
     {
         return toFrequencyDomain(size, -1);
@@ -261,7 +261,7 @@ class AxisInfo
 
     bool compatible(AxisInfo const & other) const
     {
-        return isUnknown() || other.isUnknown() || 
+        return isUnknown() || other.isUnknown() ||
                ((typeFlags() & ~tags::Frequency) == (other.typeFlags() & ~tags::Frequency) &&
                  key() == other.key());
     }
@@ -275,14 +275,14 @@ class AxisInfo
     {
         return !operator==(other);
     }
-    
+
     // the primary ordering is according to axis type:
     //     Channels < Space < Angle < Time < Frequency < Edge < Unknown
     // the secondary ordering is the lexicographic ordering of the keys
     //     "x" < "y" < "z"
     bool operator<(AxisInfo const & other) const
     {
-        return (typeFlags() < other.typeFlags()) || 
+        return (typeFlags() < other.typeFlags()) ||
                 (typeFlags() == other.typeFlags() && key() < other.key());
     }
 
@@ -290,17 +290,17 @@ class AxisInfo
     {
         return !(other < *this);
     }
-    
+
     bool operator>(AxisInfo const & other) const
     {
         return other < *this;
     }
-    
+
     bool operator>=(AxisInfo const & other) const
     {
         return !(*this < other);
     }
-    
+
     std::string key_, description_;
     double resolution_;
     AxisType flags_;
@@ -331,4 +331,4 @@ std::ostream & operator<<(std::ostream & o, AxisInfo const & i)
 
 } // namespace vigra
 
-#endif // VIGRA_AXISTAGS_HXX
+#endif // VIGRA2_AXISTAGS_HXX_HXX

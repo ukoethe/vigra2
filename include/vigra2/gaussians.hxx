@@ -35,8 +35,8 @@
 
 #pragma once
 
-#ifndef VIGRA_GAUSSIANS_HXX
-#define VIGRA_GAUSSIANS_HXX
+#ifndef VIGRA2_GAUSSIANS_HXX
+#define VIGRA2_GAUSSIANS_HXX
 
 #include <cmath>
 #include <vector>
@@ -233,4 +233,4 @@ void Gaussian<T>::calculateHermitePolynomial()
 } // namespace vigra
 
 
-#endif /* VIGRA_GAUSSIANS_HXX */
+#endif /* VIGRA2_GAUSSIANS_HXX */

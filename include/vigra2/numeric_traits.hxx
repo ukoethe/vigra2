@@ -35,8 +35,8 @@
 
 #pragma once
 
-#ifndef VIGRA_NUMERIC_TRAITS_HXX
-#define VIGRA_NUMERIC_TRAITS_HXX
+#ifndef VIGRA2_NUMERIC_TRAITS_HXX_HXX
+#define VIGRA2_NUMERIC_TRAITS_HXX_HXX
 
 #include <type_traits>
 #include <cmath>    // abs(double)
@@ -87,7 +87,6 @@ struct NumericTraits
 {
     typedef T                                          Type;
     typedef typename PromoteTraits<T>::Promote         Promote;
-    typedef typename std::make_unsigned<Promote>::type UnsignedPromote;
     typedef typename PromoteTraits<T>::RealPromote     RealPromote;
     typedef std::complex<RealPromote>                  ComplexPromote;
     typedef T                                          ValueType;
@@ -160,17 +159,17 @@ struct NumericTraits<bool>
     static constexpr Type smallestPositive() noexcept { return true; }
     static constexpr bool min() noexcept { return false; }
     static constexpr bool max() noexcept { return true; }
-    
+
     static const bool minConst = false;
     static const bool maxConst = true;
-    
+
     static Promote toPromote(bool v) { return v ? 1 : 0; }
     static RealPromote toRealPromote(bool v) { return v ? 1.0 : 0.0; }
-    static bool fromPromote(Promote v) { 
-        return (v == 0) ? false : true; 
+    static bool fromPromote(Promote v) {
+        return (v == 0) ? false : true;
     }
     static bool fromRealPromote(RealPromote v) {
-        return (v == 0.0) ? false : true; 
+        return (v == 0.0) ? false : true;
     }
 };
 
@@ -183,7 +182,7 @@ struct SignedNumericTraits
     typedef typename std::make_unsigned<Promote>::type UnsignedPromote;
     typedef RealPromoteType<Type> RealPromote;
     typedef std::complex<RealPromote> ComplexPromote;
-    
+
     static constexpr Type zero() noexcept    { return 0; }
     static constexpr Type one() noexcept     { return 1; }
     static constexpr Type nonZero() noexcept { return 1; }
@@ -191,22 +190,22 @@ struct SignedNumericTraits
     static constexpr Type smallestPositive() noexcept { return 1; }
     static constexpr Type min() noexcept     { return std::numeric_limits<T>::min(); }
     static constexpr Type max() noexcept     { return std::numeric_limits<T>::max(); }
-    
+
     static const Type minConst = min();
     static const Type maxConst = max();
-    
+
     static Promote      toPromote(Type v)     { return v; }
     static RealPromote  toRealPromote(Type v) { return v; }
-    
-    static Type fromPromote(Promote v) 
+
+    static Type fromPromote(Promote v)
     {
         return v <= static_cast<Promote>(min())
                    ? min()
-                   : v >= static_cast<Promote>(max()) 
+                   : v >= static_cast<Promote>(max())
                           ? max()
                           : static_cast<Type>(v);
     }
-    static Type fromRealPromote(RealPromote v) 
+    static Type fromRealPromote(RealPromote v)
     {
         return v <= static_cast<RealPromote>(min())
                    ? min()
@@ -236,7 +235,7 @@ struct UnsignedNumericTraits
     typedef typename std::make_unsigned<Promote>::type UnsignedPromote;
     typedef RealPromoteType<Type> RealPromote;
     typedef std::complex<RealPromote> ComplexPromote;
-    
+
     static constexpr Type zero() noexcept    { return 0; }
     static constexpr Type one() noexcept     { return 1; }
     static constexpr Type nonZero() noexcept { return 1; }
@@ -244,22 +243,22 @@ struct UnsignedNumericTraits
     static constexpr Type smallestPositive() noexcept { return 1; }
     static constexpr Type min() noexcept     { return std::numeric_limits<T>::min(); }
     static constexpr Type max() noexcept     { return std::numeric_limits<T>::max(); }
-    
+
     static const Type minConst = min();
     static const Type maxConst = max();
-    
+
     static Promote      toPromote(Type v)     { return v; }
     static RealPromote  toRealPromote(Type v) { return v; }
-    
-    static Type fromPromote(Promote v) 
+
+    static Type fromPromote(Promote v)
     {
         return v <= static_cast<Promote>(zero())
                    ? zero()
-                   : v >= static_cast<Promote>(max()) 
+                   : v >= static_cast<Promote>(max())
                           ? max()
                           : static_cast<Type>(v);
     }
-    static Type fromRealPromote(RealPromote v) 
+    static Type fromRealPromote(RealPromote v)
     {
         return v <= static_cast<RealPromote>(zero())
                    ? zero()
@@ -284,12 +283,12 @@ template<class T>
 struct FloatNumericTraits
 {
     typedef T    Type;
-    typedef Type ValueType;    
+    typedef Type ValueType;
     typedef Type Promote;
     typedef Type UnsignedPromote;
     typedef Type RealPromote;
     typedef std::complex<RealPromote> ComplexPromote;
-    
+
     static constexpr Type zero() noexcept { return 0.0; }
     static constexpr Type one() noexcept { return 1.0; }
     static constexpr Type nonZero() noexcept { return 1.0; }
@@ -297,11 +296,11 @@ struct FloatNumericTraits
     static constexpr Type smallestPositive() noexcept { return std::numeric_limits<Type>::min(); }
     static constexpr Type min() noexcept { return std::numeric_limits<Type>::lowest(); }
     static constexpr Type max() noexcept { return std::numeric_limits<Type>::max(); }
-    
+
     static Promote      toPromote(Type v) { return v; }
     static RealPromote  toRealPromote(Type v) { return v; }
     static Type         fromPromote(Promote v) { return v; }
-    static Type         fromRealPromote(RealPromote v) 
+    static Type         fromRealPromote(RealPromote v)
     {
         return v <= static_cast<RealPromote>(min())
                    ? min()
@@ -507,15 +506,15 @@ inline
 FPT safeFloatDivision( FPT f1, FPT f2 )
 {
     return  f2 < NumericTraits<FPT>::one() && f1 > f2 * NumericTraits<FPT>::max()
-                ? NumericTraits<FPT>::max() 
-                : (f2 > NumericTraits<FPT>::one() && f1 < f2 * NumericTraits<FPT>::smallestPositive()) || 
+                ? NumericTraits<FPT>::max()
+                : (f2 > NumericTraits<FPT>::one() && f1 < f2 * NumericTraits<FPT>::smallestPositive()) ||
                    f1 == NumericTraits<FPT>::zero()
-                     ? NumericTraits<FPT>::zero() 
+                     ? NumericTraits<FPT>::zero()
                      : f1/f2;
 }
 
 } // namespace numeric_traits_detail
-    
+
     /** \brief Tolerance based floating-point equality.
 
         Check whether two floating point numbers are equal within the given tolerance.
@@ -547,13 +546,13 @@ closeAtTolerance(T1 l, T2 r, PromoteType<T1, T2> epsilon)
 template <class T1, class T2>
 inline
 typename std::enable_if<std::is_floating_point<PromoteType<T1, T2> >::value,
-                        bool>::type 
+                        bool>::type
 closeAtTolerance(T1 l, T2 r)
 {
     typedef PromoteType<T1, T2> T;
     return closeAtTolerance(l, r, T(2.0) * NumericTraits<T>::epsilon());
 }
-    
+
     /** \brief Tolerance based floating-point less-or-equal.
 
         Check whether two floating point numbers are less or equal within the given tolerance.
@@ -568,7 +567,7 @@ closeAtTolerance(T1 l, T2 r)
 template <class T1, class T2>
 inline
 typename std::enable_if<std::is_floating_point<PromoteType<T1, T2> >::value,
-                        bool>::type 
+                        bool>::type
 lessEqualAtTolerance(T1 l, T2 r, PromoteType<T1, T2> epsilon)
 {
     return l < r || closeAtTolerance(l, r, epsilon);
@@ -577,13 +576,13 @@ lessEqualAtTolerance(T1 l, T2 r, PromoteType<T1, T2> epsilon)
 template <class T1, class T2>
 inline
 typename std::enable_if<std::is_floating_point<PromoteType<T1, T2> >::value,
-                        bool>::type 
+                        bool>::type
 lessEqualAtTolerance(T1 l, T2 r)
 {
     typedef PromoteType<T1, T2> T;
     return lessEqualAtTolerance(l, r, T(2.0) * NumericTraits<T>::epsilon());
 }
-    
+
     /** \brief Tolerance based floating-point greater-or-equal.
 
         Check whether two floating point numbers are greater or equal within the given tolerance.
@@ -598,7 +597,7 @@ lessEqualAtTolerance(T1 l, T2 r)
 template <class T1, class T2>
 inline
 typename std::enable_if<std::is_floating_point<PromoteType<T1, T2> >::value,
-                        bool>::type 
+                        bool>::type
 greaterEqualAtTolerance(T1 l, T2 r, PromoteType<T1, T2> epsilon)
 {
     return r < l || closeAtTolerance(l, r, epsilon);
@@ -613,4 +612,4 @@ inline bool greaterEqualAtTolerance(T1 l, T2 r)
 
 } // namespace vigra
 
-#endif // VIGRA_NUMERIC_TRAITS_HXX
+#endif // VIGRA2_NUMERIC_TRAITS_HXX_HXX

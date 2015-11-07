@@ -35,8 +35,8 @@
 
 #pragma once
 
-#ifndef VIGRA_CONFIG_HXX
-#define VIGRA_CONFIG_HXX
+#ifndef VIGRA2_CONFIG_HXX
+#define VIGRA2_CONFIG_HXX
 
 #include "config_version.hxx"
 #include <stdexcept>
@@ -107,21 +107,21 @@
     #if _MSC_VER < 1400
         #define VIGRA_NO_WORKING_STRINGSTREAM
     #endif
-    
+
     #if _MSC_VER < 1600
         #define VIGRA_NO_UNIQUE_PTR
     #endif
-    
+
     #define VIGRA_NEED_BIN_STREAMS
-    
+
     #define VIGRA_NO_THREADSAFE_STATIC_INIT  // at least up to _MSC_VER <= 1600, probably higher
-    
-    // usage: 
+
+    // usage:
     //   static int * p = VIGRA_SAFE_STATIC(p, new int(42));
     //
     #define VIGRA_SAFE_STATIC(p, v) \
     0; while(p == 0) ::vigra::detail::safeStaticInit(&p, v)
-    
+
     namespace vigra { namespace detail {
     template <class T>
     inline void safeStaticInit(T ** p, T * v)
@@ -130,7 +130,7 @@
             delete v;
     }
     }} // namespace vigra::detail
-    
+
     #ifndef VIGRA_ENABLE_ANNOYING_WARNINGS
         #pragma warning ( disable: 4244 4267) // implicit integer conversion warnings
     #endif
@@ -158,10 +158,10 @@
         #define VIGRA_NO_WORKING_STRINGSTREAM
     #endif
     #define HAS_HASH_CONTAINERS
-    
+
     // these warnings produce too many false positives to be useful
-    #pragma GCC diagnostic ignored "-Wshadow"  
-    
+    #pragma GCC diagnostic ignored "-Wshadow"
+
     #if defined(__GXX_EXPERIMENTAL_CXX0X__) || __cplusplus >= 201103L
         #if defined(__APPLE__)
             #define VIGRA_NO_UNIQUE_PTR
@@ -231,7 +231,7 @@
     #else
         #define VIGRA_EXPORT __declspec(dllimport)
     #endif
-    
+
     #define VIGRA_NO_BESSEL
 #endif  // __MINGW32__
 
@@ -318,8 +318,8 @@ static const int runtime_ndim = -1;
 #  define VIGRA_SHARED_PTR  std::shared_ptr
 #endif
 
-#ifndef VIGRA_NO_THREADSAFE_STATIC_INIT    
-    // usage: 
+#ifndef VIGRA_NO_THREADSAFE_STATIC_INIT
+    // usage:
     //   static int * p = VIGRA_SAFE_STATIC(p, new int(42));
     //
     #define VIGRA_SAFE_STATIC(p, v) v
@@ -340,4 +340,4 @@ namespace vigra {
 #endif
 
 
-#endif // VIGRA_CONFIG_HXX
+#endif // VIGRA2_CONFIG_HXX

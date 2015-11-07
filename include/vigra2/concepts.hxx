@@ -35,8 +35,8 @@
 
 #pragma once
 
-#ifndef VIGRA_CONCEPTS_HXX
-#define VIGRA_CONCEPTS_HXX
+#ifndef VIGRA2_CONCEPTS_HXX_HXX
+#define VIGRA2_CONCEPTS_HXX_HXX
 
 #include "config.hxx"
 #include <type_traits>
@@ -48,4 +48,4 @@ using EnableIf = typename std::enable_if<CONCEPTS, RETURN>::type;
 
 } // namespace vigra
 
-#endif // VIGRA_CONCEPTS_HXX
+#endif // VIGRA2_CONCEPTS_HXX_HXX

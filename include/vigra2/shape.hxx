@@ -35,8 +35,8 @@
 
 #pragma once
 
-#ifndef VIGRA_SHAPE_HXX
-#define VIGRA_SHAPE_HXX
+#ifndef VIGRA2_SHAPE_HXX_HXX
+#define VIGRA2_SHAPE_HXX_HXX
 
 #include "config.hxx"
 #include "tinyarray.hxx"
@@ -59,62 +59,62 @@ class RangeIter
         vigra_precondition((step > 0 && begin <= end) || (step < 0 && begin >= end),
             "RangeIter(): sign mismatch between step and (end-begin).");
     }
-    
+
     RangeIter(RangeIter const & other, ReverseCopyTag)
     : RangeIter(other.end_, other.begin_, -other.step_)
     {}
-    
+
   public:
     RangeIter begin() const
     {
         return *this;
     }
-    
+
     RangeIter end() const
     {
         return RangeIter(*this, ReverseCopy);
     }
-    
+
     T const & operator*() const
     {
         return begin_;
     }
-    
+
     RangeIter & operator++()
     {
         begin_ += step_;
         return *this;
     }
-    
+
     bool operator!=(RangeIter const & other) const
     {
         return begin_ != other.begin_;
     }
-    
+
     bool operator<(RangeIter const & other) const
     {
         return (other.begin_ - begin_)*step_ > 0;
     }
-    
+
     ArrayIndex size() const
     {
         // FIXME: test RangeIter::size() for non-integer ranges
         return floor((abs(end_-begin_+step_)-1)/abs(step_));
     }
-    
+
   private:
     T begin_, end_, step_;
 };
 
 template <class T1, class T2, class T3>
-RangeIter<T1> 
+RangeIter<T1>
 range(T1 begin, T2 end, T3 step)
 {
     return RangeIter<T1>(begin, end, step);
 }
 
 template <class T1, class T2>
-RangeIter<T1> 
+RangeIter<T1>
 range(T1 begin, T2 end)
 {
     return RangeIter<T1>(begin, end, 1);
@@ -132,4 +132,4 @@ using Shape = TinyArray<ArrayIndex, N>;
 
 } // namespace vigra
 
-#endif // VIGRA_SHAPE_HXX
+#endif // VIGRA2_SHAPE_HXX_HXX

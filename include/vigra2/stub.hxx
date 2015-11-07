@@ -35,8 +35,8 @@
 
 #pragma once
 
-#ifndef VIGRA_STUB_HXX
-#define VIGRA_STUB_HXX
+#ifndef VIGRA2_STUB_HXX
+#define VIGRA2_STUB_HXX
 
 #include "config.hxx"
 
@@ -45,4 +45,4 @@ namespace vigra {
 
 } // namespace vigra
 
-#endif // VIGRA_STUB_HXX
+#endif // VIGRA2_STUB_HXX

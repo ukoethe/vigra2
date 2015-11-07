@@ -35,8 +35,8 @@
 
 #pragma once
 
-#ifndef VIGRA_TINY_LINALG_HXX
-#define VIGRA_TINY_LINALG_HXX
+#ifndef VIGRA2_TINY_LINALG_HXX
+#define VIGRA2_TINY_LINALG_HXX
 
 #include "config.hxx"
 #include "numeric_traits.hxx"
@@ -114,7 +114,7 @@ dot(TinySymmetricView<V1, N> const & l,
 }
 
     // matrix-matrix product
-template <class V1, class D1, class V2, class D2, 
+template <class V1, class D1, class V2, class D2,
           int N1, int N2, int N3>
 inline
 TinyArray<PromoteType<V1, V2>, N1, N3>
@@ -198,11 +198,11 @@ dot(TinySymmetricView<V1, N> const & l,
 }
 
     /** \brief Compute the eigenvalues of a 2x2 real symmetric matrix.
-      
+
         The matrix is specified by a <tt>TinySymmetricView</tt>,
-        which only stores the upper triangular part. The algorithm uses the 
+        which only stores the upper triangular part. The algorithm uses the
         analytical eigenvalue formulas .
-      
+
         <b>\#include</b> \<vigra/tiny_linalg.hxx\><br>
         Namespace: vigra
     */
@@ -216,15 +216,15 @@ symmetricEigenvalues(TinySymmetricView<T, 2> const & a)
 }
 
     /** \brief Compute the eigenvalues of a 3x3 real symmetric matrix.
-        
+
         The matrix is specified by a <tt>TinySymmetricView</tt>,
-        which only stores the upper triangular part. 
-        The algorithm uses a numerically stable version of the 
+        which only stores the upper triangular part.
+        The algorithm uses a numerically stable version of the
         analytical eigenvalue formula according to
         <p>
         David Eberly: <a href="http://www.geometrictools.com/Documentation/EigenSymmetric3x3.pdf">
         <em>"Eigensystems for 3 × 3 Symmetric Matrices (Revisited)"</em></a>, Geometric Tools Documentation, 2006
-        
+
         <b>\#include</b> \<vigra/tiny_linalg.hxx\><br>
         Namespace: vigra
     */
@@ -233,7 +233,7 @@ inline TinyArray<T, 3>
 symmetricEigenvalues(TinySymmetricView<T, 3> const & a)
 {
     TinyArray<T, 3> res(DontInit);
-    symmetric3x3Eigenvalues(a[0], a[1], a[2], a[3], a[4], a[5], 
+    symmetric3x3Eigenvalues(a[0], a[1], a[2], a[3], a[4], a[5],
                             &res[0], &res[1], &res[2]);
     return res;
 }
@@ -242,4 +242,4 @@ symmetricEigenvalues(TinySymmetricView<T, 3> const & a)
 
 } // namespace vigra
 
-#endif // VIGRA_TINY_LINALG_HXX
+#endif // VIGRA2_TINY_LINALG_HXX

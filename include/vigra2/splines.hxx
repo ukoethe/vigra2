@@ -35,8 +35,8 @@
 
 #pragma once
 
-#ifndef VIGRA_SPLINES_HXX
-#define VIGRA_SPLINES_HXX
+#ifndef VIGRA2_SPLINES_HXX
+#define VIGRA2_SPLINES_HXX
 
 #include <cmath>
 #include "config.hxx"
@@ -181,7 +181,7 @@ class BSplineBase
 
   protected:
     result_type exec(first_argument_type x, second_argument_type derivative_order) const;
-    
+
         // factory function for the prefilter coefficients array
     static std::vector<double> calculatePrefilterCoefficients();
 
@@ -216,7 +216,7 @@ BSplineBase<ORDER, T>::exec(first_argument_type x, second_argument_type derivati
 }
 
 template <int ORDER, class T>
-std::vector<double> 
+std::vector<double>
 BSplineBase<ORDER, T>::calculatePrefilterCoefficients()
 {
     std::vector<double> res;
@@ -316,7 +316,7 @@ class BSplineBase<0, T>
     template <class U, int N>
     autodiff::DualVector<U, N> operator()(autodiff::DualVector<U, N> const & x) const
     {
-        return x < 0.5 && -0.5 <= x 
+        return x < 0.5 && -0.5 <= x
                    ? autodiff::DualVector<U, N>(1.0)
                    : autodiff::DualVector<U, N>(0.0);
     }
@@ -341,7 +341,7 @@ class BSplineBase<0, T>
     }
 
     typedef T WeightMatrix[1][1];
-  
+
     static WeightMatrix const & weights()
     {
         return weightMatrix_;
@@ -410,7 +410,7 @@ class BSpline<1, T>
     autodiff::DualVector<U, N> operator()(autodiff::DualVector<U, N> x) const
     {
         x = abs(x);
-        return x < 1.0 
+        return x < 1.0
                     ? 1.0 - x
                     : autodiff::DualVector<U, N>(0.0);
     }
@@ -533,9 +533,9 @@ class BSpline<2, T>
     autodiff::DualVector<U, N> operator()(autodiff::DualVector<U, N> x) const
     {
         x = abs(x);
-        return x < 0.5 
+        return x < 0.5
                    ? 0.75 - x*x
-                   : x < 1.5 
+                   : x < 1.5
                         ? 0.5 * sq(1.5 - x)
                         : autodiff::DualVector<U, N>(0.0);
     }
@@ -581,7 +581,7 @@ template <class T>
 std::vector<double> BSpline<2, T>::prefilterCoefficients_(1, 2.0*M_SQRT2 - 3.0);
 
 template <class T>
-typename BSpline<2, T>::WeightMatrix BSpline<2, T>::weightMatrix_ = 
+typename BSpline<2, T>::WeightMatrix BSpline<2, T>::weightMatrix_ =
                            {{ 0.125, 0.75, 0.125},
                             {-0.5, 0.0, 0.5},
                             { 0.5, -1.0, 0.5}};
@@ -738,7 +738,7 @@ template <class T>
 std::vector<double> BSpline<3, T>::prefilterCoefficients_(1, VIGRA_CSTD::sqrt(3.0) - 2.0);
 
 template <class T>
-typename BSpline<3, T>::WeightMatrix BSpline<3, T>::weightMatrix_ = 
+typename BSpline<3, T>::WeightMatrix BSpline<3, T>::weightMatrix_ =
                            {{ 1.0 / 6.0, 2.0 / 3.0, 1.0 / 6.0, 0.0},
                             {-0.5, 0.0, 0.5, 0.0},
                             { 0.5, -1.0, 0.5, 0.0},
@@ -912,7 +912,7 @@ template <class T>
 std::vector<double> BSpline<4, T>::prefilterCoefficients_(calculatePrefilterCoefficients());
 
 template <class T>
-typename BSpline<4, T>::WeightMatrix BSpline<4, T>::weightMatrix_ = 
+typename BSpline<4, T>::WeightMatrix BSpline<4, T>::weightMatrix_ =
                            {{ 1.0/384.0, 19.0/96.0, 115.0/192.0, 19.0/96.0, 1.0/384.0},
                             {-1.0/48.0, -11.0/24.0, 0.0, 11.0/24.0, 1.0/48.0},
                             { 1.0/16.0, 1.0/4.0, -5.0/8.0, 1.0/4.0, 1.0/16.0},
@@ -1016,7 +1016,7 @@ BSpline<4, T>::exec(first_argument_type x, second_argument_type derivative_order
                              : x < -0.5
                                  ? -4.0
                                  : 6.0
-                     : x < 0.5 
+                     : x < 0.5
                          ? 6.0
                          : x < 1.5
                              ? -4.0
@@ -1139,7 +1139,7 @@ template <class T>
 std::vector<double> BSpline<5, T>::prefilterCoefficients_(calculatePrefilterCoefficients());
 
 template <class T>
-typename BSpline<5, T>::WeightMatrix BSpline<5, T>::weightMatrix_ = 
+typename BSpline<5, T>::WeightMatrix BSpline<5, T>::weightMatrix_ =
                            {{ 1.0/120.0, 13.0/60.0, 11.0/20.0, 13.0/60.0, 1.0/120.0, 0.0},
                             {-1.0/24.0, -5.0/12.0, 0.0, 5.0/12.0, 1.0/24.0, 0.0},
                             { 1.0/12.0, 1.0/6.0, -0.5, 1.0/6.0, 1.0/12.0, 0.0},
@@ -1350,7 +1350,7 @@ public:
     {
         return prefilterCoefficients_;
     }
-    
+
   protected:
     static std::vector<double> prefilterCoefficients_;
 };
@@ -1383,4 +1383,4 @@ CatmullRomSpline<T>::operator()(argument_type x) const
 } // namespace vigra
 
 
-#endif /* VIGRA_SPLINES_HXX */
+#endif /* VIGRA2_SPLINES_HXX */

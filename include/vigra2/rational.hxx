@@ -44,8 +44,8 @@
 
 #pragma once
 
-#ifndef VIGRA_RATIONAL_HPP
-#define VIGRA_RATIONAL_HPP
+#ifndef VIGRA2_RATIONAL_HXX
+#define VIGRA2_RATIONAL_HXX
 
 #include <cmath>
 #include <stdexcept>
@@ -201,7 +201,7 @@ public:
             <tt>IntType</tt> or <tt>IntType const &</tt>.
         */
     typedef typename std::conditional<std::is_fundamental<IntType>::value,
-                                      IntType, IntType const &>::type 
+                                      IntType, IntType const &>::type
             param_type;
 
         /** Default constructor: creates zero (<tt>0/1</tt>)
@@ -1303,5 +1303,5 @@ std::ostream& operator<< (std::ostream& os, const vigra::Rational<IntType>& r)
 
 } // namespace vigra
 
-#endif  // VIGRA_RATIONAL_HPP
+#endif  // VIGRA2_RATIONAL_HXX
 

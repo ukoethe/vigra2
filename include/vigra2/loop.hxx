@@ -35,8 +35,8 @@
 
 #pragma once
 
-#ifndef VIGRA_LOOP_HXX
-#define VIGRA_LOOP_HXX
+#ifndef VIGRA2_LOOP_HXX_HXX
+#define VIGRA2_LOOP_HXX_HXX
 
 #include "config.hxx"
 #include "error.hxx"
@@ -58,7 +58,7 @@ class LoopIndex
   public:
     typedef ArrayIndex               IndexType;
     typedef TinyArray<IndexType, 3>  Range;
-    
+
     LoopIndex (IndexType begin, IndexType end, IndexType step=1)
     : id_(this - (LoopIndex *)0)
     , begin_(begin)
@@ -72,11 +72,11 @@ class LoopIndex
                 (step_ < 0 && begin_ > end_),
                 "LoopIndex(): sign mismatch between 'step' and '(end-begin)'.");
     }
-    
+
     LoopIndex (IndexType end=0)
     : LoopIndex(0, end)
     {}
-    
+
   protected:
     LoopIndex (size_t id, IndexType begin, IndexType end, IndexType step)
     : id_(id)
@@ -91,9 +91,9 @@ class LoopIndex
                 (step_ < 0 && begin_ > end_),
                 "LoopIndex(): sign mismatch between 'step' and '(end-begin)'.");
     }
-    
+
   public:
-  
+
     LoopIndex & setRange(LoopIndex const & i)
     {
         begin_     = i.begin_;
@@ -102,7 +102,7 @@ class LoopIndex
         has_range_ = i.has_range_;
         return *this;
     }
-  
+
     LoopIndex & setRange(IndexType begin, IndexType end, IndexType step=1)
     {
         begin_     = begin;
@@ -116,30 +116,30 @@ class LoopIndex
                 "LoopIndex::setRange(): sign mismatch between 'step' and '(end-begin)'.");
         return *this;
     }
-  
+
     LoopIndex & setRange(IndexType end)
     {
         return setRange(0, end);
     }
-    
+
     LoopSlice slice(IndexType begin, IndexType end, IndexType step=1);
-    
+
     // LoopSlice sliceStep(IndexType s)
     // {
         // step_ = s;
         // return *this;
     // }
-    
+
     Range range() const
     {
         return Range(begin_, end_, step_);
     }
-    
+
     IndexType distance() const
     {
         return end_ - begin_;
     }
-    
+
     size_t  id_;
     IndexType  begin_, end_, step_;
     bool has_range_;
@@ -152,25 +152,25 @@ class LoopSlice
     typedef ArrayIndex               IndexType;
     typedef TinyArray<IndexType, 3>  Range;
     friend class LoopIndex;
-    
+
     LoopSlice(LoopIndex const & i)
     : LoopIndex(i)
     , left_(0)
     , right_(0)
     , has_window_(false)
     {}
-    
+
   protected:
-  
+
     LoopSlice(IndexType id, IndexType begin, IndexType end, IndexType step)
     : LoopIndex(id, begin, end, step)
     , left_(0)
     , right_(0)
     , has_window_(false)
     {}
-    
+
   public:
-  
+
     LoopSlice & window(IndexType left, IndexType right)
     {
         left_ = left;
@@ -178,27 +178,27 @@ class LoopSlice
         has_window_ = true;
         return *this;
     }
-    
+
     LoopSlice & left(IndexType l)
     {
         return window(l, right_);
     }
-    
+
     LoopSlice & right(IndexType r)
     {
         return window(left_, r);
     }
-    
+
     IndexType  left_, right_;
     bool has_window_;
 };
 
-inline LoopSlice 
+inline LoopSlice
 LoopIndex::slice(IndexType begin, IndexType end, IndexType step)
 {
     return LoopSlice(id_, begin, end, step);
 }
-    
+
 
 template <class T>
 class MArrayView
@@ -206,79 +206,79 @@ class MArrayView
   public:
     using SliceVector = std::vector<LoopSlice>;
     using MultiIndex = Shape<>;
-    
+
     MArrayView(MultiIndex const & shape)
     : shape_(shape)
     , strides_(shapeToStrides(shape_))
     , data_(0)
     {}
-    
+
     MArrayView(MultiIndex const & shape, MultiIndex const & strides, T * data)
     : shape_(shape)
     , strides_(strides)
     , data_(data)
     {}
-    
+
     MArrayView(std::initializer_list<ArrayIndex> shape)
     : MArrayView(MultiIndex(shape.begin(), shape.end()))
     {}
-    
-    std::tuple<MArrayView, SliceVector> 
+
+    std::tuple<MArrayView, SliceVector>
     operator()(SliceVector indices) const
     {
         vigra_precondition(indices.size() == ndim(),
-            "MArrayView::operator(): Expected " + std::to_string(ndim()) + 
+            "MArrayView::operator(): Expected " + std::to_string(ndim()) +
             " arguments, " + std::to_string(indices.size()) + " given.");
         return std::make_tuple(*this, std::move(indices));
     }
-    
+
     template <class ... REST>
-    std::tuple<MArrayView, SliceVector> 
+    std::tuple<MArrayView, SliceVector>
     operator()(LoopSlice i, REST... indices) const
     {
         return operator()({i, indices...});
     }
-    
-    std::tuple<MArrayView, SliceVector> 
+
+    std::tuple<MArrayView, SliceVector>
     operator[](SliceVector indices) const
     {
         return operator()(std::move(indices));
     }
-    
+
     T & operator[](MultiIndex i)
     {
         return data_[dot(i, strides_)];
     }
-    
+
     T const & operator[](MultiIndex i) const
     {
         return data_[dot(i, strides_)];
     }
-    
+
     ArrayIndex ndim() const
     {
         return shape_.size();
     }
-    
+
     ArrayIndex size() const
     {
         return prod(shape_);
     }
-    
+
     void swap(MArrayView & v)
     {
         std::swap(data_, v.data_);
         shape_.swap(v.shape_);
         strides_.swap(v.strides_);
     }
-    
+
     MArrayView bind(ArrayIndex dim, ArrayIndex where) const
     {
         T * data = const_cast<T *>(data_);
         return MArrayView(shape_.erase(dim), strides_.erase(dim),
                           data + where*strides_[dim]);
     }
-    
+
     MultiIndex shape_, strides_;
     T * data_;
 };
@@ -288,12 +288,12 @@ class MArray
 : public MArrayView<T>
 {
     using BaseType = MArrayView<T>;
-    
+
   public:
-  
+
     using typename BaseType::MultiIndex;
     using Data = std::vector<T>;
-    
+
     MArray(MultiIndex const & shape)
     : BaseType(shape)
     , alloc_data_(prod(shape), 0)
@@ -301,11 +301,11 @@ class MArray
         this->data_ = alloc_data_.data();
         std::iota(alloc_data_.begin(), alloc_data_.end(), 1);
     }
-    
+
     MArray(std::initializer_list<ArrayIndex> shape)
     : MArray(MultiIndex(shape.begin(), shape.end()))
     {}
-    
+
     Data alloc_data_;
 };
 
@@ -318,41 +318,41 @@ class Loop
     typedef std::vector<LoopIndex>  IndexVector;
     typedef std::vector<LoopSlice>  SliceVector;
     typedef Shape<>                 MultiIndex;
-    
+
     template <int N>
     using Level = std::integral_constant<int, N>;
-    
+
   public:
-  
+
     friend class LoopTest;
-    
+
     template <class ... REST>
     Loop(LoopIndex i, REST... indices)
     : Loop{i, indices...}
     {}
-    
+
     Loop(std::initializer_list<LoopIndex> indices)
     : indices_{indices}
     , nesting_(indices_.size()-1)
     {}
-    
+
     Loop(IndexVector indices)
     : indices_{std::move(indices)}
     , nesting_(indices_.size()-1)
     {}
-    
+
     int ndim() const
     {
         return indices_.size();
     }
-    
+
     Loop & add(std::tuple<MArrayView<int>, SliceVector> const & data)
     {
         MArrayView<int> const & array = std::get<0>(data);
         SliceVector const & slices = std::get<1>(data);
         MArrayView<int> newarray(array);
         MultiIndex strides(ndim());
-        
+
         Shape<> axes_to_bind(array.ndim());
         Shape<> bind_where(array.ndim());
         for(int i=0; i<ndim(); ++i)
@@ -398,7 +398,7 @@ class Loop
         strides_.push_back(strides);
         return *this;
     }
-    
+
     template <class FUNC>
     void run(FUNC f) const
     {
@@ -440,28 +440,28 @@ class Loop
           }
         }
     }
-    
+
     template<class A1, class A2>
     static void savePointers(A1 & data, A2 & p)
     {
         for(int i=0; i<data.size(); ++i)
             p[i] = data[i].data_;
     }
-    
+
     template<class A1, class A2>
     static void restorePointers(A1 & data, A2 & p)
     {
         for(int i=0; i<data.size(); ++i)
             data[i].data_ = p[i];
     }
-    
+
     template<class A1, class A2>
     static void incrementPointers(A1 & data, A2 const & strides, ArrayIndex step, int level)
     {
         for(int i=0; i<data.size(); ++i)
             data[i].data_ += strides[i][level]*step;
     }
-    
+
     template <class FUNC>
     void runImpl(FUNC f, MultiIndex & index, int level) const
     {
@@ -522,7 +522,7 @@ class Loop
             }
         }
     }
-    
+
     template <class FUNC, int N, int LEVEL>
     typename std::enable_if<LEVEL != N-1, void>::type
     runImpl(FUNC f, Shape<N> & index, Level<LEVEL>) const
@@ -583,7 +583,7 @@ class Loop
             data_[0].data_ = data_ptr;
         }
     }
-    
+
     IndexVector indices_;
     mutable std::vector<MArrayView<int> >  data_;
     mutable std::vector<int *>             save_ptrs_;
@@ -593,4 +593,4 @@ class Loop
 
 } // namespace vigra
 
-#endif // VIGRA_LOOP_HXX
+#endif // VIGRA2_LOOP_HXX_HXX

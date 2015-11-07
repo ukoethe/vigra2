@@ -35,8 +35,8 @@
 
 #pragma once
 
-#ifndef VIGRA_ERROR_HXX
-#define VIGRA_ERROR_HXX
+#ifndef VIGRA2_ERROR_HXX
+#define VIGRA2_ERROR_HXX
 
 #include <stdexcept>
 #include <sstream>
@@ -49,51 +49,51 @@ namespace vigra {
     Exceptions and assertions provided by VIGRA
 
     <b>\#include</b> \<vigra/error.hxx\>
-    
+
     VIGRA defines the following exception class:
-    
+
     \code
     namespace vigra {
         class ContractViolation : public std::runtime_error;
     }
     \endcode
-    
-    The following associated macros throw the corresponding exception if 
+
+    The following associated macros throw the corresponding exception if
     their PREDICATE evaluates to '<TT>false</TT>':
-    
+
     \code
     vigra_precondition(PREDICATE, MESSAGE);
     vigra_postcondition(PREDICATE, MESSAGE);
     vigra_invariant(PREDICATE, MESSAGE);
     \endcode
-    
+
     The MESSAGE is passed to the exception and can be retrieved via
     the overloaded member function '<TT>exception.what()</TT>'. If the compiler
-    flag '<TT>NDEBUG</TT>' is <em>not</em> defined, the file name and line number of 
+    flag '<TT>NDEBUG</TT>' is <em>not</em> defined, the file name and line number of
     the error are automatically included in the message. The macro
-    
+
     \code
     vigra_assert(PREDICATE, MESSAGE);
     \endcode
-    
+
     is identical to <tt>vigra_precondition()</tt> except that it is completely removed
-    when '<TT>NDEBUG</TT>' is defined. This is useful for tests that are only needed during 
+    when '<TT>NDEBUG</TT>' is defined. This is useful for tests that are only needed during
     debugging, such as array index bound checking. The following macro
-    
+
     \code
     vigra_fail(MESSAGE);
     \endcode
-    
-    unconditionally throws a '<TT>std::runtime_error</TT>' constructed from the message 
+
+    unconditionally throws a '<TT>std::runtime_error</TT>' constructed from the message
     (along with file name and line number, if NDEBUG is not set).
-    
+
     <b> Usage:</b>
-    
+
     Include-File:
     \<vigra/error.hxx\>
     <p>
     Namespace: vigra (except for the macros, of course)
-    
+
     \code
     int main(int argc, char ** argv)
     {
@@ -119,19 +119,19 @@ namespace vigra {
     }
     \endcode
 **/
-class ContractViolation 
+class ContractViolation
 : public std::runtime_error
 {
   public:
-  
+
     static std::string createMessage(char const * prefix, char const * message)
     {
         std::ostringstream s;
         s << "\n" << prefix << "\n" << message << "\n";
         return s.str();
     }
-    
-    static std::string createMessage(char const * prefix, char const * message, 
+
+    static std::string createMessage(char const * prefix, char const * message,
                                      char const * file, int line)
     {
         std::ostringstream s;
@@ -139,12 +139,12 @@ class ContractViolation
           << file << ":" << line << ")\n";
         return s.str();
     }
-    
+
     ContractViolation(char const * prefix, char const * message)
     : std::runtime_error(createMessage(prefix, message))
     {}
-    
-    ContractViolation(char const * prefix, char const * message, 
+
+    ContractViolation(char const * prefix, char const * message,
                       char const * file, int line)
     : std::runtime_error(createMessage(prefix, message, file, line))
     {}
@@ -156,17 +156,17 @@ class ContractViolation
 #if 1
 
 inline
-void throw_contract_error(char const * prefix, char const * message, 
+void throw_contract_error(char const * prefix, char const * message,
                           char const * file, int line)
 {
-    throw vigra::ContractViolation(prefix, message, file, line); 
+    throw vigra::ContractViolation(prefix, message, file, line);
 }
 
 inline
-void throw_contract_error(char const * prefix, std::string message, 
+void throw_contract_error(char const * prefix, std::string message,
                           char const * file, int line)
 {
-    throw vigra::ContractViolation(prefix, message.c_str(), file, line); 
+    throw vigra::ContractViolation(prefix, message.c_str(), file, line);
 }
 
 inline
@@ -174,7 +174,7 @@ void throw_runtime_error(char const * message, char const * file, int line)
 {
     std::ostringstream what;
     what << "\n" << message << "\n(" << file << ":" << line << ")\n";
-    throw std::runtime_error(what.str()); 
+    throw std::runtime_error(what.str());
 }
 
 inline
@@ -182,7 +182,7 @@ void throw_runtime_error(std::string message, char const * file, int line)
 {
     std::ostringstream what;
     what << "\n" << message << "\n(" << file << ":" << line << ")\n";
-    throw std::runtime_error(what.str()); 
+    throw std::runtime_error(what.str());
 }
 
 // place throw_contract_error() into the else branch of an if
@@ -202,7 +202,7 @@ void throw_runtime_error(std::string message, char const * file, int line)
 #define vigra_invariant(PREDICATE, MESSAGE) \
     if((PREDICATE)) {} else \
         vigra::throw_contract_error("Invariant violation!", MESSAGE, __FILE__, __LINE__)
-            
+
 #define vigra_fail(MESSAGE) \
     vigra::throw_runtime_error(MESSAGE, __FILE__, __LINE__)
 
@@ -211,7 +211,7 @@ void throw_runtime_error(std::string message, char const * file, int line)
 inline
 void throw_contract_error(char const * message)
 {
-    throw vigra::ContractViolation(message); 
+    throw vigra::ContractViolation(message);
 }
 
 #define vigra_precondition(PREDICATE, MESSAGE) \
@@ -227,7 +227,7 @@ void throw_contract_error(char const * message)
 #define vigra_invariant(PREDICATE, MESSAGE) \
     if((PREDICATE)) {} else \
         vigra::throw_contract_error("Invariant violation!", MESSAGE)
-            
+
 #define vigra_fail(MESSAGE) \
     throw std::runtime_error(MESSAGE)
 
@@ -235,4 +235,4 @@ void throw_contract_error(char const * message)
 
 } // namespace vigra
 
-#endif // VIGRA_ERROR_HXX
+#endif // VIGRA2_ERROR_HXX
